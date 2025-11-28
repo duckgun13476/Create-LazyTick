@@ -1,10 +1,14 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.PinkCats.createlazytick.mixin",
+  "package": "net.pinkcats.createlazytick.mixin",
   "compatibilityLevel": "JAVA_8",
   "refmap": "CreateLazyTick.refmap.json",
   "mixins": [
+    "ChuteLazyTickMixin",
+    "DepotLazyTickMixin",
+    "FluidLazyTickMixin",
+    "FunnelLazyTickMixin"
   ],
   "client": [
   ],
