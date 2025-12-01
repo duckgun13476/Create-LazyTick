@@ -2,7 +2,7 @@ package net.pinkcats.createlazytick.mixin;
 
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Funnel;
-import com.simibubi.create.content.equipment.goggles.IHaveHoveringInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.belt.BeltHelper;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
@@ -15,8 +15,8 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryTrackerBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.utility.BlockFace;
-import com.simibubi.create.foundation.utility.animation.LerpedFloat;
+import net.createmod.catnip.math.BlockFace;
+import net.createmod.catnip.animation.LerpedFloat;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -137,17 +137,11 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-
         flap.tickChaser();
-
-
         if (createfastschematiccannon$HasInterface){
             ActuakMultiCount = 0;
 
         }
-
-
-
 
 
         if(!createfastschematiccannon$HasInterface){
@@ -194,7 +188,6 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
             activateExtractingBeltFunnel();
         if (mode == Funnel.Mode.EXTRACT)
             activateExtractor();
-
 
         ci.cancel();
     }

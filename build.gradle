@@ -189,7 +189,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
 
     //Create
-    modImplementation("curse.maven:create-328085:5838779")
+    modImplementation("curse.maven:create-328085:7178761")
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
 
@@ -210,6 +210,7 @@ dependencies {
     modImplementation("curse.maven:observable-509575:5643037")
     modImplementation("curse.maven:architectury-api-419699:5137938")
     modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
+    modImplementation("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")
     //create
     //runtimeOnly fg.deobf("curse.maven:create-328085:5838779")
 

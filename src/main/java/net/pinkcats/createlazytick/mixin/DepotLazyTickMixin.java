@@ -11,7 +11,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.utility.VecHelper;
+import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.Containers;
@@ -135,7 +135,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         boolean wasLocked = heldItem.locked;
         BeltProcessingBehaviour.ProcessingResult result = wasLocked ? processingBehaviour.handleHeldItem(heldItem, transportedHandler)
                 : processingBehaviour.handleReceivedItem(heldItem, transportedHandler);
-        if (result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
+        if (heldItem == null || result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
             heldItem = null;
             blockEntity.sendData();
             {

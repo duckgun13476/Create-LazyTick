@@ -1,17 +1,17 @@
 package net.pinkcats.createlazytick.mixin;
 
-import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryTrackerBehaviour;
-import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+
 import net.pinkcats.createlazytick.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -56,7 +56,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     private void handleInputFromAbove() {}
 
     @Shadow
-    LerpedFloat itemPosition;
+    net.createmod.catnip.animation.LerpedFloat itemPosition;
 
     @Shadow
     private boolean handleDownwardOutput(boolean simulate) {return false;}
