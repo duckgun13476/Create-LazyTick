@@ -211,6 +211,8 @@ dependencies {
     modImplementation("curse.maven:architectury-api-419699:5137938")
     modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
     modImplementation("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")
+    //modImplementation("curse.maven:lionfish-api-1001614:5922047")
+    //modImplementation("curse.maven:lendercataclysm-551586:6906993")
     //create
     //runtimeOnly fg.deobf("curse.maven:create-328085:5838779")
 

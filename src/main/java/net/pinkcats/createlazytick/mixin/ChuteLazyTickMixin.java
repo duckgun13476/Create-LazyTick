@@ -74,6 +74,9 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     boolean mistake = false;
 
     private void LazyTickChute(boolean CanDownload){
+        //if (!level.isClientSide) {
+           // System.out.println("Chute"+CurrentDelayTick + "  " + chuteTick);
+        //}
         if (!level.isClientSide){
 
             if (CanDownload){
@@ -99,7 +102,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                         mistake = true;
                     }
 
-                    //System.out.println("Current Tick: "+CurrentDelayTick);
+
                 }
             }
         }
