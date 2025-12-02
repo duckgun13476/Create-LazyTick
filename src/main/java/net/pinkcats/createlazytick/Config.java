@@ -41,6 +41,12 @@ public class Config
     private static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX = BUILDER
             .comment("max delay tick if depot is rest")
             .defineInRange("depot_delay_max", 60, 20, Integer.MAX_VALUE);
+
+
+
+
+
+
     //=================================================================================================
 
 
