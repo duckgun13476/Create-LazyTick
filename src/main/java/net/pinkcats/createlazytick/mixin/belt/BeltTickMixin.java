@@ -188,7 +188,7 @@ public class BeltTickMixin {
             float limitedMovement =
                     beltMovementPositive ? Math.min(movement, diffToEnd) : Math.max(movement, diffToEnd);
             float nextOffset = currentItem.beltPosition + limitedMovement;
-            System.out.println(nextOffset+" "+limitedMovement +" "+ movement +" "+ ServerSpeedProvider.get());
+            ///System.out.println(nextOffset+" "+limitedMovement +" "+ movement +" "+ ServerSpeedProvider.get());
             //System.out.println(limitedMovement);
 
             // Belt item processing
