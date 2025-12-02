@@ -22,6 +22,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -30,6 +31,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
+
+import static net.pinkcats.createlazytick.Config.depot_delay_max;
 
 @Mixin(value = DepotBehaviour.class, remap = false)
 public class DepotLazyTickMixin extends BlockEntityBehaviour {
@@ -79,10 +82,12 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
 
         Level world = blockEntity.getLevel();
-
         for (Iterator<TransportedItemStack> iterator = incoming.iterator(); iterator.hasNext();) {
             TransportedItemStack ts = iterator.next();
-            if (!tick(ts))
+            boolean tick_res = tick(ts);
+            System.out.println(tick_res);
+
+            if (!tick_res)
                 continue;
             if (world.isClientSide && !blockEntity.isVirtual())
                 continue;
@@ -99,6 +104,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             iterator.remove();
             blockEntity.notifyUpdate();
         }
+
 
         if (heldItem == null) {
             ci.cancel();
@@ -120,6 +126,24 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
+        //tick emerge
+        //System.out.println("Depot" + createLazyTick$CurrentDelayTick + "  " + createLazyTick$DepotDelayTick);
+
+
+        if (createLazyTick$CurrentDelayTick > createLazyTick$DepotDelayTick) {
+           createLazyTick$CurrentDelayTick = 0;
+        } else {
+
+            createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick + 1;
+            if (createLazyTick$CurrentDelayTick>5){
+
+                ci.cancel();
+                return;
+            }
+        }
+
+
+
         BeltProcessingBehaviour processingBehaviour =
                 BlockEntityBehaviour.get(world, pos.above(2), BeltProcessingBehaviour.TYPE);
         if (processingBehaviour == null) {
@@ -131,11 +155,28 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
+
+
         ItemStack previousItem = heldItem.stack;
         boolean wasLocked = heldItem.locked;
         BeltProcessingBehaviour.ProcessingResult result = wasLocked ? processingBehaviour.handleHeldItem(heldItem, transportedHandler)
                 : processingBehaviour.handleReceivedItem(heldItem, transportedHandler);
-        if (result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
+
+
+
+
+
+
+        if (result == BeltProcessingBehaviour.ProcessingResult.PASS)
+            if (createLazyTick$DepotDelayTick < depot_delay_max)
+                createLazyTick$DepotDelayTick = createLazyTick$DepotDelayTick + Math.max(createLazyTick$CurrentDelayTick / 10, 1);
+
+        if (result == BeltProcessingBehaviour.ProcessingResult.HOLD) {
+            createLazyTick$DepotDelayTick = 0;
+            createLazyTick$CurrentDelayTick =0;
+        }
+
+        if (heldItem == null || result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
             heldItem = null;
             blockEntity.sendData();
             {
@@ -145,9 +186,16 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         }
 
         heldItem.locked = result == BeltProcessingBehaviour.ProcessingResult.HOLD;
-        if (heldItem.locked != wasLocked || !previousItem.equals(heldItem.stack, false))
+        if (heldItem.locked != wasLocked || !previousItem.equals(heldItem.stack, false)) {
             blockEntity.sendData();
+        }
+        ci.cancel();
     }
+
+    @Unique
+    private int createLazyTick$DepotDelayTick = 0;
+    @Unique
+    private int createLazyTick$CurrentDelayTick = 0;
 
 
     @Inject(method = "handleBeltFunnelOutput",at=@At("HEAD" ),remap = false,cancellable = true)
@@ -211,12 +259,11 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     }
 
 
+    public int getDepotDelayTick() {
+        return createLazyTick$DepotDelayTick;
+    }
 
-
-
-
-
-
-
-
+    public int getCurrentDelayTick() {
+        return createLazyTick$CurrentDelayTick;
+    }
 }
