@@ -8,7 +8,10 @@
     "ChuteLazyTickMixin",
     "DepotLazyTickMixin",
     "FluidLazyTickMixin",
-    "FunnelLazyTickMixin"
+    "FunnelLazyTickMixin",
+    "belt.BeltFunnelInteractionLazyTickMixin",
+    "belt.BeltInventoryAccessor",
+    "belt.BeltTickMixin"
   ],
   "client": [
   ],
