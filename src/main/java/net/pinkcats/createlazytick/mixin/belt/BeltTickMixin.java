@@ -34,8 +34,6 @@ public class BeltTickMixin {
     @Shadow
     boolean beltMovementPositive;
 
-    @Shadow
-    TransportedItemStack lazyClientItem;
 
     @Shadow
     private void insert(TransportedItemStack newStack) {}
@@ -76,21 +74,14 @@ public class BeltTickMixin {
         List<TransportedItemStack>  toRemove = accessor.getToRemove();
         List<TransportedItemStack> items = accessor.getItems();
 
-        // Residual item for "smooth" transitions
-        if (lazyClientItem != null) {
-            if (lazyClientItem.locked)
-                lazyClientItem = null;
-            else
-                lazyClientItem.locked = true;
-        }
-
         // Added/Removed items from previous cycle
         if (!toInsert.isEmpty() || !toRemove.isEmpty()) {
             toInsert.forEach(this::insert);
             toInsert.clear();
             items.removeAll(toRemove);
             toRemove.clear();
-            belt.notifyUpdate();
+            belt.setChanged();
+            belt.sendData();
         }
 
         //stop
@@ -175,14 +166,18 @@ public class BeltTickMixin {
 
             //System.out.println(ending);
             if (ending == BeltEum.Ending.BLOCKED){
-                if (BeltDelayTick<60) {
-                    BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
+                animal_delay ++;
+                if (animal_delay > 100) {
+                    if (BeltDelayTick < 60) {
+                        BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
 
+                    }
                 }
             }
 
             else {
                 BeltDelayTick = 0;
+                animal_delay = 0;
             }
 
             float limitedMovement =
@@ -252,8 +247,6 @@ public class BeltTickMixin {
 
                 currentItem.stack = remainder;
                 if (remainder.isEmpty()) {
-                    lazyClientItem = currentItem;
-                    lazyClientItem.locked = false;
                     iterator.remove();
                 } else
                     currentItem.stack = remainder;
