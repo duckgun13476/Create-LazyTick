@@ -251,7 +251,7 @@ jar {
 
     }
     manifest.attributes([
-            "MixinConfigs": "createfastschematiccannon.mixins.json",
+            "MixinConfigs": "createlazytick.mixins.json",
             "Git-Hash"    :  gitHash
     ])
 
