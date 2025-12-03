@@ -51,6 +51,7 @@ public class BeltTickMixin {
     private int BeltCurrentTick = 0;
     private int BeltDelayTick = 0;
     private int animal_delay = 0;
+    private int HasItemCount = 0;
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
@@ -82,6 +83,9 @@ public class BeltTickMixin {
             toRemove.clear();
             belt.setChanged();
             belt.sendData();
+            System.out.println("item removed/added");
+            BeltDelayTick = 0;
+            animal_delay = 0;
         }
 
         //stop
@@ -95,6 +99,7 @@ public class BeltTickMixin {
             beltMovementPositive = !beltMovementPositive;
             Collections.reverse(items);
             belt.notifyUpdate();
+            System.out.println("belt.notifyUpdate reserve");
         }
 
         // Assuming the first entry is furthest on the belt
@@ -118,7 +123,10 @@ public class BeltTickMixin {
         BeltEum.Ending ending = BeltEum.Ending.UNRESOLVED;
 
         // Loop over items
+        int count = 0;
+        int stop_count = 0;
         while (iterator.hasNext()) {
+            count ++;
             stackInFront = currentItem;
             currentItem = iterator.next();
             currentItem.prevBeltPosition = currentItem.beltPosition;
@@ -134,8 +142,12 @@ public class BeltTickMixin {
             if (onClient)
                 movement *= ServerSpeedProvider.get();
 
+            //System.out.println(movement);
+
             // Don't move if held by processing (client)
-            if (world != null && world.isClientSide && currentItem.locked) continue;
+            if (world != null && world.isClientSide && currentItem.locked) {
+                continue;
+            }
 
             // Don't move if held by external components
             if (currentItem.lockedExternally) {
@@ -150,6 +162,7 @@ public class BeltTickMixin {
                 float diff = stackInFront.beltPosition - currentPos;
                 if (Math.abs(diff) <= spacing)
                     noMovement = true;
+
                 movement =
                         beltMovementPositive ? Math.min(movement, diff - spacing) : Math.max(movement, diff + spacing);
             }
@@ -164,25 +177,20 @@ public class BeltTickMixin {
                 diffToEnd += beltMovementPositive ? -ending.margin : ending.margin;
             }
 
-            //System.out.println(ending);
-            if (ending == BeltEum.Ending.BLOCKED){
-                animal_delay ++;
-                if (animal_delay > 100) {
-                    if (BeltDelayTick < 60) {
-                        BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
-
-                    }
-                }
-            }
-
-            else {
-                BeltDelayTick = 0;
-                animal_delay = 0;
-            }
+            //if (ending == BeltEum.Ending.BLOCKED)
+               // stop_count++;
 
             float limitedMovement =
                     beltMovementPositive ? Math.min(movement, diffToEnd) : Math.max(movement, diffToEnd);
+
+            System.out.println( movement+"   "+diffToEnd+"  "+limitedMovement);
             float nextOffset = currentItem.beltPosition + limitedMovement;
+
+            if (Math.abs(limitedMovement) < 0.00001){
+                stop_count++;
+            }
+
+
             ///System.out.println(nextOffset+" "+limitedMovement +" "+ movement +" "+ ServerSpeedProvider.get());
             //System.out.println(limitedMovement);
 
@@ -190,30 +198,40 @@ public class BeltTickMixin {
             if (!onClient && horizontal) {
                 ItemStack item = currentItem.stack;
                 if (handleBeltProcessingAndCheckIfRemoved(currentItem, nextOffset, noMovement)) {
+
                     iterator.remove();
+                    System.out.println("belt.notifyUpdate");
                     belt.notifyUpdate();
                     continue;
                 }
-                if (item != currentItem.stack)
+                if (item != currentItem.stack) {
+                    System.out.println("belt.notifyUpdate");
                     belt.notifyUpdate();
+                }
                 if (currentItem.locked)
                     continue;
             }
 
             // Belt Funnels
-            if (BeltFunnelInteractionHandler.checkForFunnels(OrginalBeltInventory, currentItem, nextOffset))
+            if (BeltFunnelInteractionHandler.checkForFunnels(OrginalBeltInventory, currentItem, nextOffset)) {
+                System.out.println("Funnels");
                 continue;
+            }
 
             if (noMovement)
                 continue;
 
             // Belt Tunnels
-            if (BeltTunnelInteractionHandler.flapTunnelsAndCheckIfStuck(OrginalBeltInventory, currentItem, nextOffset))
+            if (BeltTunnelInteractionHandler.flapTunnelsAndCheckIfStuck(OrginalBeltInventory, currentItem, nextOffset)) {
+                System.out.println("Tunnels");
                 continue;
+            }
 
             // Horizontal Crushing Wheels
-            if (BeltCrusherInteractionHandler.checkForCrushers(OrginalBeltInventory, currentItem, nextOffset))
+            if (BeltCrusherInteractionHandler.checkForCrushers(OrginalBeltInventory, currentItem, nextOffset)) {
+                System.out.println("Crushing Wheels");
                 continue;
+            }
 
             // Apply Movement
             currentItem.beltPosition += limitedMovement;
@@ -253,6 +271,7 @@ public class BeltTickMixin {
 
                 flapTunnel(OrginalBeltInventory, lastOffset, movementFacing, false);
                 belt.notifyUpdate();
+                System.out.println("belt.notifyUpdate insert");
                 continue;
             }
 
@@ -264,9 +283,33 @@ public class BeltTickMixin {
                 iterator.remove();
                 flapTunnel(OrginalBeltInventory, lastOffset, movementFacing, false);
                 belt.notifyUpdate();
+                System.out.println("belt.notifyUpdate eject");
 
             }
         }
+
+        System.out.println(stop_count +"  " + count);
+        if (stop_count == count){
+            animal_delay++;
+            if (animal_delay>100) {
+                if (BeltDelayTick < 60) {
+                    BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
+
+                }
+            }
+        }
+
+        else {
+            BeltDelayTick = 0;
+            animal_delay = 0;
+        }
+
+        if (HasItemCount != count) {
+            HasItemCount = count;
+            BeltDelayTick = 0;
+            animal_delay = 0;
+        }
+
         ci.cancel();
     }
 
