@@ -92,7 +92,7 @@ public class BeltTickMixin {
             items.removeAll(toRemove);
             toRemove.clear();
             belt.notifyUpdate();
-            System.out.println("item removed/added");
+            //System.out.println("item removed/added");
             BeltDelayTick = 0;
             animal_delay = 0;
         }
@@ -108,7 +108,7 @@ public class BeltTickMixin {
             beltMovementPositive = !beltMovementPositive;
             Collections.reverse(items);
             belt.notifyUpdate();
-            System.out.println("belt.notifyUpdate reserve");
+            //System.out.println("belt.notifyUpdate reserve");
         }
 
         // Assuming the first entry is furthest on the belt
@@ -192,7 +192,7 @@ public class BeltTickMixin {
             float limitedMovement =
                     beltMovementPositive ? Math.min(movement, diffToEnd) : Math.max(movement, diffToEnd);
 
-            System.out.println( movement+"   "+diffToEnd+"  "+limitedMovement);
+            //System.out.println( movement+"   "+diffToEnd+"  "+limitedMovement);
             float nextOffset = currentItem.beltPosition + limitedMovement;
 
             if (Math.abs(limitedMovement) < 0.00001){
@@ -209,12 +209,12 @@ public class BeltTickMixin {
                 if (handleBeltProcessingAndCheckIfRemoved(currentItem, nextOffset, noMovement)) {
 
                     iterator.remove();
-                    System.out.println("belt.notifyUpdate");
+                    //System.out.println("belt.notifyUpdate");
                     belt.notifyUpdate();
                     continue;
                 }
                 if (item != currentItem.stack) {
-                    System.out.println("belt.notifyUpdate");
+                    //System.out.println("belt.notifyUpdate");
                     belt.notifyUpdate();
                 }
                 if (currentItem.locked)
@@ -223,7 +223,7 @@ public class BeltTickMixin {
 
             // Belt Funnels
             if (BeltFunnelInteractionHandler.checkForFunnels(OrginalBeltInventory, currentItem, nextOffset)) {
-                System.out.println("Funnels");
+                //System.out.println("Funnels");
                 continue;
             }
 
@@ -232,13 +232,13 @@ public class BeltTickMixin {
 
             // Belt Tunnels
             if (BeltTunnelInteractionHandler.flapTunnelsAndCheckIfStuck(OrginalBeltInventory, currentItem, nextOffset)) {
-                System.out.println("Tunnels");
+                //System.out.println("Tunnels");
                 continue;
             }
 
             // Horizontal Crushing Wheels
             if (BeltCrusherInteractionHandler.checkForCrushers(OrginalBeltInventory, currentItem, nextOffset)) {
-                System.out.println("Crushing Wheels");
+                //System.out.println("Crushing Wheels");
                 continue;
             }
 
@@ -282,7 +282,7 @@ public class BeltTickMixin {
 
                 flapTunnel(OrginalBeltInventory, lastOffset, movementFacing, false);
                 belt.notifyUpdate();
-                System.out.println("belt.notifyUpdate insert");
+                //System.out.println("belt.notifyUpdate insert");
                 continue;
             }
 
@@ -294,12 +294,12 @@ public class BeltTickMixin {
                 iterator.remove();
                 flapTunnel(OrginalBeltInventory, lastOffset, movementFacing, false);
                 belt.notifyUpdate();
-                System.out.println("belt.notifyUpdate eject");
+                //System.out.println("belt.notifyUpdate eject");
 
             }
         }
 
-        System.out.println(stop_count +"  " + count);
+        //System.out.println(stop_count +"  " + count);
         if (stop_count == count){
             animal_delay++;
             if (animal_delay>100) {
