@@ -135,11 +135,16 @@ public class BeltTickMixin {
         int count = 0;
         int stop_count = 0;
         while (iterator.hasNext()) {
-            count ++;
+
             stackInFront = currentItem;
             currentItem = iterator.next();
             currentItem.prevBeltPosition = currentItem.beltPosition;
             currentItem.prevSideOffset = currentItem.sideOffset;
+
+
+
+            count = count + currentItem.stack.getCount();
+
 
             if (currentItem.stack.isEmpty()) {
                 iterator.remove();
@@ -186,9 +191,6 @@ public class BeltTickMixin {
                 diffToEnd += beltMovementPositive ? -ending.margin : ending.margin;
             }
 
-            //if (ending == BeltEum.Ending.BLOCKED)
-               // stop_count++;
-
             float limitedMovement =
                     beltMovementPositive ? Math.min(movement, diffToEnd) : Math.max(movement, diffToEnd);
 
@@ -196,7 +198,7 @@ public class BeltTickMixin {
             float nextOffset = currentItem.beltPosition + limitedMovement;
 
             if (Math.abs(limitedMovement) < 0.00001){
-                stop_count++;
+                currentItem.stack.getCount();
             }
 
 
@@ -300,6 +302,8 @@ public class BeltTickMixin {
         }
 
         //System.out.println(stop_count +"  " + count);
+
+
         if (stop_count == count){
             animal_delay++;
             if (animal_delay>100) {

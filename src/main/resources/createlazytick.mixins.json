@@ -11,7 +11,9 @@
     "FunnelLazyTickMixin",
     "belt.BeltFunnelInteractionLazyTickMixin",
     "belt.BeltInventoryAccessor",
-    "belt.BeltTickMixin"
+    "belt.BeltTickMixin",
+    "minecraft.CacheLabel",
+    "saw.SawRecipeMixin"
   ],
   "client": [
   ],
