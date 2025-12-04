@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.simibubi.create.content.kinetics.belt.transport.BeltTunnelInteractionHandler.flapTunnel;
+import static net.pinkcats.createlazytick.Config.belt_delay_max;
 
 @Mixin(BeltInventory.class)
 public class BeltTickMixin {
@@ -307,7 +308,7 @@ public class BeltTickMixin {
         if (stop_count == count){
             animal_delay++;
             if (animal_delay>100) {
-                if (BeltDelayTick < 60) {
+                if (BeltDelayTick < belt_delay_max) {
                     BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
 
                 }

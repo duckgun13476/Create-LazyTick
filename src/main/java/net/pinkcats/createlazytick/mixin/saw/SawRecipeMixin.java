@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static net.pinkcats.createlazytick.Config.saw_cache_max;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
 @ParametersAreNonnullByDefault
@@ -85,7 +86,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
             return createLazyTick$assemblyRecipeCache.get(itemStack.getItem());
 
         } else {
-            System.out.println("not use cache original "+itemStack.getItem()+" "+createLazyTick$assemblyRecipeCache.size());
+            //System.out.println("not use cache original "+itemStack.getItem()+" "+createLazyTick$assemblyRecipeCache.size());
             Optional<CuttingRecipe> assemblyRecipe = Optional.empty();
             if (level != null) {
                 assemblyRecipe = SequencedAssemblyRecipe.getRecipe(level, itemStack,
@@ -94,12 +95,10 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
             if (assemblyRecipe.isPresent() && filtering.test(assemblyRecipe.get()
                     .getResultItem(level.registryAccess()))) {
 
-                System.out.println(createLazyTick$assemblyRecipeCache.size());
                 createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of(assemblyRecipe.get()));
-                System.out.println(createLazyTick$assemblyRecipeCache.size());
                 return ImmutableList.of(assemblyRecipe.get());
             } else  {
-                System.out.println("Is empty");
+                //System.out.println("Is empty");
                 createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of());
                 return ImmutableList.of();
             }
@@ -120,7 +119,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     private Map<Item, List<? extends Recipe<?>>> createLazyTick$recipeCache = new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Item, List<? extends Recipe<?>>> eldest) {
-            return size() > 30; // max cache count
+            return size() > saw_cache_max; // max cache count
         }
     };
 
@@ -129,7 +128,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     private Map<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> createLazyTick$assemblyRecipeCache = new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> eldest) {
-            return size() > 30; // max cache count
+            return size() > saw_cache_max; // max cache count
         }
     };
 
@@ -142,7 +141,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
         }
 
         else {
-            System.out.println("not use cache "+itemStack+createLazyTick$recipeCache.size());
+            //System.out.println("not use cache "+itemStack+createLazyTick$recipeCache.size());
             Predicate<Recipe<?>> types = RecipeConditions.isOfType(AllRecipeTypes.CUTTING.getType(),
                     AllConfigs.server().recipes.allowStonecuttingOnSaw.get() ? RecipeType.STONECUTTING : null);
 
@@ -153,10 +152,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
                     .filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
                     .collect(Collectors.toList());
 
-
-            System.out.println(createLazyTick$recipeCache.size());
             createLazyTick$recipeCache.put(itemStack.getItem(), recipes);
-            System.out.println(createLazyTick$recipeCache.size());
             return recipes;
 
         }
@@ -164,7 +160,6 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
     @Unique
     private void createLazyTick$ClearCache() {
-        System.out.println("clearing cache");
         createLazyTick$recipeCache.clear();
         createLazyTick$assemblyRecipeCache.clear();
     }

@@ -46,7 +46,23 @@ public class Config
             .defineInRange("depot_delay_max", 60, 20, Integer.MAX_VALUE);
 
 
+    // belt
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT = BUILDER
+            .comment("Whether to enable belt lazy tick")
+            .define("enable_lazy_belt", true);
+    private static final ForgeConfigSpec.IntValue BELT_DELAY_MAX = BUILDER
+            .comment("max delay tick if belt is rest")
+            .defineInRange("belt_delay_max", 60, 20, Integer.MAX_VALUE);
 
+
+
+    // saw
+    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW = BUILDER
+            .comment("Whether to enable saw lazy tick")
+            .define("enable_lazy_saw", true);
+    private static final ForgeConfigSpec.IntValue SAW_CACHE_MAX = BUILDER
+            .comment("max cache count if saw is rest")
+            .defineInRange("saw_delay_max", 30, 1, Integer.MAX_VALUE);
 
 
 
@@ -56,29 +72,37 @@ public class Config
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static boolean enable_lazy_tick;
+
     public static boolean enable_lazy_funnel;
     public static boolean enable_lazy_chute;
     public static boolean enable_lazy_depot;
+    public static boolean enable_cache_saw;
+    public static boolean enable_belt_delay;
 
 
     public static int funnel_delay_max;
     public static int chute_delay_max;
     public static int depot_delay_max;
-
-
+    public static int saw_cache_max;
+    public static int belt_delay_max;
 
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
         enable_lazy_tick = ENABLE_LAZY_TICK.get();
+
         enable_lazy_funnel = ENABLE_LAZY_FUNNEL.get();
         enable_lazy_chute = ENABLE_LAZY_CHUTE.get();
         enable_lazy_depot = ENABLE_LAZY_DEPOT.get();
+        enable_cache_saw = ENABLE_CACHE_SAW.get();
+        enable_belt_delay = ENABLE_LAZY_BELT.get();
 
         funnel_delay_max = FUNNEL_DELAY_MAX.get();
         chute_delay_max = CHUTE_DELAY_MAX.get();
         depot_delay_max = DEPOT_DELAY_MAX.get();
+        saw_cache_max = SAW_CACHE_MAX.get();
+        belt_delay_max = BELT_DELAY_MAX.get();
 
 
     }
