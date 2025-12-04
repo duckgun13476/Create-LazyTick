@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
+import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 
 @Mixin(MinecraftServer.class)
 public class CacheLabel {
@@ -23,7 +24,7 @@ public class CacheLabel {
     @Inject(method = "reloadResources", at = @At("HEAD"))
     private void ReloadLabel(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         IsServerReload = true;
-
+        LOGGER.info("[CreateLazyTick] clearing cache...");
     }
 
     @Inject(method = "tickServer", at = @At("HEAD"))

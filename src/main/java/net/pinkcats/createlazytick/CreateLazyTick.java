@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 @Mod(CreateLazyTick.MODID)
 public class CreateLazyTick {
     public static final String MODID = "createlazytick";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
     public static boolean IsServerReload = false;
 
 
