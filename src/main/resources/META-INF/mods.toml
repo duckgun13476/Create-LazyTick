@@ -34,3 +34,5 @@ side = "BOTH"
     ordering="AFTER"
     side="BOTH"
 
+[[mixins]]
+    config = "createlazytick.mixins.json"

@@ -208,6 +208,13 @@ dependencies {
     // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
     // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
     modImplementation("curse.maven:observable-509575:5643037")
+
+    modImplementation("curse.maven:spark-361579:4738952")
+
+
+    modImplementation("curse.maven:kubejs-238086:5853326")
+    modImplementation("curse.maven:rhino-416294:6186971")
+
     modImplementation("curse.maven:architectury-api-419699:5137938")
     modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
     //create
