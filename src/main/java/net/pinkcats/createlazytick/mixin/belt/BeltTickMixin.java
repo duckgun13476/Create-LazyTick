@@ -291,6 +291,8 @@ public class BeltTickMixin {
         }
 
         //System.out.println(stop_count +"  " + count);
+
+
         if (stop_count == count){
             animal_delay++;
             if (animal_delay>100) {
