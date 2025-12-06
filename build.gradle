@@ -30,7 +30,7 @@ idea {
 
 
 mixin {
-    //add sourceSets.main, "${mod_id}.refmap.json"
+    add sourceSets.main, "${mod_id}.refmap.json"
 
     config "${mod_id}.mixins.json"
 }
@@ -187,7 +187,7 @@ repositories {
 
 dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
-
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' //Mixin注解处理器(记得开)
     //Create
     modImplementation("curse.maven:create-328085:5838779")
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
@@ -383,5 +383,20 @@ boolean hasUnstaged() {
         return !result.isEmpty()
     } catch (Throwable ignored) {
         return false
+    }
+}
+
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-encoding', 'utf8']
+    }
+
+    tasks.withType(Test) {
+        systemProperty "file.encoding", "UTF-8"
+    }
+
+    tasks.withType(Javadoc) {
+        options.encoding = 'UTF-8'
     }
 }
