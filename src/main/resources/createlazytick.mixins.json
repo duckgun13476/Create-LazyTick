@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "net.pinkcats.createlazytick.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "CreateLazyTick.refmap.json",
+  "refmap": "createlazytick.refmap.json",
   "mixins": [
     "ChuteLazyTickMixin",
     "DepotLazyTickMixin",
