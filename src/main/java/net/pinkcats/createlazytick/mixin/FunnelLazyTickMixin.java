@@ -87,7 +87,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
     @Shadow
-    public int getAmountToExtract() {return 0;};
+    public int getAmountToExtract() {return 0;}
 
     @Shadow
     public ItemHelper.ExtractionCountMode getModeToExtract() {return null;}
@@ -221,7 +221,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
 
-                        ) { // 替换成你的判断条件
+                        ) {
                             createfastschematiccannon$targetDirection = dir;
                             return true;
                         }

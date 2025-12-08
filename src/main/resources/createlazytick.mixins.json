@@ -13,7 +13,8 @@
     "belt.BeltInventoryAccessor",
     "belt.BeltTickMixin",
     "minecraft.CacheLabel",
-    "saw.SawRecipeMixin"
+    "saw.SawRecipeMixin",
+    "BasinLazyTickMixin"
   ],
   "client": [
   ],
