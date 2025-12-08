@@ -65,7 +65,13 @@ public class Config
             .defineInRange("saw_delay_max", 30, 1, Integer.MAX_VALUE);
 
 
-
+    // basin -> mixer/press
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN = BUILDER
+            .comment("Whether to enable basin lazy tick(Influence on mechanical mixer and mechanical press)")
+            .define("enable_lazy_basin",true);
+    private static final ForgeConfigSpec.IntValue BASIN_DELAY_MAX = BUILDER
+            .comment("max delay tick if basin is rest")
+            .defineInRange("basin_delay_max", 60, 20, Integer.MAX_VALUE);
     //=================================================================================================
 
 
@@ -78,13 +84,14 @@ public class Config
     public static boolean enable_lazy_depot;
     public static boolean enable_cache_saw;
     public static boolean enable_belt_delay;
-
+    public static boolean enable_lazy_basin;
 
     public static int funnel_delay_max;
     public static int chute_delay_max;
     public static int depot_delay_max;
     public static int saw_cache_max;
     public static int belt_delay_max;
+    public static int basin_delay_max;
 
 
     @SubscribeEvent
@@ -97,13 +104,14 @@ public class Config
         enable_lazy_depot = ENABLE_LAZY_DEPOT.get();
         enable_cache_saw = ENABLE_CACHE_SAW.get();
         enable_belt_delay = ENABLE_LAZY_BELT.get();
+        enable_lazy_basin = ENABLE_LAZY_BASIN.get();
 
         funnel_delay_max = FUNNEL_DELAY_MAX.get();
         chute_delay_max = CHUTE_DELAY_MAX.get();
         depot_delay_max = DEPOT_DELAY_MAX.get();
         saw_cache_max = SAW_CACHE_MAX.get();
         belt_delay_max = BELT_DELAY_MAX.get();
-
+        basin_delay_max = BASIN_DELAY_MAX.get();
 
     }
 

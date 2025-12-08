@@ -87,7 +87,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
     @Shadow
-    public int getAmountToExtract() {return 0;};
+    public int getAmountToExtract() {return 0;}
 
     @Shadow
     public ItemHelper.ExtractionCountMode getModeToExtract() {return null;}
