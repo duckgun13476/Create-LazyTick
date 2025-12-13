@@ -19,7 +19,7 @@ import java.util.List;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
-@Mixin(BasinOperatingBlockEntity.class)
+@Mixin(value = BasinOperatingBlockEntity.class,remap = false)
 public abstract class BasinLazyTickMixin extends KineticBlockEntity {
 
     @Shadow
@@ -51,7 +51,9 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
      */
     @Unique
     private void lazyTickUpdate(boolean foundRecipe) {
-        if (level.isClientSide) return;
+
+        if (level != null && level.isClientSide && !isVirtual())
+            return;
 
         // 真正找到配方,重置计数
         if (foundRecipe) {
@@ -90,7 +92,7 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
     )
     private void createLazyTick$updateBasinLazy(CallbackInfoReturnable<Boolean> cir) {
         // 总开关检测
-        if (!Config.enable_lazy_basin) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_basin) {
             return;
         }
 
@@ -103,8 +105,7 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
         // 2. 如果有缓存命中
         if (this.currentRecipe != null && this.matchBasinRecipe(this.currentRecipe)) {
             lazyTickUpdate(true); // 成功匹配，重置延迟
-            this.startProcessingBasin();
-            this.sendData();
+            createLazyTick$StartAndSync();
             cir.setReturnValue(true); //拦截后续配方调用
             return;
         }
@@ -120,10 +121,10 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
         lazyTickCounter = 0;
 
         // 3. 手动接管搜索,以查看是否有返回配方
-        List<Recipe<?>> recipes = getMatchingRecipes();
-
         // BasinOperatingBlockEntity.getMatchingRecipes() 内部已经处理了空盆判断
         // 如果盆是空的，recipes 也会是 EmptyList，符合“未找到配方”
+        List<Recipe<?>> recipes = getMatchingRecipes();
+
 
         if (recipes.isEmpty()) {
             // 搜索失败（空盆或无匹配），增加延迟
@@ -134,9 +135,16 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
             // 搜索成功，重置延迟
             lazyTickUpdate(true);
             this.currentRecipe = recipes.get(0);
-            this.startProcessingBasin();
-            this.sendData();
+            createLazyTick$StartAndSync();
             cir.setReturnValue(true);
         }
     }
+
+    @Unique
+    private void createLazyTick$StartAndSync() {
+        this.startProcessingBasin();
+        this.sendData();
+    }
+
+
 }

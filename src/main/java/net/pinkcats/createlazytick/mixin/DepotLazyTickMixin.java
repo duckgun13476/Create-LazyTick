@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
+import net.pinkcats.createlazytick.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -78,6 +79,10 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "tick*",at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_depot) {
+            return;
+        }
+
         super.tick();
 
 

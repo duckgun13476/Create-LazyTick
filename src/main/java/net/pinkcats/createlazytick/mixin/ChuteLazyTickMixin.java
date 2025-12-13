@@ -106,13 +106,15 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                 }
             }
         }
-
-
     }
 
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_chute) {
+            return;
+        }
+
         super.tick();
 
         if (!level.isClientSide)
@@ -146,10 +148,6 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         chuteTick = 0;
         //System.out.println("Run tick");
     }
-
-
-
-
 
         if (itemMotion < 0) {
             if (nextOffset < .5f) {

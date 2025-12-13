@@ -18,6 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.pinkcats.createlazytick.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,6 +30,9 @@ public class BeltFunnelInteractionLazyTickMixin {
 
     @Inject(method ="checkForFunnels" ,at=@At("HEAD" ),cancellable = true,remap = false)
     private static void checkForFunnels(BeltInventory beltInventory, TransportedItemStack currentItem, float nextOffset, CallbackInfoReturnable<Boolean> cir) {
+        if (!Config.enable_lazy_tick || !Config.enable_belt_delay) {
+            return;
+        }
         BeltInventoryAccessor accessor = (BeltInventoryAccessor) beltInventory;
         boolean beltMovementPositive = accessor.getBeltMovementPositive();
         BeltBlockEntity beltInterface = accessor.getBelt();
