@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "createlazytick.refmap.json",
   "mixins": [
+    "BasinLazyTickMixin",
     "ChuteLazyTickMixin",
     "DepotLazyTickMixin",
     "FluidLazyTickMixin",
@@ -12,9 +13,10 @@
     "belt.BeltFunnelInteractionLazyTickMixin",
     "belt.BeltInventoryAccessor",
     "belt.BeltTickMixin",
+    "itemdrain.ItemDrainAccessor",
+    "itemdrain.ItemDrainLazyTickMixin",
     "minecraft.CacheLabel",
-    "saw.SawRecipeMixin",
-    "BasinLazyTickMixin"
+    "saw.SawRecipeMixin"
   ],
   "client": [
   ],

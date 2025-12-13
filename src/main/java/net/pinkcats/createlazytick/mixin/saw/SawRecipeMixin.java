@@ -21,6 +21,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.pinkcats.createlazytick.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -56,6 +57,9 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
     @Inject(method = "getRecipes",at=@At("HEAD" ),cancellable = true,remap = false)
     private void getRecipes(CallbackInfoReturnable<List<? extends Recipe<?>>> cir) {
+        if (!Config.enable_lazy_tick || !Config.enable_cache_saw) {
+            return;
+        }
         if (IsServerReload)
             createLazyTick$ClearCache();
 

@@ -8,6 +8,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.CreateLazyTick;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -51,7 +52,13 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
      */
     @Unique
     private void lazyTickUpdate(boolean foundRecipe) {
-        if (level.isClientSide) return;
+        boolean onClient = level != null && level.isClientSide && !isVirtual();
+
+        if (level == null) {
+            CreateLazyTick.LOGGER.error("Level is null!");
+            return;
+        }
+        if (onClient) return;
 
         // 真正找到配方,重置计数
         if (foundRecipe) {
@@ -92,7 +99,7 @@ public abstract class BasinLazyTickMixin extends KineticBlockEntity {
     )
     private void createLazyTick$updateBasinLazy(CallbackInfoReturnable<Boolean> cir) {
         // 总开关检测
-        if (!Config.enable_lazy_basin) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_basin) {
             return;
         }
 
