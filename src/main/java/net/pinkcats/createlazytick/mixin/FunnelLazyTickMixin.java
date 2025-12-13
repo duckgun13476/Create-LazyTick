@@ -1,6 +1,5 @@
 package net.pinkcats.createlazytick.mixin;
 
-import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlock;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Funnel;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
@@ -141,7 +140,9 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        System.out.println(PORTABLE_STORAGE_INTERFACE.get());
+        if (!Config.enable_lazy_tick || Config.enable_belt_delay) {
+            return;
+        }
         flap.tickChaser();
         if (createfastschematiccannon$HasInterface){
             ActuakMultiCount = 0;
@@ -233,7 +234,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         else {
             if (level != null) {
                 Block target = level.getBlockState(blockPos.relative(createfastschematiccannon$targetDirection)).getBlock();
-                return target.toString().equals("Block{create:portable_storage_interface}");
+                return target == PORTABLE_STORAGE_INTERFACE.get();
             }
         }
 
@@ -244,6 +245,9 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
     private void activateExtractingBeltFunnel(CallbackInfo ci) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_funnel) {
+            return;
+        }
 
         if (invVersionTracker.stillWaiting(invManipulation)) {
             ci.cancel();

@@ -12,6 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.fluids.FluidStack;
+import net.pinkcats.createlazytick.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -49,6 +50,10 @@ public class FluidLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_fluid) {
+            return;
+        }
+
         pipeTick++;
         if (pipeTick<4)
         {
