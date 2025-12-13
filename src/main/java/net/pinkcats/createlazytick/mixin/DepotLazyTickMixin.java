@@ -91,7 +91,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         for (Iterator<TransportedItemStack> iterator = incoming.iterator(); iterator.hasNext();) {
             TransportedItemStack ts = iterator.next();
             boolean tick_res = tick(ts);
-            System.out.println(tick_res);
+            //System.out.println(tick_res);
 
             if (!tick_res)
                 continue;
