@@ -52,9 +52,13 @@ public class BeltTickMixin {
 
 
 
+    @Unique
     private int BeltCurrentTick = 0;
+    @Unique
     private int BeltDelayTick = 0;
+    @Unique
     private int animal_delay = 0;
+    @Unique
     private int HasItemCount = 0;
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)

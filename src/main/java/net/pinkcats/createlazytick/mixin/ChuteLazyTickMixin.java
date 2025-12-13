@@ -16,6 +16,7 @@ import net.pinkcats.createlazytick.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -69,10 +70,14 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     }
 
+    @Unique
     int chuteTick = 0;
+    @Unique
     int CurrentDelayTick = 1;
+    @Unique
     boolean mistake = false;
 
+    @Unique
     private void LazyTickChute(boolean CanDownload){
         //if (!level.isClientSide) {
            // System.out.println("Chute"+CurrentDelayTick + "  " + chuteTick);

@@ -1,6 +1,9 @@
 package net.pinkcats.createlazytick.mixin;
 
+import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlock;
+import com.simibubi.create.content.kinetics.deployer.DeployerBlock;
 import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Funnel;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
@@ -92,7 +95,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     @Shadow
     public ItemHelper.ExtractionCountMode getModeToExtract() {return null;}
 
-
+    @Unique
     public Funnel.Mode determineCurrentMode() {
         BlockState state = getBlockState();
         if (!FunnelBlock.isFunnel(state))
@@ -122,8 +125,8 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
     @Unique
-    private void createfastschematiccannon$startCooldown() {
-        extractionCooldown = AllConfigs.server().logistics.defaultExtractionTimer.get() + ActuakMultiCount;
+    private void createlazytick$startCooldown() {
+        extractionCooldown = AllConfigs.server().logistics.defaultExtractionTimer.get() + ActualMultiCount;
         //System.out.println("extraction cooldown: " + extractionCooldown);
     }
 
@@ -131,7 +134,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     public void onTransfer(ItemStack stack) {}
 
     @Unique
-    private int ActuakMultiCount = 0;
+    private int ActualMultiCount = 0;
 
 
 
@@ -141,19 +144,19 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
             return;
         }
         flap.tickChaser();
-        if (createfastschematiccannon$HasInterface){
-            ActuakMultiCount = 0;
+        if (createlazytick$HasInterface){
+            ActualMultiCount = 0;
 
         }
 
 
-        if(!createfastschematiccannon$HasInterface){
+        if(!createlazytick$HasInterface){
             if (extractionCooldown > 0) {
                 extractionCooldown--;
                 ci.cancel();
                 return;
             }
-            createfastschematiccannon$startCooldown();
+            createlazytick$startCooldown();
         }
 
 
@@ -176,7 +179,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
             return;
         }
 
-        if (createfastschematiccannon$HasInterface){
+        if (createlazytick$HasInterface){
             if (extractionCooldown > 0) {
                 extractionCooldown--;
                 ci.cancel();
@@ -185,7 +188,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         }
         BlockState blockState = getBlockState();
         BlockPos blockPos = getBlockPos();
-        createfastschematiccannon$HasInterface = IsMovingInterface(blockPos,blockState);
+        createlazytick$HasInterface = IsMovingInterface(blockPos,blockState);
 
         if (mode == Funnel.Mode.PUSHING_TO_BELT)
             activateExtractingBeltFunnel();
@@ -196,14 +199,15 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     }
 
     @Unique
-    private Direction createfastschematiccannon$targetDirection = null;
+    private Direction createlazytick$targetDirection = null;
 
 
     @Unique
-    private boolean createfastschematiccannon$HasInterface = false;
+    private boolean createlazytick$HasInterface = false;
 
+    @Unique
     private boolean IsMovingInterface(BlockPos blockPos,BlockState blockState) {
-        if (createfastschematiccannon$targetDirection == null) {
+        if (createlazytick$targetDirection == null) {
             if (level != null) {
                 try {
 
@@ -217,15 +221,12 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
                         // 找到目标方块：记录方向并返回true
                         if (
-
-                                block.toString().equals("Block{create:portable_storage_interface}") ||
-                                        block.toString().equals("Block{create:deployer}")
-
-
-
-
+                                /*block.toString().equals("Block{create:portable_storage_interface}") ||
+                                        block.toString().equals("Block{create:deployer}")*/
+                                //toString()不稳定吧?
+                                block instanceof PortableStorageInterfaceBlock || block instanceof DeployerBlock
                         ) { // 替换成你的判断条件
-                            createfastschematiccannon$targetDirection = dir;
+                            createlazytick$targetDirection = dir;
                             return true;
                         }
                     }
@@ -233,7 +234,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
                 }
                 catch(Exception e){
-                    System.out.println(e);
+                    CreateLazyTick.LOGGER.error(e.getMessage());
                     return false;
                 }
 
@@ -241,9 +242,16 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         }
         else {
             if (level != null) {
-                Block target = level.getBlockState(blockPos.relative(createfastschematiccannon$targetDirection)).getBlock();
-                // 替换成你的判断条件
-                return target.toString().equals("Block{create:portable_storage_interface}");
+                Block target = level.getBlockState(blockPos.relative(createlazytick$targetDirection)).getBlock();
+                boolean isValid = target instanceof PortableStorageInterfaceBlock || target instanceof DeployerBlock;
+
+                if (!isValid) {
+                    createlazytick$targetDirection = null;
+                }
+
+                return isValid;
+                //原方法是不是缺失缓存清空机制?
+                //return target instanceof PortableStorageInterfaceBlock || target instanceof DeployerBlock;
             }
         }
 
@@ -306,23 +314,23 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         if (stack.isEmpty()) {
 
             //System.out.println("stack is empty");
-            if (ActuakMultiCount < Config.funnel_delay_max) {
-                ActuakMultiCount = ActuakMultiCount + 10;
+            if (ActualMultiCount < Config.funnel_delay_max) {
+                ActualMultiCount = ActualMultiCount + 10;
             }
-            createfastschematiccannon$startCooldown();
+            createlazytick$startCooldown();
             if (deniedByInsertion.isFalse())
                 invVersionTracker.awaitNewVersion(invManipulation.getInventory());
             return;
         }
 
-        if (ActuakMultiCount >=10 ) {
-            ActuakMultiCount  = ActuakMultiCount - 30;
+        if (ActualMultiCount >=10 ) {
+            ActualMultiCount = Math.max(0,ActualMultiCount - 30);
         }
 
         flap(false);
         onTransfer(stack);
         inputBehaviour.handleInsertion(stack, facing, false);
-        createfastschematiccannon$startCooldown();
+        createlazytick$startCooldown();
         ci.cancel();
     }
 

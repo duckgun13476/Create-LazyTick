@@ -263,11 +263,12 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         cir.cancel();
     }
 
-
+    @Unique
     public int getDepotDelayTick() {
         return createLazyTick$DepotDelayTick;
     }
 
+    @Unique
     public int getCurrentDelayTick() {
         return createLazyTick$CurrentDelayTick;
     }
