@@ -33,20 +33,20 @@ import static net.pinkcats.createlazytick.Config.belt_delay_max;
 @Mixin(value = BeltInventory.class,remap = false)
 public class BeltTickMixin {
 
-    @Shadow
+    @Shadow(remap = false)
     boolean beltMovementPositive;
 
-    @Shadow
+    @Shadow(remap = false)
     TransportedItemStack lazyClientItem;
 
-    @Shadow
+    @Shadow(remap = false)
     private void insert(TransportedItemStack newStack) {}
 
-    @Shadow
+    @Shadow(remap = false)
     public void eject(TransportedItemStack stack) {}
 
 
-    @Shadow
+    @Shadow(remap = false)
     protected boolean handleBeltProcessingAndCheckIfRemoved(TransportedItemStack currentItem, float nextOffset,
                                                             boolean noMovement) {return false;}
 
