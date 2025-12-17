@@ -8,18 +8,18 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ItemDrainBlockEntity.class)
 public interface ItemDrainAccessor {
-    @Accessor("heldItem")
+    @Accessor(value = "heldItem",remap = false)
     TransportedItemStack getHeldItem();
 
-    @Accessor("heldItem")
+    @Accessor(value = "heldItem",remap = false)
     void setHeldItem(TransportedItemStack stack);
 
-    @Accessor("processingTicks")
+    @Accessor(value = "processingTicks",remap = false)
     int getProcessingTicks();
 
-    @Accessor("processingTicks")
+    @Accessor(value = "processingTicks",remap = false)
     void setProcessingTicks(int ticks);
 
-    @Invoker("continueProcessing")
+    @Invoker(value = "continueProcessing",remap = false)
     boolean invokeContinueProcessing();
 }

@@ -42,13 +42,13 @@ import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 @Mixin(SawBlockEntity.class)
 public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
-    @Shadow
+    @Shadow(remap = false)
     private static final Object cuttingRecipesKey = new Object();
 
-    @Shadow
+    @Shadow(remap = false)
     private FilteringBehaviour filtering;
 
-    @Shadow
+    @Shadow(remap = false)
     public ProcessingInventory inventory;
 
     public SawRecipeMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -64,6 +64,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
             createLazyTick$ClearCache();
 
         ItemStack HandleItem = inventory.getStackInSlot(0);
+        if (HandleItem.hasTag()) return;
         //System.out.println(inventory.getStackInSlot(0));
         ImmutableList
                 <com.simibubi.create.content.kinetics.saw.CuttingRecipe> A = createLazyTick$GetAssemblyRecipeCache(HandleItem);
