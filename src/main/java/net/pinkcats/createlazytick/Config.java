@@ -32,7 +32,7 @@ public class Config
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT;
     public static final ForgeConfigSpec.IntValue BELT_DELAY_MAX;
 
-    // Processing (Depot, Saw, Basin, Item Drain)
+    // Processing (Depot, Saw, Basin, Item Drain, Deployer)
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
     public static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX;
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
@@ -40,6 +40,7 @@ public class Config
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
     public static final ForgeConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
 
     // Crafter
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER;
@@ -109,7 +110,7 @@ public class Config
 
         BUILDER.pop();
 
-        // --- Processing Settings (Depot, Saw, Basin, Item Drain) ---
+        // --- Processing Settings (Depot, Saw, Basin, Item Drain, Deployer) ---
         BUILDER.comment("Processing Blocks Settings").push("processing");
 
         // Depot
@@ -140,6 +141,11 @@ public class Config
         ITEM_DRAIN_DELAY_MAX = BUILDER
                 .comment("max delay tick if something stuck on the item drain")
                 .defineInRange("item_drain_delay_max", 60, 20, Integer.MAX_VALUE);
+
+        // Deployer
+        ENABLE_CACHE_DEPLOYER = BUILDER
+                .comment("Whether to enable deployer cache to improve efficiency")
+                .define("enable_cache_deployer", true);
 
         BUILDER.pop();
 
@@ -225,6 +231,7 @@ public class Config
     public static boolean enable_cache_crafter_debugger;
     public static boolean enable_lazy_crafter_redstone;
     public static boolean enable_lazy_arm;
+    public static boolean enable_cache_deployer;
 
     public static List<? extends String> arm_ignore_lazytick_list;
     public static List<? extends String> arm_weak_lazytick_list;
@@ -258,6 +265,7 @@ public class Config
         enable_cache_crafter_debugger = ENABLE_CACHE_CRAFTER_DEBUGGER.get();
         enable_lazy_crafter_redstone = ENABLE_LAZY_CRAFTER_REDSTONE.get();
         enable_lazy_arm = ENABLE_LAZY_ARM.get();
+        enable_cache_deployer = ENABLE_CACHE_DEPLOYER.get();
 
         arm_ignore_lazytick_list = ARM_IGNORE_LAZYTICK_LIST.get();
         arm_weak_lazytick_list = ARM_WEAK_LAZYTICK_LIST.get();
