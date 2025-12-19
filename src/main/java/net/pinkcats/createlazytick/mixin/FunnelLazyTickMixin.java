@@ -1,5 +1,6 @@
 package net.pinkcats.createlazytick.mixin;
 
+import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlock;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Funnel;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
@@ -36,6 +37,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.simibubi.create.AllBlocks.DEPLOYER;
+import static com.simibubi.create.AllBlocks.PORTABLE_STORAGE_INTERFACE;
 
 @Mixin(value = FunnelBlockEntity.class, remap = false)
 public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveringInformation {
@@ -137,6 +141,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
+        System.out.println(PORTABLE_STORAGE_INTERFACE.get());
         flap.tickChaser();
         if (createfastschematiccannon$HasInterface){
             ActuakMultiCount = 0;
@@ -210,24 +215,13 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
                     for (Direction dir : allDirections) {
                         Block block = level.getBlockState(blockPos.relative(dir)).getBlock();
-                       // System.out.println("Checking " + dir + ": " + block); // 调试用，可保留
 
                         // 找到目标方块：记录方向并返回true
-                        if (
-
-                                block.toString().equals("Block{create:portable_storage_interface}") ||
-                                        block.toString().equals("Block{create:deployer}")
-
-
-
-
-                        ) {
+                        if (block == PORTABLE_STORAGE_INTERFACE.get() || block == DEPLOYER.get()) {
                             createfastschematiccannon$targetDirection = dir;
                             return true;
                         }
                     }
-
-
                 }
                 catch(Exception e){
                     System.out.println(e);
@@ -239,7 +233,6 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         else {
             if (level != null) {
                 Block target = level.getBlockState(blockPos.relative(createfastschematiccannon$targetDirection)).getBlock();
-                // 替换成你的判断条件
                 return target.toString().equals("Block{create:portable_storage_interface}");
             }
         }
