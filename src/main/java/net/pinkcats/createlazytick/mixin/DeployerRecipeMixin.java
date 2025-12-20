@@ -25,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static net.pinkcats.createlazytick.CreateLazyTick.DropResourceLocation;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
 /**
@@ -56,7 +57,7 @@ public abstract class DeployerRecipeMixin {
 
     // 预定义 Create 序列组装的注册名常量，用于快速比对
     @Unique
-    private static final ResourceLocation CREATE_SEQUENCED_ASSEMBLY = new ResourceLocation("create", "sequenced_assembly");
+    private static final ResourceLocation CREATE_SEQUENCED_ASSEMBLY = DropResourceLocation("create", "sequenced_assembly");
 
     /**
      * 判断配方是否为“危险”的序列组装配方。

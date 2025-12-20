@@ -36,8 +36,6 @@ public class BeltTickMixin {
     @Shadow(remap = false)
     boolean beltMovementPositive;
 
-    @Shadow(remap = false)
-    TransportedItemStack lazyClientItem;
 
     @Shadow(remap = false)
     private void insert(TransportedItemStack newStack) {}
@@ -87,13 +85,7 @@ public class BeltTickMixin {
         List<TransportedItemStack>  toRemove = accessor.getToRemove();
         List<TransportedItemStack> items = accessor.getItems();
 
-        // Residual item for "smooth" transitions
-        if (lazyClientItem != null) {
-            if (lazyClientItem.locked)
-                lazyClientItem = null;
-            else
-                lazyClientItem.locked = true;
-        }
+
 
         // Added/Removed items from previous cycle
         if (!toInsert.isEmpty() || !toRemove.isEmpty()) {
@@ -287,8 +279,6 @@ public class BeltTickMixin {
 
                 currentItem.stack = remainder;
                 if (remainder.isEmpty()) {
-                    lazyClientItem = currentItem;
-                    lazyClientItem.locked = false;
                     iterator.remove();
                 } else
                     currentItem.stack = remainder;

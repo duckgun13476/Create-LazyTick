@@ -1,9 +1,9 @@
 package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -22,6 +22,13 @@ public class CreateLazyTick {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static boolean IsServerReload = false;
 
+    public static ResourceLocation DropResourceLocation(String Location){
+        return new ResourceLocation(Location);
+    }
+
+    public static ResourceLocation DropResourceLocation(String NameSpace, String Path){
+        return new ResourceLocation(NameSpace,Path);
+    }
 
     public CreateLazyTick() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();

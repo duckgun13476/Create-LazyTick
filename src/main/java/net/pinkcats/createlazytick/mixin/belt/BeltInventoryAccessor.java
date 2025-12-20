@@ -10,19 +10,19 @@ import java.util.List;
 
 @Mixin(value = BeltInventory.class,remap = false)
 public interface BeltInventoryAccessor {
-    @Accessor(value = "beltMovementPositive",remap = false)
+    @Accessor(value = "beltMovementPositive")
     boolean getBeltMovementPositive();
 
-    @Accessor(value = "belt",remap = false)
+    @Accessor(value = "belt")
     BeltBlockEntity getBelt();
 
-    @Accessor(value = "toInsert",remap = false)
+    @Accessor(value = "toInsert")
     List<TransportedItemStack> getToInsert();
 
-    @Accessor(value = "toRemove",remap = false)
+    @Accessor(value = "toRemove")
     List<TransportedItemStack> getToRemove();
 
-    @Accessor(value = "items",remap = false)
+    @Accessor(value = "items")
     List<TransportedItemStack> getItems();
 
 
