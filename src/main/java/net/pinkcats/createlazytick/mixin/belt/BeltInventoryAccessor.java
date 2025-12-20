@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-@Mixin(BeltInventory.class)
+@Mixin(value = BeltInventory.class,remap = false)
 public interface BeltInventoryAccessor {
     @Accessor(value = "beltMovementPositive",remap = false)
     boolean getBeltMovementPositive();

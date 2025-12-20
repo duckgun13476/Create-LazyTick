@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BasinBlockEntity.class)
 public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBasinOptimization {
 
-    @Shadow(remap = false)
+    @Shadow
     private boolean contentsChanged; // 引用原版的脏标记字段
 
     @Unique
@@ -56,7 +56,7 @@ public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBa
         return this.lazytick$cachedHeatLevel;
     }
 
-    @Inject(method = "tick", at = @At("HEAD"), remap = false)
+    @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
         // 每 Tick 开始时重置缓存，确保数据实时性
         this.lazytick$cachedHeatLevel = null;

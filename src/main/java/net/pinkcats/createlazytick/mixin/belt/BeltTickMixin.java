@@ -30,7 +30,7 @@ import java.util.List;
 import static com.simibubi.create.content.kinetics.belt.transport.BeltTunnelInteractionHandler.flapTunnel;
 import static net.pinkcats.createlazytick.Config.belt_delay_max;
 
-@Mixin(BeltInventory.class)
+@Mixin(value = BeltInventory.class,remap = false)
 public class BeltTickMixin {
 
     @Shadow(remap = false)

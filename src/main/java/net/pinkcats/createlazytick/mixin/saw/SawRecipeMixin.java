@@ -39,7 +39,7 @@ import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mixin(SawBlockEntity.class)
+@Mixin(value = SawBlockEntity.class,remap = false)
 public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
     @Shadow(remap = false)

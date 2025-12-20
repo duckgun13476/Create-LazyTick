@@ -40,6 +40,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.simibubi.create.AllBlocks.DEPLOYER;
+import static com.simibubi.create.AllBlocks.PORTABLE_STORAGE_INTERFACE;
+
 @Mixin(value = FunnelBlockEntity.class, remap = false)
 public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveringInformation {
 
@@ -217,21 +220,13 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
                     for (Direction dir : allDirections) {
                         Block block = level.getBlockState(blockPos.relative(dir)).getBlock();
-                       // System.out.println("Checking " + dir + ": " + block); // 调试用，可保留
 
                         // 找到目标方块：记录方向并返回true
-                        if (
-                                /*block.toString().equals("Block{create:portable_storage_interface}") ||
-                                        block.toString().equals("Block{create:deployer}")*/
-                                //toString()不稳定吧?
-                                block instanceof PortableStorageInterfaceBlock || block instanceof DeployerBlock
-                        ) { // 替换成你的判断条件
+                        if (block == PORTABLE_STORAGE_INTERFACE.get() || block == DEPLOYER.get()) {
                             createlazytick$targetDirection = dir;
                             return true;
                         }
                     }
-
-
                 }
                 catch(Exception e){
                     CreateLazyTick.LOGGER.error(e.getMessage());
@@ -243,15 +238,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         else {
             if (level != null) {
                 Block target = level.getBlockState(blockPos.relative(createlazytick$targetDirection)).getBlock();
-                boolean isValid = target instanceof PortableStorageInterfaceBlock || target instanceof DeployerBlock;
-
-                if (!isValid) {
-                    createlazytick$targetDirection = null;
-                }
-
-                return isValid;
-                //原方法是不是缺失缓存清空机制?
-                //return target instanceof PortableStorageInterfaceBlock || target instanceof DeployerBlock;
+                return target == PORTABLE_STORAGE_INTERFACE.get() || target == DEPLOYER.get();
             }
         }
 

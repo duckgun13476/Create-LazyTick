@@ -6,20 +6,20 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(ItemDrainBlockEntity.class)
+@Mixin(value = ItemDrainBlockEntity.class,remap = false)
 public interface ItemDrainAccessor {
-    @Accessor(value = "heldItem",remap = false)
+    @Accessor(value = "heldItem")
     TransportedItemStack getHeldItem();
 
-    @Accessor(value = "heldItem",remap = false)
+    @Accessor(value = "heldItem")
     void setHeldItem(TransportedItemStack stack);
 
-    @Accessor(value = "processingTicks",remap = false)
+    @Accessor(value = "processingTicks")
     int getProcessingTicks();
 
-    @Accessor(value = "processingTicks",remap = false)
+    @Accessor(value = "processingTicks")
     void setProcessingTicks(int ticks);
 
-    @Invoker(value = "continueProcessing",remap = false)
+    @Invoker(value = "continueProcessing")
     boolean invokeContinueProcessing();
 }

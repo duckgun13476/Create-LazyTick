@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ItemDrainBlockEntity.class)
+@Mixin(value = ItemDrainBlockEntity.class,remap = false)
 public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
     // 当前实际生效的冷却倒计时
@@ -69,7 +69,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         boolean onClient = level != null && level.isClientSide && !isVirtual();
 
         if (level == null) {
-            CreateLazyTick.LOGGER.error("Level is null!");
+            ci.cancel();
             return;
         }
 
@@ -109,6 +109,8 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
             return;
         }
 
+
+        //original method
         heldItem.prevBeltPosition = heldItem.beltPosition;
         heldItem.prevSideOffset = heldItem.sideOffset;
 
@@ -142,9 +144,11 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
                     return;
                 }
                 if (!tryExportingToBeltFunnel.isEmpty()) {
+
                     applyBackoff(); // 漏斗阻塞,应用退避
                     ci.cancel();
                     return;
+
                 }
             }
 
