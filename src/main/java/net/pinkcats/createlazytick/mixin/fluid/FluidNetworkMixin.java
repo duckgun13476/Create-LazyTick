@@ -23,6 +23,8 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static net.pinkcats.createlazytick.Config.FluidDelayTick;
+
 @Mixin(value = FluidNetwork.class,remap = false)
 public class FluidNetworkMixin {
 
@@ -79,7 +81,7 @@ public class FluidNetworkMixin {
                 PipeConnection pipeConnection = get(blockFace);
                 if (pipeConnection != null) {
                     if (blockFace.equals(start))
-                        transferSpeed = (int) Math.max(1, pipeConnection.getPressure().get(true) / 2f *4);
+                        transferSpeed = (int) Math.max(1, pipeConnection.getPressure().get(true) / 2f * FluidDelayTick);
                     frontier.add(Pair.of(blockFace, pipeConnection));
                 }
                 iterator.remove();

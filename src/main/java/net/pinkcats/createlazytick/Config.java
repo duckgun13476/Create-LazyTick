@@ -264,8 +264,14 @@ public class Config
 
         BUILDER.pop();
 
+
+
+
         SPEC = BUILDER.build();
     }
+
+
+    public static int FluidDelayTick = 10;
 
     // ==========================================
     // Public Access Fields
