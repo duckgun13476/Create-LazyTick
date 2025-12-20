@@ -1,5 +1,5 @@
 
-![logo.png](logo.png)
+<img width="496" height="149" alt="logo" src="https://github.com/user-attachments/assets/b437a026-1527-48b9-9bda-a49af8369c89" />
 
 <p align="center">
 <a href="https://modrinth.com/mod/create-entity-control"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/available/modrinth_vector.svg" alt="Modrinth Page"></a>
