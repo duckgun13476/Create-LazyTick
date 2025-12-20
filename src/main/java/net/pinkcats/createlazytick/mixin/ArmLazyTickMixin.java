@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import static net.pinkcats.createlazytick.CreateLazyTick.DropResourceLocation;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
 /**
@@ -96,7 +97,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
 
         // 解析忽略列表
         for (String id : Config.arm_ignore_lazytick_list) {
-            ResourceLocation loc = new ResourceLocation(id);
+            ResourceLocation loc = DropResourceLocation(id);
             if (ForgeRegistries.BLOCKS.containsKey(loc)) {
                 lazytick$cachedIgnoreBlocks.add(ForgeRegistries.BLOCKS.getValue(loc));
             }
@@ -104,7 +105,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
 
         // 解析弱懒加载列表
         for (String id : Config.arm_weak_lazytick_list) {
-            ResourceLocation loc = new ResourceLocation(id);
+            ResourceLocation loc = DropResourceLocation(id);
             if (ForgeRegistries.BLOCKS.containsKey(loc)) {
                 lazytick$cachedWeakBlocks.add(ForgeRegistries.BLOCKS.getValue(loc));
             }

@@ -67,6 +67,8 @@ public class Config
         BUILDER.comment("Global Settings").push("general");
 
         ENABLE_LAZY_TICK = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable lazy tick mixin")
                 .define("enable_lazy_tick", true);
 
@@ -76,6 +78,8 @@ public class Config
         BUILDER.comment("Fluid Pipe Settings").push("fluids");
 
         ENABLE_LAZY_FLUID = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable fluid pipe lazy tick")
                 .define("enable_lazy_fluid", true);
 
@@ -86,25 +90,37 @@ public class Config
 
         // Funnel
         ENABLE_LAZY_FUNNEL = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable funnel lazy tick")
                 .define("enable_lazy_funnel", true);
         FUNNEL_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if funnel is rest")
                 .defineInRange("funnel_delay_max", 120, 20, Integer.MAX_VALUE);
 
         // Chute
         ENABLE_LAZY_CHUTE = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable chute lazy tick")
                 .define("enable_lazy_chute", true);
         CHUTE_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if chute is rest")
                 .defineInRange("chute_delay_max", 60, 20, Integer.MAX_VALUE);
 
         // Belt
         ENABLE_LAZY_BELT = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable belt lazy tick")
                 .define("enable_lazy_belt", true);
         BELT_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if belt is rest")
                 .defineInRange("belt_delay_max", 60, 20, Integer.MAX_VALUE);
 
@@ -115,59 +131,85 @@ public class Config
 
         // Depot
         ENABLE_LAZY_DEPOT = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable depot lazy tick")
                 .define("enable_lazy_depot", true);
         DEPOT_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if depot is rest")
                 .defineInRange("depot_delay_max", 60, 20, Integer.MAX_VALUE);
 
         // Saw
         ENABLE_CACHE_SAW = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable saw cache to improve efficiency of finding recipes")
                 .define("enable_cache_saw", true);
         SAW_CACHE_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max cache count for each saw")
                 .defineInRange("saw_cache_max", 50, 1, Integer.MAX_VALUE);
 
         // Basin
         ENABLE_LAZY_BASIN = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable basin lazy tick by cached recipes(Influence on mechanical mixer and mechanical press)")
                 .define("enable_lazy_basin", true);
 
         // Item Drain
         ENABLE_LAZY_ITEM_DRAIN = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable item drain lazy tick")
                 .define("enable_lazy_item_drain", true);
         ITEM_DRAIN_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if something stuck on the item drain")
                 .defineInRange("item_drain_delay_max", 60, 20, Integer.MAX_VALUE);
 
         // Deployer
         ENABLE_CACHE_DEPLOYER = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable deployer cache to improve efficiency")
                 .define("enable_cache_deployer", true);
 
         BUILDER.pop();
 
         // --- Crafter Settings ---
-        BUILDER.comment("Mechanical Crafter Settings").push("crafter");
+        BUILDER.comment("Crafter Settings").push("crafter");
 
         ENABLE_CACHE_CRAFTER = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable crafter cache to improve efficiency of finding recipes")
                 .define("enable_cache_crafter", true);
         ENABLE_CACHE_CRAFTER_DEBUGGER = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable crafter debugger to show cache stats.")
                 .define("enable_cache_crafter_debugger", false);
         CRAFTER_GLOBAL_CACHE_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max cache count for global crafter")
                 .defineInRange("crafter_global_cache_max", 500, 10, Integer.MAX_VALUE);
         CRAFTER_CACHE_RECORD_DELAY = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("""
                         Delay time (in seconds) for crafter cache to start recording again after a server reload.
                         This setting prevents abnormal recipes from being recorded in the global cache due to unstable recipes after a reload.
                         Warning: A lower value carries higher risks. Please consider carefully before changing this setting.""")
                 .defineInRange("crafter_cache_record_delay", 40, 0, 600);
         ENABLE_LAZY_CRAFTER_REDSTONE = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("""
                         Whether to enable crafter redstone lazy tick.
                         Note: When this option is enabled, if you attempt to activate a mechanical crafter in a lazy-loaded state via redstone,
@@ -175,6 +217,8 @@ public class Config
                         A mechanical crafter in an active state can respond immediately without requiring the above conditions.""")
                 .define("enable_lazy_crafter_redstone", true);
         CRAFTER_REDSTONE_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("The maximum delay for activating a mechanical crafter via redstone after it has been inactive for a period of time.")
                 .defineInRange("crafter_redstone_delay_max", 60, 0, Integer.MAX_VALUE);
 
@@ -184,13 +228,19 @@ public class Config
         BUILDER.comment("Mechanical Arm Settings").push("arm");
 
         ENABLE_LAZY_ARM = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable mechanical arm lazy tick")
                 .define("enable_lazy_arm", true);
         ARM_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if arm is searching for items/targets")
                 .defineInRange("arm_delay_max", 60, 1, Integer.MAX_VALUE);
 
         ARM_IGNORE_LAZYTICK_LIST = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("List of blocks that force the arm to work at full speed (Disable Lazy Tick).",
                         "Use this for fast-moving inputs like belts.")
                 .defineList("arm_ignore_lazytick_list",
@@ -198,6 +248,8 @@ public class Config
                         o -> o instanceof String);
 
         ARM_WEAK_LAZYTICK_LIST = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("List of blocks that allow lazy ticking but with a reduced max delay (Weak Lazy).",
                         "Use this for time-sensitive outputs like blaze burners.")
                 .defineList("arm_weak_lazytick_list",
@@ -205,6 +257,8 @@ public class Config
                         o -> o instanceof String);
 
         ARM_WEAK_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
                 .comment("The max delay tick for blocks in the 'Weak Lazy' list.")
                 .defineInRange("arm_weak_delay_max", 10, 1, Integer.MAX_VALUE);
 

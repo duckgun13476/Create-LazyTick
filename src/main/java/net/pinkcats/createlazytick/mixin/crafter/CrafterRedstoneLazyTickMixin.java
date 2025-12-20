@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
-@Mixin(MechanicalCrafterBlockEntity.class)
+@Mixin(value = MechanicalCrafterBlockEntity.class,remap = false)
 public abstract class CrafterRedstoneLazyTickMixin {
 
     @Shadow(remap = false)
