@@ -69,21 +69,7 @@ public abstract class DeployerRecipeMixin {
     private boolean lazytick$isDangerousRecipe(Recipe<?> recipe) {
         if (recipe == null) return false;
 
-        // 1. Java 类型检查
-        // 拦截标准的序列组装配方
-        if (recipe instanceof SequencedAssemblyRecipe) return true;
-
-        // 2. Serializer 引用检查
-        try {
-            RecipeSerializer<?> serializer = recipe.getSerializer();
-            ResourceLocation serializerId = ForgeRegistries.RECIPE_SERIALIZERS.getKey(serializer);
-            if (CREATE_SEQUENCED_ASSEMBLY.equals(serializerId)) return true;
-        } catch (Exception e) {
-            // 获取失败视为危险，宁可不缓存也不要出错
-            return true;
-        }
-
-        // 3. 产物检查 (拦截 Step 0 及伪装者)
+        // 1. 产物检查 (拦截 Step 0 及伪装者)
         // 这是为了解决 "Step 0" 配方伪装成普通 Deploying 配方的问题。
         // 只要产物是 "SequencedAssemblyItem" (半成品)，说明这必定是序列组装的一环。
         try {
@@ -114,6 +100,19 @@ public abstract class DeployerRecipeMixin {
             return true;
         }
 
+        // 2. Java 类型检查
+        // 拦截标准的序列组装配方
+        if (recipe instanceof SequencedAssemblyRecipe) return true;
+
+        // 3. Serializer 引用检查
+        try {
+            RecipeSerializer<?> serializer = recipe.getSerializer();
+            ResourceLocation serializerId = ForgeRegistries.RECIPE_SERIALIZERS.getKey(serializer);
+            if (CREATE_SEQUENCED_ASSEMBLY.equals(serializerId)) return true;
+        } catch (Exception e) {
+            // 获取失败视为危险，宁可不缓存也不要出错
+            return true;
+        }
         return false;
     }
 
