@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin;
+package net.pinkcats.createlazytick.mixin.fluid;
 
 
 import com.simibubi.create.content.fluids.FluidReactions;
