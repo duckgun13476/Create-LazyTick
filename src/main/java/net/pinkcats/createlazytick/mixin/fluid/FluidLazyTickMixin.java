@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import static net.pinkcats.createlazytick.Config.FluidDelayTick;
+
 //记得补偿流体(目前速度有异常)
 @Mixin(value = FluidTransportBehaviour.class, remap = false)
 public class FluidLazyTickMixin extends BlockEntityBehaviour {
@@ -58,7 +60,7 @@ public class FluidLazyTickMixin extends BlockEntityBehaviour {
         }
 
         pipeTick++;
-        if (pipeTick<4)
+        if (pipeTick< FluidDelayTick )
         {
             ci.cancel();
             return;

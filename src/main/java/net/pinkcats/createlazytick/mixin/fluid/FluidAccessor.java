@@ -12,6 +12,4 @@ public interface FluidAccessor {
     @Accessor("location")
     BlockFace getLocation();
 
-
-
 }
