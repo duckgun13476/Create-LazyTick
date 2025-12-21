@@ -127,10 +127,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             ci.cancel();
             return;
         }
-        if (handleBeltFunnelOutput()) {
-            ci.cancel();
-            return;
-        }
 
         //tick emerge
         //System.out.println("Depot" + createLazyTick$CurrentDelayTick + "  " + createLazyTick$DepotDelayTick);
@@ -148,7 +144,10 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             }
         }
 
-
+        if (handleBeltFunnelOutput()) {
+            ci.cancel();
+            return;
+        }
 
         BeltProcessingBehaviour processingBehaviour =
                 BlockEntityBehaviour.get(world, pos.above(2), BeltProcessingBehaviour.TYPE);
@@ -221,7 +220,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             ItemStack afterInsert = blockEntity.getBehaviour(DirectBeltInputBehaviour.TYPE)
                     .tryExportingToBeltFunnel(previousItem, null, false);
 
-            //System.out.println(previousItem);
+
 
             if (afterInsert == null) {
                 cir.setReturnValue(false);
@@ -241,6 +240,16 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         ItemStack afterInsert = blockEntity.getBehaviour(DirectBeltInputBehaviour.TYPE)
                 .tryExportingToBeltFunnel(previousItem, null, false);
 
+        if (afterInsert.getCount() != 0) {
+            if (createLazyTick$DepotDelayTick < depot_delay_max+20) {
+                createLazyTick$DepotDelayTick = createLazyTick$DepotDelayTick + Math.max(createLazyTick$CurrentDelayTick / 10, 1);
+            }
+        } else {
+            createLazyTick$DepotDelayTick = 0;
+            createLazyTick$CurrentDelayTick =0;
+        }
+
+        //System.out.println(afterInsert);
 
         //System.out.println("previousItem Output:"+previousItem);
         if (afterInsert == null) {
