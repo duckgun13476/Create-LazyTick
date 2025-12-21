@@ -318,7 +318,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
 
     def mainFile = upload(curseforge_id, new File(
             "./build/libs/${package_name}-${mod_version}-forge-${minecraft_version}.jar"))
-    mainFile.changelog = new File("./update/${versionParts[0]}-changelog.md").text.split("\n\n\n")[0]
+    mainFile.changelog = new File("./update/changelog.md").text.split("\n\n\n")[0]
     mainFile.addEnvironment("Client", "Server")
     mainFile.addGameVersion("${minecraft_version}")
     mainFile.addModLoader("Forge","NeoForge")
@@ -344,7 +344,7 @@ publishMods {
     def versionParts = mod_version.split("-")
 
     file = reobfJar.archiveFile
-    changelog = rootProject.file("./update/${versionParts[0]}-changelog.md").text
+    changelog = rootProject.file("./update/changelog.md").text
     type = STABLE
     version = "$minecraft_version-$mod_version"
     displayName = "${display_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}"
