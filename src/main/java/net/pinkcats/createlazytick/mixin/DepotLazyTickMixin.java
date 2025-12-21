@@ -240,6 +240,13 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         ItemStack afterInsert = blockEntity.getBehaviour(DirectBeltInputBehaviour.TYPE)
                 .tryExportingToBeltFunnel(previousItem, null, false);
 
+
+        if (afterInsert == null) {
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
+        }
+
         if (afterInsert.getCount() != 0) {
             if (createLazyTick$DepotDelayTick < depot_delay_max+20) {
                 createLazyTick$DepotDelayTick = createLazyTick$DepotDelayTick + Math.max(createLazyTick$CurrentDelayTick / 10, 1);
@@ -252,11 +259,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         //System.out.println(afterInsert);
 
         //System.out.println("previousItem Output:"+previousItem);
-        if (afterInsert == null) {
-            cir.setReturnValue(false);
-            cir.cancel();
-            return;
-        }
+
         if (previousItem.getCount() != afterInsert.getCount()) {
             if (afterInsert.isEmpty())
                 heldItem = null;
