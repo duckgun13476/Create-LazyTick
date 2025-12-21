@@ -1,10 +1,11 @@
 
 
 
-
+### 1.3-beta
+1. Added Spout recipes cache
 
 ### 1.2-beta
-1. Fix a crush bug.
+1. Fixed a crush bug.
 
 ### 1.1-beta
 1. Added LazyTick for Arm, Crafter, Deployer, Item drain and Saw.
@@ -13,7 +14,7 @@
 4. Fixed all potential issues that were not correctly labeled (remap = false).
 
 ### 1.1-alpha
-1. Add all LazyTick to config.(为所有的Mixin添加了配置项)
+1. Add all LazyTick to config.
 
 ### 1.0-alpha
 1. Add chute and funnel lazy tick.
