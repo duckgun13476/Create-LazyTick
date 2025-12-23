@@ -12,8 +12,11 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
+import static net.pinkcats.createlazytick.Config.global_cache_record_delay;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
+import static net.pinkcats.createlazytick.helper.Spout.SpoutCache.AMOUNT_CACHE;
+import static net.pinkcats.createlazytick.helper.Spout.SpoutCache.CAN_FILL_CACHE;
 
 @Mixin(MinecraftServer.class)
 public class CacheLabel {
@@ -25,12 +28,26 @@ public class CacheLabel {
     private void ReloadLabel(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         IsServerReload = true;
         LOGGER.info("[CreateLazyTick] clearing cache...");
+
+        // Clear Spout Cache.
+        CAN_FILL_CACHE.clear();
+        AMOUNT_CACHE.clear();
+
+    }
+
+
+    @Inject(method = "reloadResources", at = @At("RETURN"))
+    private void ReloadEnd(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
+        IsServerReload = true;
+        LOGGER.info("[CreateLazyTick] End cache...");
+
+
     }
 
     @Inject(method = "tickServer", at = @At("HEAD"))
     private void tickServer(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         createLazyTick$tick++;
-        if (createLazyTick$tick >20){
+        if (createLazyTick$tick > global_cache_record_delay){
             createLazyTick$tick = 0;
             IsServerReload = false;
         }

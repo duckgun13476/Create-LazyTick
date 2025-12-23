@@ -2,6 +2,7 @@
 
 ### 1.3-beta
 1. Fix config problem.
+2. Add Spout recipes cache
 
 ### 1.2-beta
 1. Fix a crush bug.
