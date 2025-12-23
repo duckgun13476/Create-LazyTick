@@ -24,6 +24,7 @@ public class Config
 
     // Fluids
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FLUID;
+    public static final ForgeConfigSpec.IntValue FLUID_DELAY_MAX;
 
     // Logistics (Funnel, Chute, Belt)
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FUNNEL;
@@ -86,13 +87,19 @@ public class Config
         BUILDER.pop();
 
         // --- Fluid Settings ---
-        BUILDER.comment("Fluid Pipe Settings").push("fluids");
+        BUILDER.comment("Fluid System Settings").push("fluids");
 
         ENABLE_LAZY_FLUID = BUILDER
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable fluid pipe lazy tick")
                 .define("enable_lazy_fluid", true);
+
+        FLUID_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Delay ticks for fluid system.(Large number is not recommended.)")
+                .defineInRange("funnel_delay_max", 10, 1, Integer.MAX_VALUE);
 
         BUILDER.pop();
 
@@ -287,8 +294,6 @@ public class Config
     }
 
 
-    public static int FluidDelayTick = 10;
-
     // ==========================================
     // Public Access Fields
     // ==========================================
@@ -314,6 +319,7 @@ public class Config
     public static List<? extends String> arm_ignore_lazytick_list;
     public static List<? extends String> arm_weak_lazytick_list;
 
+    public static int fluid_delay_max;
     public static int funnel_delay_max;
     public static int chute_delay_max;
     public static int depot_delay_max;
@@ -349,6 +355,7 @@ public class Config
         arm_ignore_lazytick_list = ARM_IGNORE_LAZYTICK_LIST.get();
         arm_weak_lazytick_list = ARM_WEAK_LAZYTICK_LIST.get();
 
+        fluid_delay_max = FLUID_DELAY_MAX.get();
         funnel_delay_max = FUNNEL_DELAY_MAX.get();
         chute_delay_max = CHUTE_DELAY_MAX.get();
         depot_delay_max = DEPOT_DELAY_MAX.get();
