@@ -1,7 +1,7 @@
 
 
-
-
+### 1.3-beta
+1. Fix config problem.
 
 ### 1.2-beta
 1. Fix a crush bug.
