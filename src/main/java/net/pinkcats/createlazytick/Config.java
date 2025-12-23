@@ -98,7 +98,7 @@ public class Config
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if funnel is rest")
-                .defineInRange("funnel_delay_max", 120, 20, Integer.MAX_VALUE);
+                .defineInRange("funnel_delay_max", 60, 20, Integer.MAX_VALUE);
 
         // Chute
         ENABLE_LAZY_CHUTE = BUILDER
@@ -151,7 +151,7 @@ public class Config
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
                 .comment("max cache count for each saw")
-                .defineInRange("saw_cache_max", 50, 1, Integer.MAX_VALUE);
+                .defineInRange("saw_cache_max", 60, 1, Integer.MAX_VALUE);
 
         // Basin
         ENABLE_LAZY_BASIN = BUILDER
