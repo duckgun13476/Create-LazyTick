@@ -17,8 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
-import static net.pinkcats.createlazytick.helper.Spout.SpoutCache.AMOUNT_CACHE;
-import static net.pinkcats.createlazytick.helper.Spout.SpoutCache.CAN_FILL_CACHE;
+import static net.pinkcats.createlazytick.helper.RecipeCacheTool.AMOUNT_CACHE;
+import static net.pinkcats.createlazytick.helper.RecipeCacheTool.CAN_FILL_CACHE;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault

@@ -1,6 +1,7 @@
 package net.pinkcats.createlazytick.mixin.minecraft;
 
 import net.minecraft.server.MinecraftServer;
+import net.pinkcats.createlazytick.helper.CrafterCacheStats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,8 +16,7 @@ import java.util.function.BooleanSupplier;
 import static net.pinkcats.createlazytick.Config.global_cache_record_delay;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
-import static net.pinkcats.createlazytick.helper.Spout.SpoutCache.AMOUNT_CACHE;
-import static net.pinkcats.createlazytick.helper.Spout.SpoutCache.CAN_FILL_CACHE;
+import static net.pinkcats.createlazytick.helper.RecipeCacheTool.*;
 
 @Mixin(MinecraftServer.class)
 public class CacheLabel {
@@ -32,6 +32,13 @@ public class CacheLabel {
         // Clear Spout Cache.
         CAN_FILL_CACHE.clear();
         AMOUNT_CACHE.clear();
+
+        // Clear Crafter Cache / Reset Tick.
+        CrafterRecipeCache.clear();
+        IsCrafterCacheFull = false;
+        CrafterCacheStats.reset();
+        CrafterCacheStats.onCooldownSkip();
+
 
     }
 
