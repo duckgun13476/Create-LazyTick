@@ -10,6 +10,7 @@
     "DeployerRecipeMixin",
     "DepotLazyTickMixin",
     "FunnelLazyTickMixin",
+    "SpoutRecipeMixin",
     "basin.BasinLazyTickMixin",
     "basin.BasinOperatingLazyTickMixin",
     "belt.BeltFunnelInteractionLazyTickMixin",

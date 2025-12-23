@@ -20,6 +20,7 @@ public class Config
 
     // General
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_TICK;
+    public static final ForgeConfigSpec.IntValue GLOBAL_CACHE_RECORD_DELAY;
 
     // Fluids
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FLUID;
@@ -32,7 +33,7 @@ public class Config
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT;
     public static final ForgeConfigSpec.IntValue BELT_DELAY_MAX;
 
-    // Processing (Depot, Saw, Basin, Item Drain, Deployer)
+    // Processing (Depot, Saw, Basin, Item Drain, Deployer, Spout)
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
     public static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX;
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
@@ -41,12 +42,13 @@ public class Config
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
     public static final ForgeConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SPOUT;
+    public static final ForgeConfigSpec.IntValue SPOUT_CACHE_MAX;
 
     // Crafter
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER;
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER_DEBUGGER;
     public static final ForgeConfigSpec.IntValue CRAFTER_GLOBAL_CACHE_MAX;
-    public static final ForgeConfigSpec.IntValue CRAFTER_CACHE_RECORD_DELAY;
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
     public static final ForgeConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
 
@@ -71,6 +73,15 @@ public class Config
                 .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable lazy tick mixin")
                 .define("enable_lazy_tick", true);
+
+        GLOBAL_CACHE_RECORD_DELAY = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("""
+                        Delay time (in seconds) for global cache to start recording again after a server reload.
+                        This setting prevents abnormal recipes from being recorded in the global cache due to unstable recipes after a reload.
+                        Warning: A lower value carries higher risks. Please consider carefully before changing this setting.""")
+                .defineInRange("global_cache_record_delay", 40, 20, 600);
 
         BUILDER.pop();
 
@@ -126,7 +137,7 @@ public class Config
 
         BUILDER.pop();
 
-        // --- Processing Settings (Depot, Saw, Basin, Item Drain, Deployer) ---
+        // --- Processing Settings (Depot, Saw, Basin, Item Drain, Deployer, Spout) ---
         BUILDER.comment("Processing Blocks Settings").push("processing");
 
         // Depot
@@ -179,6 +190,19 @@ public class Config
                 .comment("Whether to enable deployer cache to improve efficiency")
                 .define("enable_cache_deployer", true);
 
+        // Spout
+        ENABLE_CACHE_SPOUT = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Whether to enable global spout cache.")
+                .define("enable_cache_spout", true);
+        SPOUT_CACHE_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("max cache count for global spout cache")
+                .defineInRange("spout_cache_max", 500, 1, Integer.MAX_VALUE);
+
+
         BUILDER.pop();
 
         // --- Crafter Settings ---
@@ -199,14 +223,6 @@ public class Config
                 .comment("--------------------------------------------------------------------------")
                 .comment("max cache count for global crafter")
                 .defineInRange("crafter_global_cache_max", 500, 10, Integer.MAX_VALUE);
-        CRAFTER_CACHE_RECORD_DELAY = BUILDER
-                .comment("")
-                .comment("--------------------------------------------------------------------------")
-                .comment("""
-                        Delay time (in seconds) for crafter cache to start recording again after a server reload.
-                        This setting prevents abnormal recipes from being recorded in the global cache due to unstable recipes after a reload.
-                        Warning: A lower value carries higher risks. Please consider carefully before changing this setting.""")
-                .defineInRange("crafter_cache_record_delay", 40, 0, 600);
         ENABLE_LAZY_CRAFTER_REDSTONE = BUILDER
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
@@ -278,6 +294,7 @@ public class Config
     // ==========================================
 
     public static boolean enable_lazy_tick;
+    public static int global_cache_record_delay;
 
     public static boolean enable_lazy_fluid;
     public static boolean enable_lazy_funnel;
@@ -292,6 +309,7 @@ public class Config
     public static boolean enable_lazy_crafter_redstone;
     public static boolean enable_lazy_arm;
     public static boolean enable_cache_deployer;
+    public static boolean enable_cache_spout;
 
     public static List<? extends String> arm_ignore_lazytick_list;
     public static List<? extends String> arm_weak_lazytick_list;
@@ -303,10 +321,10 @@ public class Config
     public static int belt_delay_max;
     public static int item_drain_delay_max;
     public static int crafter_global_cache_max;
-    public static int crafter_cache_record_delay;
     public static int crafter_redstone_delay_max;
     public static int arm_weak_delay_max;
     public static int arm_delay_max;
+    public static int spout_cache_max;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
@@ -326,6 +344,7 @@ public class Config
         enable_lazy_crafter_redstone = ENABLE_LAZY_CRAFTER_REDSTONE.get();
         enable_lazy_arm = ENABLE_LAZY_ARM.get();
         enable_cache_deployer = ENABLE_CACHE_DEPLOYER.get();
+        enable_cache_spout = ENABLE_CACHE_SPOUT.get();
 
         arm_ignore_lazytick_list = ARM_IGNORE_LAZYTICK_LIST.get();
         arm_weak_lazytick_list = ARM_WEAK_LAZYTICK_LIST.get();
@@ -337,9 +356,10 @@ public class Config
         belt_delay_max = BELT_DELAY_MAX.get();
         item_drain_delay_max = ITEM_DRAIN_DELAY_MAX.get();
         crafter_global_cache_max = CRAFTER_GLOBAL_CACHE_MAX.get();
-        crafter_cache_record_delay = CRAFTER_CACHE_RECORD_DELAY.get();
+        global_cache_record_delay = GLOBAL_CACHE_RECORD_DELAY.get();
         crafter_redstone_delay_max = CRAFTER_REDSTONE_DELAY_MAX.get();
         arm_weak_delay_max = ARM_WEAK_DELAY_MAX.get();
         arm_delay_max = ARM_DELAY_MAX.get();
+        spout_cache_max = SPOUT_CACHE_MAX.get();
     }
 }
