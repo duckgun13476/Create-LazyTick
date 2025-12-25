@@ -5,6 +5,9 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "createlazytick.refmap.json",
   "mixins": [
+    "Create.SmartBlockEntityControlMixin",
+    "Create.Client.SmartBlockEntityGoggleMixin",
+    "Minecraft.CacheLabel",
     "OptElement.ArmLazyTickMixin",
     "OptElement.ChuteLazyTickMixin",
     "OptElement.DeployerRecipeMixin",
@@ -24,10 +27,8 @@
     "OptElement.fluid.FluidNetworkAccessor",
     "OptElement.fluid.FluidNetworkMixin",
     "OptElement.fluid.PipeConnectionAccessor",
-    "Create.SmartBlockEntityControlMixin",
     "OptElement.itemdrain.ItemDrainAccessor",
     "OptElement.itemdrain.ItemDrainLazyTickMixin",
-    "Minecraft.CacheLabel",
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
