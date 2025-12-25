@@ -137,6 +137,16 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
         super.tick();
 
+        if (!level.isClientSide) {
+            ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+            control.lazytick$setSyncedTier(CurrentDelayTick, Config.chute_delay_max);
+            //System.out.println("---");
+            //System.out.println(control.CLT$getMaxTicks());
+            //control.CLT$setMaxTicks(CurrentDelayTick);
+            //System.out.println(control.CLT$getMaxTicks());
+        }
+
+
         if (!level.isClientSide)
             canPickUpItems = canDirectlyInsert();
 

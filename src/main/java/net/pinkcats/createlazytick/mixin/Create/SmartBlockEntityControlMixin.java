@@ -7,17 +7,22 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickTier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Objects;
+
 @Mixin(value = SmartBlockEntity.class,remap = false)
 public abstract class SmartBlockEntityControlMixin extends BlockEntity implements ISmartBlockEntityControl {
 
     @Unique private byte lazytick$forceDisabled = 0;
     @Unique private String lazytick$operatorName = "";
+    @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
+    @Unique private int createLazyTick$EntityMaxTick = 0;
 
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -43,11 +48,12 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "write", at = @At("RETURN"))
     private void lazytick$writeNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
-        if (this.lazytick$forceDisabled == 0) {
-            tag.putByte("LazyTickForceDisabled", (byte) 1);
-            if (!this.lazytick$operatorName.isEmpty())
-                tag.putString("LazyTickOperator", this.lazytick$operatorName);
 
+        tag.putByte("LazyTickForceDisabled", this.lazytick$forceDisabled);
+        tag.putString("LazyTickOperator", this.lazytick$operatorName);
+
+        if (this.lazytick$syncedTier != LazyTickTier.ACTIVE) {
+            tag.putInt("LazyTickTier", this.lazytick$syncedTier.ordinal());
         }
     }
 
@@ -62,6 +68,38 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
             this.lazytick$operatorName = "";
         }
 
+        if (tag.contains("LazyTickTier")) {
+            int ordinal = tag.getInt("LazyTickTier");
+            if (ordinal >= 0 && ordinal < LazyTickTier.values().length) {
+                this.lazytick$syncedTier = LazyTickTier.values()[ordinal];
+            }
+        } else {
+            this.lazytick$syncedTier = LazyTickTier.ACTIVE;
+        }
+
+    }
+
+
+    @Override
+    public LazyTickTier lazytick$getSyncedTier() { return this.lazytick$syncedTier; }
+
+    @Override
+    public void lazytick$setSyncedTier(int currentTick, int maxTick) {
+        LazyTickTier newTier = LazyTickTier.fromTicks(currentTick, maxTick);
+        if (this.lazytick$syncedTier != newTier) {
+            this.lazytick$syncedTier = newTier;
+            this.setChanged();
+            this.createLazyTick$sendBlockUpdated();
+        }
+    }
+
+
+    @Unique
+    private void createLazyTick$sendBlockUpdated() {
+        if (this.level != null) {
+            BlockState state = this.getBlockState();
+            this.level.sendBlockUpdated(this.worldPosition, state, state, 3);
+        }
     }
 
 
@@ -72,14 +110,41 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public byte createLazyTick$ControlState() { return this.lazytick$forceDisabled; }
 
     @Override
-    public void createLazyTick$SetForceControl(byte value) { this.lazytick$forceDisabled = value; }
+    public void createLazyTick$SetForceControl(byte value) {
+
+        System.out.println("Change "+ value+" to "+this.lazytick$forceDisabled);
+
+        if (this.lazytick$forceDisabled != value) {
+            this.lazytick$forceDisabled = value;
+            this.setChanged();
+            this.createLazyTick$sendBlockUpdated();
+        }
+
+    }
 
     @Override
     public String createLazyTick$getUserName() { return this.lazytick$operatorName; }
 
     @Override
-    public void createLazyTick$setUserName(String value) { this.lazytick$operatorName = value; }
+    public void createLazyTick$setUserName(String value) {
+        if (!Objects.equals(this.lazytick$operatorName, value)) {
 
+            this.lazytick$operatorName = value;
+            this.setChanged();
+            this.createLazyTick$sendBlockUpdated();
+        }
+    }
 
+    @Override
+    public int CLT$getMaxTicks() { return this.createLazyTick$EntityMaxTick; }
+
+    @Override
+    public void CLT$setMaxTicks(int value)  {
+        if  (this.createLazyTick$EntityMaxTick != value) {
+            this.createLazyTick$EntityMaxTick = value;
+            this.setChanged();
+            this.createLazyTick$sendBlockUpdated();
+        }
+    }
 
 }
