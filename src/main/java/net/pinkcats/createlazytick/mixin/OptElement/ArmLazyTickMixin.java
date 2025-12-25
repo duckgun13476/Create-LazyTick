@@ -66,27 +66,15 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     @Unique
     private static final int REVALIDATE_INTERVAL = 200;
 
-    // AI跑的方法:
     // 静态存储解析后的 Block 对象，所有机械臂实例共享。
     // 相比存储 String，这消除了运行时的 ForgeRegistries.getKey() 反查和 res.toString() 开销。
     @Unique private static Set<Block> lazytick$cachedIgnoreBlocks = null;
     @Unique private static Set<Block> lazytick$cachedWeakBlocks = null;
 
-    // 消抖时间戟
-    @Unique private static long lazytick$lastCacheRebuildTime = 0;
-
     public ArmLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
-
-    //<p>是换行符
-    /**
-     * 版本迁移警告 (Migration Note):<p>
-     * 在迁移至 Minecraft 1.20.6/1.21+ 时，此方法必须重写。<p>
-     * 原因: {@code new ResourceLocation(String)} 构造函数已被弃用并移除。<p>
-     * 解决方案: 请改用 {@code ResourceLocation.parse(String)} 或 {@code ResourceLocation.tryParse(String)}。
-     */
     // 缓存构建方法
     // 将配置中的 String (如 "minecraft:chest") 解析为实际的 Block 对象并存入 Set。
     // 该操作较慢，但仅在首次运行或重载配置时执行一次。
@@ -111,25 +99,19 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
             }
         }
 
-        lazytick$lastCacheRebuildTime = System.currentTimeMillis();
     }
 
     // 维护缓存配置名单有效性
     @Unique
     private void lazytick$ensureConfigCaches() {
-        // 情况1: 首次初始化
-        if (lazytick$cachedIgnoreBlocks == null) {
-            lazytick$rebuildCaches();
+        // 情况1: 服务器重载配置 (IsServerReload)
+        if (IsServerReload) {
             return;
         }
 
-        // 情况2: 服务器重载配置 (IsServerReload)
-        // 使用 1000ms 防抖，防止每一台机械臂在同一 Tick 都触发重构
-        if (IsServerReload) {
-            long now = System.currentTimeMillis();
-            if (now - lazytick$lastCacheRebuildTime > 1000) {
-                lazytick$rebuildCaches();
-            }
+        // 情况2: 首次初始化
+        if (lazytick$cachedIgnoreBlocks == null) {
+            lazytick$rebuildCaches();
         }
     }
 
