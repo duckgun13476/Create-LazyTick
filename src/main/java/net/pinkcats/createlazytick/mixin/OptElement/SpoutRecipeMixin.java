@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin;
+package net.pinkcats.createlazytick.mixin.OptElement;
 
 import com.simibubi.create.content.fluids.spout.FillingBySpout;
 import net.minecraft.MethodsReturnNonnullByDefault;

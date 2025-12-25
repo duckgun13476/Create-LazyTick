@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.minecraft;
+package net.pinkcats.createlazytick.mixin.Minecraft;
 
 import net.minecraft.server.MinecraftServer;
 import net.pinkcats.createlazytick.helper.CrafterCacheStats;

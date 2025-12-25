@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.basin;
+package net.pinkcats.createlazytick.mixin.OptElement.basin;
 
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinOperatingBlockEntity;

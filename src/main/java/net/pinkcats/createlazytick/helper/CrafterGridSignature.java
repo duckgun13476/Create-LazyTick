@@ -3,7 +3,7 @@ package net.pinkcats.createlazytick.helper;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
 import net.minecraft.world.item.Item; // 引入 Item 类
 import net.minecraft.world.item.ItemStack;
-import net.pinkcats.createlazytick.mixin.crafter.CrafterAccessor;
+import net.pinkcats.createlazytick.mixin.OptElement.crafter.CrafterAccessor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;

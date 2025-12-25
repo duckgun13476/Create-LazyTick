@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.crafter;
+package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import net.minecraft.world.item.ItemStack;

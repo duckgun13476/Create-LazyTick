@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.belt;
+package net.pinkcats.createlazytick.mixin.OptElement.belt;
 
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.belt.transport.BeltInventory;
