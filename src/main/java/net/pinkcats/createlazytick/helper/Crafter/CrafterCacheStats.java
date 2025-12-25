@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper;
+package net.pinkcats.createlazytick.helper.Crafter;
 
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick; // 引入主类以使用 LOGGER

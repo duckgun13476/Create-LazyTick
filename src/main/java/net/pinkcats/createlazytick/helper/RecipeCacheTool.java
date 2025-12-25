@@ -4,6 +4,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.helper.Crafter.CrafterGridSignature;
 import net.pinkcats.createlazytick.helper.Spout.SpoutCacheKey;
 
 import java.util.Collections;

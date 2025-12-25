@@ -1,7 +1,7 @@
 package net.pinkcats.createlazytick.mixin.Minecraft;
 
 import net.minecraft.server.MinecraftServer;
-import net.pinkcats.createlazytick.helper.CrafterCacheStats;
+import net.pinkcats.createlazytick.helper.Crafter.CrafterCacheStats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
