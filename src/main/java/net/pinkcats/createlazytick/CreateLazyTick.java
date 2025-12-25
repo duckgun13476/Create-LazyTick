@@ -2,7 +2,6 @@ package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -19,7 +18,10 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.pinkcats.createlazytick.item.LazyTickClockItem;
 import org.slf4j.Logger;
+
+import java.lang.reflect.Field;
 
 import static net.pinkcats.createlazytick.command.LazyTickCommand.RegisterCLTCommand;
 
@@ -31,26 +33,33 @@ public class CreateLazyTick {
     public static boolean IsServerReload = false;
 
     public static ResourceLocation DropResourceLocation(String Location){
-        return new ResourceLocation(Location);
+        return ResourceLocation.parse(Location);
     }
     public static ResourceLocation DropResourceLocation(String NameSpace, String Path){
-        return new ResourceLocation(NameSpace,Path);
+        return ResourceLocation.fromNamespaceAndPath(NameSpace,Path);
     }
 
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS,MODID);
 
-    public static final RegistryObject<Item> CLOCK = ITEMS
-            .register("clock", () -> new Item(
-             new Item.Properties()));
+    public static final RegistryObject<Item> CLOCK = ITEMS.register("clock",
+            () -> new LazyTickClockItem(new Item.Properties().stacksTo(1)));
+
 
 
     public CreateLazyTick() {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        // Only for 1.20.1 forge
+        ModLoadingContext modLoadingContext = getModLoadingContextViaReflection();
+        FMLJavaModLoadingContext modContext = modLoadingContext.extension();
+        IEventBus modEventBus = modContext.getModEventBus();
+
+
         ITEMS.register(modEventBus);
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modLoadingContext.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
+
 
     private void commonSetup(final FMLCommonSetupEvent event) {
 
@@ -75,6 +84,25 @@ public class CreateLazyTick {
         public static void onClientSetup(FMLClientSetupEvent event)
         {
 
+        }
+    }
+
+
+
+
+    //Tool Func
+
+
+    @SuppressWarnings("unchecked")
+    private static ModLoadingContext getModLoadingContextViaReflection() {
+        try {
+            Field contextField = ModLoadingContext.class.getDeclaredField("context");
+            contextField.setAccessible(true);
+            ThreadLocal<ModLoadingContext> contextThreadLocal = (ThreadLocal<ModLoadingContext>) contextField.get(null);
+            return contextThreadLocal.get();
+
+        } catch (Exception e) {
+            throw new RuntimeException("CreateLazyTick got ERROR in Init:", e);
         }
     }
 }

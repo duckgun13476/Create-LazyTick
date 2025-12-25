@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,6 +23,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+
+import static net.pinkcats.createlazytick.item.LazyTickClockItem.StateDirection;
+
 
 @Mixin(value = ChuteBlockEntity.class, remap = false)
 public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleInformation {
@@ -79,11 +83,10 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     @Unique
     private void LazyTickChute(boolean CanDownload){
-        //if (!level.isClientSide) {
-           // System.out.println("Chute"+CurrentDelayTick + "  " + chuteTick);
-        //}
-        if (!level.isClientSide){
 
+        if (!level.isClientSide){
+            // Current tick
+            //System.out.println(CurrentDelayTick);
             if (CanDownload){
                 CurrentDelayTick=1;
                 mistake = false;
@@ -100,6 +103,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                         }else {
                             CurrentDelayTick=CurrentDelayTick+5;
                         }
+                        CurrentDelayTick = UserControl(CurrentDelayTick);
 
                     }
 
@@ -113,12 +117,23 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         }
     }
 
+    private int UserControl(int CurrentDelayTick) {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        byte CLTState = control.createLazyTick$ControlState();
+        if (CLTState != 0){
+            return Config.chute_delay_max / (StateDirection-1) * ((StateDirection-1) - CLTState);
+        }
+        System.out.println(CurrentDelayTick);
+        return CurrentDelayTick;
+    }
+
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_chute) {
             return;
         }
+
 
         super.tick();
 
@@ -189,6 +204,9 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         itemPosition.setValue(nextOffset);
         ci.cancel();
     }
+
+
+
 
 
     /**
