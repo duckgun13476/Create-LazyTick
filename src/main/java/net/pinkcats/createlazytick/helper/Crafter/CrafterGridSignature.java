@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper;
+package net.pinkcats.createlazytick.helper.Crafter;
 
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
 import net.minecraft.world.item.Item; // 引入 Item 类
