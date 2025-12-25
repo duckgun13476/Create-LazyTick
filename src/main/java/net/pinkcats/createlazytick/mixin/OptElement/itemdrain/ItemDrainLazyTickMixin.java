@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.itemdrain;
+package net.pinkcats.createlazytick.mixin.OptElement.itemdrain;
 
 import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
 import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.Config;
-import net.pinkcats.createlazytick.CreateLazyTick;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;

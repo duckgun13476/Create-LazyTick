@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.itemdrain;
+package net.pinkcats.createlazytick.mixin.OptElement.itemdrain;
 
 import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;

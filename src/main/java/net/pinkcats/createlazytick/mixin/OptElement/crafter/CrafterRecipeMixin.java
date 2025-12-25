@@ -1,10 +1,9 @@
-package net.pinkcats.createlazytick.mixin.crafter;
+package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
 import net.minecraft.world.item.ItemStack;
 import net.pinkcats.createlazytick.Config;
-import net.pinkcats.createlazytick.CreateLazyTick; // 引入主类以使用 LOGGER
 import net.pinkcats.createlazytick.helper.CrafterCacheStats;
 import net.pinkcats.createlazytick.helper.CrafterGridSignature;
 import org.spongepowered.asm.mixin.Mixin;

@@ -6,6 +6,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,6 +20,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
+
+import static net.pinkcats.createlazytick.command.LazyTickCommand.RegisterCLTCommand;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(CreateLazyTick.MODID)
@@ -56,6 +59,12 @@ public class CreateLazyTick {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 
+    }
+
+
+    @SubscribeEvent
+    public void onCommandRegister(RegisterCommandsEvent event) {
+        RegisterCLTCommand(event);
     }
 
 
