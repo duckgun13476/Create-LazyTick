@@ -1,11 +1,8 @@
-package net.pinkcats.createlazytick.mixin.fluid;
+package net.pinkcats.createlazytick.mixin.OptElement.fluid;
 
 
 import com.simibubi.create.content.fluids.FlowSource;
-import com.simibubi.create.content.fluids.FluidNetwork;
 import com.simibubi.create.content.fluids.PipeConnection;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

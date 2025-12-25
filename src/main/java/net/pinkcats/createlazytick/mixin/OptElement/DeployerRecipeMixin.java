@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin;
+package net.pinkcats.createlazytick.mixin.OptElement;
 
 import com.simibubi.create.content.equipment.sandPaper.SandPaperItem;
 import com.simibubi.create.content.equipment.sandPaper.SandPaperPolishingRecipe.SandPaperInv;

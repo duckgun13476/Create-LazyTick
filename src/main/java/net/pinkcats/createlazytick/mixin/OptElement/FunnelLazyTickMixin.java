@@ -1,7 +1,5 @@
-package net.pinkcats.createlazytick.mixin;
+package net.pinkcats.createlazytick.mixin.OptElement;
 
-import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlock;
-import com.simibubi.create.content.kinetics.deployer.DeployerBlock;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Funnel;

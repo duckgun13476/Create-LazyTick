@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.crafter;
+package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
 import net.minecraft.core.BlockPos;

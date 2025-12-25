@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin;
+package net.pinkcats.createlazytick.mixin.OptElement;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
