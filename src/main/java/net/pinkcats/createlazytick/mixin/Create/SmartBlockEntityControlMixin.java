@@ -3,6 +3,8 @@ package net.pinkcats.createlazytick.mixin.Create;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,6 +25,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Unique private String lazytick$operatorName = "";
     @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
     @Unique private int createLazyTick$EntityMaxTick = 0;
+
 
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -85,6 +88,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Override
     public void lazytick$setSyncedTier(int currentTick, int maxTick) {
+        System.out.println("Update Sync Entity Data");
         LazyTickTier newTier = LazyTickTier.fromTicks(currentTick, maxTick);
         if (this.lazytick$syncedTier != newTier) {
             this.lazytick$syncedTier = newTier;
@@ -146,5 +150,19 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
             this.createLazyTick$sendBlockUpdated();
         }
     }
+
+    @Override
+    public BlockPos CLT$getPos() {
+        return this.worldPosition;
+    }
+
+    @Override
+    public ResourceKey<Level> CLT$getDimension(){
+        if (level != null) {
+            return level.dimension();
+        }
+        return null;
+    }
+
 
 }
