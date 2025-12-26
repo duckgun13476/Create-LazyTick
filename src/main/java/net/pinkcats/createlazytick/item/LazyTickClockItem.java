@@ -46,9 +46,9 @@ public class LazyTickClockItem extends Item {
 
             SetControlState(control, ControlState);
             if (ControlState == 0) {
-                SetOperatorName(control,null);
+                SetOperatorName(control,"");
             } else {
-                SetOperatorName(control, player);
+                SetOperatorName(control, player.getName().getString());
             }
         }
 
@@ -56,12 +56,8 @@ public class LazyTickClockItem extends Item {
     }
     //Tool Func
 
-    private static void SetOperatorName(ISmartBlockEntityControl control, Player player) {
-        if (player == null) {
-            control.createLazyTick$setUserName("");
-            return;
-        }
-        control.createLazyTick$setUserName(player.getName().getString());
+    private static void SetOperatorName(ISmartBlockEntityControl control, String player) {
+        control.createLazyTick$setUserName(player);
     }
     private static void SetControlState(ISmartBlockEntityControl control, byte ControlState) {
         control.createLazyTick$SetForceControl(ControlState);
