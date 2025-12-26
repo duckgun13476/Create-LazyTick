@@ -5,7 +5,7 @@ import com.simibubi.create.content.processing.basin.BasinOperatingBlockEntity;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import net.minecraft.world.item.crafting.Recipe;
 import net.pinkcats.createlazytick.Config;
-import net.pinkcats.createlazytick.helper.IBasinOptimization;
+import net.pinkcats.createlazytick.helper.Basin.IBasinOptimization;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
