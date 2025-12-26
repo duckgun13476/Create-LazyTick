@@ -49,7 +49,6 @@ public class SmartBlockEntityGoggleMixin implements IHaveHoveringInformation {
 
                 ));
 
-                System.out.println("  " + ((ISmartBlockEntityControl) this).CLT$getDimension());
             }
 
 

@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickTier;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,21 +33,20 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     }
 
 
-    // 1. 注入到 initialize()：这是 Create 初始化行为的地方
-    //@Inject(method = "initialize", at = @At("RETURN"))
-    //private void lazytick$onInit(CallbackInfo ci) {
-    //    if (this.lazytick$forceDisabled == 0 && this.level != null) {
-   //         ForcedActiveManager.register(this.level, this.worldPosition);
-    //    }
-    //}
+    @Inject(method = "initialize", at = @At("RETURN"), remap = false)
+    private void lazytick$onInit(CallbackInfo ci) {
+        System.out.println("init PARA" + this.lazytick$forceDisabled);
+        if (this.lazytick$forceDisabled != 0 && this.level != null) {
+            ForcedActiveManager.register(this.level, this.worldPosition);
+        }
+    }
 
-    // 2. 注入到 invalidate()：这是 SmartBlockEntity.setRemoved() 必定会调用的清理方法
-    //@Inject(method = "invalidate", at = @At("HEAD"))
-   // private void lazytick$onInvalidate(CallbackInfo ci) {
-     //   if (this.level != null) {
-    //        ForcedActiveManager.unregister(this.level, this.worldPosition);
-    //    }
-    //}
+    @Inject(method = "invalidate", at = @At("HEAD"), remap = false)
+    private void lazytick$onInvalidate(CallbackInfo ci) {
+        if (this.level != null) {
+            ForcedActiveManager.unregister(this.level, this.worldPosition);
+        }
+    }
 
 
     @Inject(method = "write", at = @At("RETURN"))
