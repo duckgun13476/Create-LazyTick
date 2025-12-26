@@ -36,32 +36,28 @@ public class LazyTickClockItem extends Item {
 
             byte ControlState = control.createLazyTick$ControlState();
 
-            System.out.println(ControlState);
-            System.out.println(context.getClickedPos());
-            System.out.println(control.createLazyTick$getUserName());
-
-
+            System.out.println("UseOn:ControlState" + ControlState);
+            System.out.println("UseOn:clickPos" + context.getClickedPos());
+            System.out.println("UseOn:UserName" + control.createLazyTick$getUserName());
 
             ControlState ++;
             if (ControlState >= StateDirection)
                 ControlState = 0;
 
             SetControlState(control, ControlState);
-            SetOperatorName(control, player);
-
-
+            if (ControlState == 0) {
+                SetOperatorName(control,"");
+            } else {
+                SetOperatorName(control, player.getName().getString());
+            }
         }
 
         return InteractionResult.PASS;
     }
-
-
-
-
     //Tool Func
 
-    private static void SetOperatorName(ISmartBlockEntityControl control, Player player) {
-        control.createLazyTick$setUserName(player.getName().getString());
+    private static void SetOperatorName(ISmartBlockEntityControl control, String player) {
+        control.createLazyTick$setUserName(player);
     }
     private static void SetControlState(ISmartBlockEntityControl control, byte ControlState) {
         control.createLazyTick$SetForceControl(ControlState);
