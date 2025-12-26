@@ -62,7 +62,6 @@ public class CreateLazyTick {
 
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-
     }
 
     @SubscribeEvent
