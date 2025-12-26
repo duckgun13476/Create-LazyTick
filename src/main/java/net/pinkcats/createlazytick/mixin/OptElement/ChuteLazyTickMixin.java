@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.Channel.ClientData;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -124,10 +125,16 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     @Unique
     private int createLazyTick$UserControl(int CurrentDelayTick) {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
+
+        // Force Control
         byte CLTState = control.createLazyTick$ControlState();
         if (CLTState != 0){
             return Config.chute_delay_max / (StateDirection-1) * ((StateDirection-1) - CLTState);
         }
+
+
+
         System.out.println(CurrentDelayTick);
         return CurrentDelayTick;
     }
@@ -151,14 +158,12 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                             ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
                             control.lazytick$setSyncedTier(createLazyTick$CurrentDelayTick, Config.chute_delay_max);
                             PacketCache.remove(data);
+                            ForcedActiveManager.register(this.level, this.worldPosition);
                             break;
                         }
                     }
                 }
             }
-
-
-
 
             //System.out.println("---");
             //System.out.println(control.CLT$getMaxTicks());
