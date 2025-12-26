@@ -66,14 +66,14 @@ public class SmartBlockEntityGoggleMixin implements IHaveHoveringInformation {
             }
 
             if (control.createLazyTick$ControlState() ==1) {
-                tooltip.add(Component.literal(" [强制全速模式]").withStyle(ChatFormatting.RED));
+                tooltip.add(Component.literal(" [强制全速模式]").withStyle(ChatFormatting.DARK_RED));
 
             } else if (control.createLazyTick$ControlState() == 2) {
                 tooltip.add(Component.literal(" [浅度休眠模式]").withStyle(ChatFormatting.RED));
             } else if (control.createLazyTick$ControlState() == 3) {
-                tooltip.add(Component.literal(" [中度休眠模式]").withStyle(ChatFormatting.RED));
+                tooltip.add(Component.literal(" [中度休眠模式]").withStyle(ChatFormatting.GOLD));
             } else if (control.createLazyTick$ControlState() == 0) {
-                tooltip.add(Component.literal(" [深度休眠模式]").withStyle(ChatFormatting.RED));
+                tooltip.add(Component.literal(" [深度休眠模式]").withStyle(ChatFormatting.YELLOW));
             }
 
             if (control.createLazyTick$ControlState() != 1) {
