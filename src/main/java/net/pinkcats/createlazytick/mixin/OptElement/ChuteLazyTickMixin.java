@@ -143,20 +143,21 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         super.tick();
 
         if (level != null && !level.isClientSide ) {
-            if (PacketCache.isEmpty())
-                return;
-
-            System.out.println(PacketCache.size());
-            for (ClientData data : PacketCache) {
-                if (data.getDimension() == level.dimension().hashCode()) {
-                    if (Objects.equals(this.worldPosition, data.getPos())) {
-                        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
-                        control.lazytick$setSyncedTier(createLazyTick$CurrentDelayTick, Config.chute_delay_max);
-                        PacketCache.remove(data);
-                        break;
+            if (!PacketCache.isEmpty()){
+                for (ClientData data : PacketCache) {
+                    if (data.getDimension() == level.dimension().hashCode()) {
+                        if (Objects.equals(this.worldPosition, data.getPos())) {
+                            ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+                            control.lazytick$setSyncedTier(createLazyTick$CurrentDelayTick, Config.chute_delay_max);
+                            PacketCache.remove(data);
+                            break;
+                        }
                     }
                 }
             }
+
+
+
 
             //System.out.println("---");
             //System.out.println(control.CLT$getMaxTicks());
