@@ -64,15 +64,17 @@ public class SmartBlockEntityGoggleMixin implements IHaveHoveringInformation {
                 tooltip.add(Component.literal("LazyTick Status:").withStyle(ChatFormatting.GRAY));
             }
 
-            if (control.createLazyTick$ControlState() ==1) {
-                tooltip.add(Component.literal(" [强制全速模式]").withStyle(ChatFormatting.DARK_RED));
+            if (control.createLazyTick$ControlState() == 1) {
+                tooltip.add(Component.literal(" [强制全速模式]").withStyle(ChatFormatting.DARK_PURPLE));
 
             } else if (control.createLazyTick$ControlState() == 2) {
-                tooltip.add(Component.literal(" [浅度休眠模式]").withStyle(ChatFormatting.RED));
+                tooltip.add(Component.literal(" [强制浅度休眠模式]").withStyle(ChatFormatting.YELLOW));
             } else if (control.createLazyTick$ControlState() == 3) {
-                tooltip.add(Component.literal(" [中度休眠模式]").withStyle(ChatFormatting.GOLD));
+                tooltip.add(Component.literal(" [强制中度休眠模式]").withStyle(ChatFormatting.GOLD));
+            } else if (control.createLazyTick$ControlState() == 4) {
+                tooltip.add(Component.literal(" [强制深度休眠模式]").withStyle(ChatFormatting.RED));
             } else if (control.createLazyTick$ControlState() == 0) {
-                tooltip.add(Component.literal(" [深度休眠模式]").withStyle(ChatFormatting.YELLOW));
+                tooltip.add(Component.literal(" [自动休眠模式]").withStyle(ChatFormatting.GRAY));
             }
 
             if (control.createLazyTick$ControlState() != 1) {
