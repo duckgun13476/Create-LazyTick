@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper.Basin;
+package net.pinkcats.createlazytick.bridge.Basin;
 
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 
