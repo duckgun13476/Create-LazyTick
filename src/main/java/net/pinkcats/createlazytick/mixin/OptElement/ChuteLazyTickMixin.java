@@ -130,7 +130,9 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         // Force Control
         byte CLTState = control.createLazyTick$ControlState();
         if (CLTState != 0){
-            return Config.chute_delay_max / (StateDirection-1) * ((StateDirection-1) - CLTState);
+            // Logic: CurrentDelay = MaxDelay * (NormalizedState / TotalIntervals)
+            // StateDirection - 2 -> why -2? -> Exclude [Automatic] state (-1), then get intervals of remaining states (-1)
+            return Config.chute_delay_max * (CLTState - 1) / Math.max(1, StateDirection - 2);
         }
 
 
