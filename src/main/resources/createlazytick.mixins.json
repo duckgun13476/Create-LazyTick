@@ -6,7 +6,6 @@
   "refmap": "createlazytick.refmap.json",
   "mixins": [
     "Create.SmartBlockEntityControlMixin",
-    "Create.Client.SmartBlockEntityGoggleMixin",
     "Minecraft.CacheLabel",
     "OptElement.ArmLazyTickMixin",
     "OptElement.ChuteLazyTickMixin",
@@ -32,6 +31,8 @@
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
+    "Create.Client.ItemDrainGoggleMixin",
+    "Create.Client.SmartBlockEntityGoggleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
