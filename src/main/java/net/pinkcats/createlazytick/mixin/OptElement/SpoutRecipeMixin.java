@@ -7,7 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidStack;
 import net.pinkcats.createlazytick.Config;
-import net.pinkcats.createlazytick.helper.Spout.SpoutCacheKey;
+import net.pinkcats.createlazytick.bridge.Spout.SpoutCacheKey;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
