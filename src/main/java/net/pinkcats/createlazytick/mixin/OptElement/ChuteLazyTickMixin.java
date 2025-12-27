@@ -85,11 +85,11 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
         if (control.createLazyTick$isDelayForced()) return;
 
-        int currentDelayTick = control.createLazyTick$getCurrentDelayTick();
+        int currentDelayTick = control.createLazyTick$getLazyTickInterval();
         if (level != null && !level.isClientSide) {
             // Current tick
             if (CanDownload) {
-                control.createLazyTick$setCurrentDelayTick(1);
+                control.createLazyTick$setLazyTickInterval(1);
                 currentDelayTick = 1;
                 createLazyTick$mistake = false;
             } else {
@@ -97,7 +97,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                     if (createLazyTick$mistake) {
                         int newDelayTick = Math.min(currentDelayTick +
                                 Math.max(1, currentDelayTick /10), Config.chute_delay_max);
-                        control.createLazyTick$setCurrentDelayTick(newDelayTick);
+                        control.createLazyTick$setLazyTickInterval(newDelayTick);
                         currentDelayTick = newDelayTick;
                     }
                     if (currentDelayTick == 1) {
@@ -130,7 +130,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getCurrentDelayTick(), Config.chute_delay_max);
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), Config.chute_delay_max);
 
 
         if (level != null && !level.isClientSide) canPickUpItems = canDirectlyInsert();
@@ -156,7 +156,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         if (level != null && !level.isClientSide) {
             createLazyTick$chuteTick++;
             //System.out.println("chuteTick: "+createLazyTick$chuteTick+"|"+control.createLazyTick$getCurrentDelayTick());
-            if (createLazyTick$chuteTick < control.createLazyTick$getCurrentDelayTick()) {
+            if (createLazyTick$chuteTick < control.createLazyTick$getLazyTickInterval()) {
                 ci.cancel();
                 return;
             }

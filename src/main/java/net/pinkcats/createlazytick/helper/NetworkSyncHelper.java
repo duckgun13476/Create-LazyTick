@@ -17,7 +17,7 @@ public class NetworkSyncHelper {
         byte CLTState = control.createLazyTick$ControlState();
         if (CLTState != 0){
             int CurrentDelayTick = maxDelayTick * (CLTState - 1) / Math.max(1, StateDirection - 2);
-            control.createLazyTick$setCurrentDelayTick(CurrentDelayTick);
+            control.createLazyTick$setLazyTickInterval(CurrentDelayTick);
             control.createLazyTick$setDelayForced(true);
             return;
         }
