@@ -16,7 +16,7 @@ public class LazyTickClockItem extends Item {
         super(properties);
     }
 
-    public static final byte StateDirection = 4;
+    public static final byte StateDirection = 5;
 
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
