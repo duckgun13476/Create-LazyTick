@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.Channel.ClientData;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -103,7 +104,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                         createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick +
                                 Math.max(1, createLazyTick$CurrentDelayTick /10);
 
-                        createLazyTick$CurrentDelayTick = createLazyTick$UserControl(createLazyTick$CurrentDelayTick);
+                        //createLazyTick$UserControl();
 
                     }
 
@@ -113,30 +114,29 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
 
                 } else  {
-                    createLazyTick$CurrentDelayTick = createLazyTick$UserControl(createLazyTick$CurrentDelayTick);
+                    //createLazyTick$UserControl();
                 }
             }
         }
     }
 
     @Unique
-    private int createLazyTick$UserControl(int CurrentDelayTick) {
+    private void createLazyTick$UserControl() {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
-
-
+        
         // Force Control
         byte CLTState = control.createLazyTick$ControlState();
         if (CLTState != 0){
-            // Logic: CurrentDelay = MaxDelay * (NormalizedState / TotalIntervals)
-            // StateDirection - 2 -> why -2? -> Exclude [Automatic] state (-1), then get intervals of remaining states (-1)
-            return Config.chute_delay_max * (CLTState - 1) / Math.max(1, StateDirection - 2);
+            createLazyTick$CurrentDelayTick =  
+                    Config.chute_delay_max * (CLTState - 1) / Math.max(1, StateDirection - 2);
         }
-
-
-
-        System.out.println(CurrentDelayTick);
-        return CurrentDelayTick;
+        
+        System.out.println(createLazyTick$CurrentDelayTick);
     }
+
+
+    @Unique
+    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
 
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
@@ -148,6 +148,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
 
         super.tick();
+        UserControl_Schedule.Tick();
 
         if (level != null && !level.isClientSide ) {
             if (!PacketCache.isEmpty()){
