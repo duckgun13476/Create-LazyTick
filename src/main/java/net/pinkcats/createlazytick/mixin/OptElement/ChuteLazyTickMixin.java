@@ -84,22 +84,22 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
         if (control.createLazyTick$isDelayForced()) return;
 
-        int currentDelayTick = control.createLazyTick$getLazyTickInterval();
+        int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
         if (level != null && !level.isClientSide) {
             // Current tick
             if (CanDownload) {
                 control.createLazyTick$setLazyTickInterval(1);
-                currentDelayTick = 1;
+                currentLazyTickInterval = 1;
                 createLazyTick$mistake = false;
             } else {
-                if (currentDelayTick < Config.chute_delay_max) {
+                if (currentLazyTickInterval < Config.chute_delay_max) {
                     if (createLazyTick$mistake) {
-                        int newDelayTick = Math.min(currentDelayTick +
-                                Math.max(1, currentDelayTick /10), Config.chute_delay_max);
+                        int newDelayTick = Math.min(currentLazyTickInterval +
+                                Math.max(1, currentLazyTickInterval /10), Config.chute_delay_max);
                         control.createLazyTick$setLazyTickInterval(newDelayTick);
-                        currentDelayTick = newDelayTick;
+                        currentLazyTickInterval = newDelayTick;
                     }
-                    if (currentDelayTick == 1) {
+                    if (currentLazyTickInterval == 1) {
                         createLazyTick$mistake = true;
                     }
                 }
