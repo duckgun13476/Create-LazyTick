@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper.Spout;
+package net.pinkcats.createlazytick.bridge.Spout;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.material.Fluid;
