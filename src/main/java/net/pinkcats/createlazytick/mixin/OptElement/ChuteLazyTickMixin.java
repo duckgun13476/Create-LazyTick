@@ -93,28 +93,18 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
         if (level != null && !level.isClientSide) {
             // Current tick
-
             if (CanDownload) {
                 createLazyTick$CurrentDelayTick = 1;
                 createLazyTick$mistake = false;
             } else {
                 if (createLazyTick$CurrentDelayTick < Config.chute_delay_max) {
                     if (createLazyTick$mistake) {
-
                         createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick +
                                 Math.max(1, createLazyTick$CurrentDelayTick /10);
-
-                        //createLazyTick$UserControl();
-
                     }
-
                     if (createLazyTick$CurrentDelayTick == 1) {
                         createLazyTick$mistake = true;
                     }
-
-
-                } else  {
-                    //createLazyTick$UserControl();
                 }
             }
         }
@@ -123,14 +113,13 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     @Unique
     private void createLazyTick$UserControl() {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
-        
+
         // Force Control
         byte CLTState = control.createLazyTick$ControlState();
         if (CLTState != 0){
-            createLazyTick$CurrentDelayTick =  
+            createLazyTick$CurrentDelayTick =
                     Config.chute_delay_max * (CLTState - 1) / Math.max(1, StateDirection - 2);
         }
-        
         System.out.println(createLazyTick$CurrentDelayTick);
     }
 
