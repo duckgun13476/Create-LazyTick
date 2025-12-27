@@ -6,9 +6,9 @@ import net.minecraft.network.chat.MutableComponent;
 
 public enum LazyTickTier {
     ACTIVE("活跃", ChatFormatting.GREEN),       // <= 1
-    LIGHT("轻度睡眠", ChatFormatting.YELLOW),   // 2 ~ 33% Max
-    MEDIUM("中度睡眠", ChatFormatting.GOLD),    // 33% Max ~ Max
-    DEEP("深度睡眠", ChatFormatting.RED);       // >= Max
+    LIGHT("浅度休眠", ChatFormatting.YELLOW),   // 2 ~ 33% Max
+    MEDIUM("中度休眠", ChatFormatting.GOLD),    // 33% Max ~ Max
+    DEEP("深度休眠", ChatFormatting.RED);       // >= Max
 
     public final String name;
     public final ChatFormatting color;
