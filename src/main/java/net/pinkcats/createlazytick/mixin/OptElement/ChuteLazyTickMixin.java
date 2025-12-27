@@ -13,12 +13,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.pinkcats.createlazytick.Channel.ClientData;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
-import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,11 +27,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Objects;
-
-import static net.pinkcats.createlazytick.Channel.ClockSyncPacket.PacketCache;
-import static net.pinkcats.createlazytick.item.LazyTickClockItem.StateDirection;
-
 
 @Mixin(value = ChuteBlockEntity.class, remap = false)
 public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleInformation {
@@ -83,29 +77,30 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     @Unique
     int createLazyTick$chuteTick = 0;
     @Unique
-    int createLazyTick$CurrentDelayTick = 1;
-    @Unique
     boolean createLazyTick$mistake = false;
 
-    @Unique
-    boolean createLazyTick$isDelayForced = false;
 
     @Unique
     private void createLazyTick$LazyTickChute(boolean CanDownload){
-        if (createLazyTick$isDelayForced) return;
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        if (control.createLazyTick$isDelayForced()) return;
 
+        int currentDelayTick = control.createLazyTick$getCurrentDelayTick();
         if (level != null && !level.isClientSide) {
             // Current tick
             if (CanDownload) {
-                createLazyTick$CurrentDelayTick = 1;
+                control.createLazyTick$setCurrentDelayTick(1);
+                currentDelayTick = 1;
                 createLazyTick$mistake = false;
             } else {
-                if (createLazyTick$CurrentDelayTick < Config.chute_delay_max) {
+                if (currentDelayTick < Config.chute_delay_max) {
                     if (createLazyTick$mistake) {
-                        createLazyTick$CurrentDelayTick = Math.min(createLazyTick$CurrentDelayTick +
-                                Math.max(1, createLazyTick$CurrentDelayTick /10),Config.chute_delay_max);
+                        int newDelayTick = Math.min(currentDelayTick +
+                                Math.max(1, currentDelayTick /10), Config.chute_delay_max);
+                        control.createLazyTick$setCurrentDelayTick(newDelayTick);
+                        currentDelayTick = newDelayTick;
                     }
-                    if (createLazyTick$CurrentDelayTick == 1) {
+                    if (currentDelayTick == 1) {
                         createLazyTick$mistake = true;
                     }
                 }
@@ -115,20 +110,8 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     @Unique
     private void createLazyTick$UserControl() {
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
-
-        // Force Control
-        byte CLTState = control.createLazyTick$ControlState();
-        if (CLTState != 0){
-            createLazyTick$CurrentDelayTick =
-                    Config.chute_delay_max * (CLTState - 1) / Math.max(1, StateDirection - 2);
-            createLazyTick$isDelayForced = true;
-            return;
-        }
-        createLazyTick$isDelayForced = false;
-        System.out.println(createLazyTick$CurrentDelayTick);
+        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.chute_delay_max);
     }
-
 
     @Unique
     private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
@@ -141,30 +124,13 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
             return;
         }
 
-
         super.tick();
         UserControl_Schedule.RandomTick();
 
-        if (level != null && !level.isClientSide ) {
-            if (!PacketCache.isEmpty()){
-                for (ClientData data : PacketCache) {
-                    if (data.getDimension() == level.dimension().hashCode()) {
-                        if (Objects.equals(this.worldPosition, data.getPos())) {
-                            ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
-                            control.lazytick$setSyncedTier(createLazyTick$CurrentDelayTick, Config.chute_delay_max);
-                            PacketCache.remove(data);
-                            ForcedActiveManager.register(this.level, this.worldPosition);
-                            break;
-                        }
-                    }
-                }
-            }
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
-            //System.out.println("---");
-            //System.out.println(control.CLT$getMaxTicks());
-            //control.CLT$setMaxTicks(CurrentDelayTick);
-            //System.out.println(control.CLT$getMaxTicks());
-        }
+        NetworkSyncHelper.createLazyTick$syncPacketData(control,
+                this.level, this.worldPosition, control.createLazyTick$getCurrentDelayTick(), Config.chute_delay_max);
 
 
         if (level != null && !level.isClientSide) canPickUpItems = canDirectlyInsert();
@@ -189,8 +155,8 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
         if (level != null && !level.isClientSide) {
             createLazyTick$chuteTick++;
-            //System.out.println("chuteTick: "+createLazyTick$chuteTick+"|"+createLazyTick$CurrentDelayTick);
-            if (createLazyTick$chuteTick < createLazyTick$CurrentDelayTick) {
+            //System.out.println("chuteTick: "+createLazyTick$chuteTick+"|"+control.createLazyTick$getCurrentDelayTick());
+            if (createLazyTick$chuteTick < control.createLazyTick$getCurrentDelayTick()) {
                 ci.cancel();
                 return;
             }
@@ -236,9 +202,6 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         itemPosition.setValue(nextOffset);
         ci.cancel();
     }
-
-
-
 
 
     /**
