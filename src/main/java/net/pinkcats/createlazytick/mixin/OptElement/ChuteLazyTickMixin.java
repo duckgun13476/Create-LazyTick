@@ -91,22 +91,17 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
         if (level != null && !level.isClientSide) {
             // Current tick
-            //System.out.println(CurrentDelayTick);
+
             if (CanDownload) {
                 createLazyTick$CurrentDelayTick = 1;
                 createLazyTick$mistake = false;
             } else {
                 if (createLazyTick$CurrentDelayTick < Config.chute_delay_max) {
                     if (createLazyTick$mistake) {
-                        if (createLazyTick$CurrentDelayTick < 10) {
-                            createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick + 1;
-                        } else if (10 < createLazyTick$CurrentDelayTick && createLazyTick$CurrentDelayTick < 30) {
-                            createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick + 2;
-                        } else if (30 < createLazyTick$CurrentDelayTick && createLazyTick$CurrentDelayTick < 60) {
-                            createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick + 3;
-                        } else {
-                            createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick + 5;
-                        }
+
+                        createLazyTick$CurrentDelayTick = createLazyTick$CurrentDelayTick +
+                                Math.max(1, createLazyTick$CurrentDelayTick /10);
+
                         createLazyTick$CurrentDelayTick = createLazyTick$UserControl(createLazyTick$CurrentDelayTick);
 
                     }
@@ -116,6 +111,8 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                     }
 
 
+                } else  {
+                    createLazyTick$CurrentDelayTick = createLazyTick$UserControl(createLazyTick$CurrentDelayTick);
                 }
             }
         }
