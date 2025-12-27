@@ -137,7 +137,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
 
         super.tick();
-        UserControl_Schedule.Tick();
+        UserControl_Schedule.RandomTick();
 
         if (level != null && !level.isClientSide ) {
             if (!PacketCache.isEmpty()){
