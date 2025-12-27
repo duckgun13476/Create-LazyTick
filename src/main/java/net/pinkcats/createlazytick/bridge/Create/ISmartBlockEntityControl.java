@@ -26,4 +26,10 @@ public interface ISmartBlockEntityControl {
     // 获取当前档位 (客户端渲染用)
     LazyTickTier lazytick$getSyncedTier();
 
+    // mixin的一般是private,如果需要让Helper使用,需要一个Interface
+    void createLazyTick$setCurrentDelayTick(int tick);
+    int createLazyTick$getCurrentDelayTick();
+
+    void createLazyTick$setDelayForced(boolean isForced);
+    boolean createLazyTick$isDelayForced();
 }

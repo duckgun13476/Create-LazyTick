@@ -22,10 +22,12 @@ import java.util.Objects;
 @Mixin(value = SmartBlockEntity.class,remap = false)
 public abstract class SmartBlockEntityControlMixin extends BlockEntity implements ISmartBlockEntityControl {
 
-    @Unique private byte lazytick$forceDisabled = 0;
+    @Unique private byte lazytick$controlState = 0;
     @Unique private String lazytick$operatorName = "";
     @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
     @Unique private int createLazyTick$EntityMaxTick = 0;
+    @Unique private int createLazyTick$CurrentDelayTick = 1;
+    @Unique private boolean createLazyTick$isDelayForced = false;
 
 
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -35,8 +37,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "initialize", at = @At("RETURN"), remap = false)
     private void lazytick$onInit(CallbackInfo ci) {
-        System.out.println("init PARA" + this.lazytick$forceDisabled);
-        if (this.lazytick$forceDisabled != 0 && this.level != null) {
+        System.out.println("init PARA" + this.lazytick$controlState);
+        if (this.lazytick$controlState != 0 && this.level != null) {
             ForcedActiveManager.register(this.level, this.worldPosition);
         }
     }
@@ -52,7 +54,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Inject(method = "write", at = @At("RETURN"))
     private void lazytick$writeNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
 
-        tag.putByte("LazyTickForceDisabled", this.lazytick$forceDisabled);
+        tag.putByte("LazyTickForceDisabled", this.lazytick$controlState);
         tag.putString("LazyTickOperator", this.lazytick$operatorName);
 
         if (this.lazytick$syncedTier != LazyTickTier.ACTIVE) {
@@ -64,10 +66,10 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     private void lazytick$readNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
         if (tag.contains("LazyTickForceDisabled")) {
 
-            this.lazytick$forceDisabled = tag.getByte("LazyTickForceDisabled");
+            this.lazytick$controlState = tag.getByte("LazyTickForceDisabled");
             this.lazytick$operatorName = tag.getString("LazyTickOperator");
         } else {
-            this.lazytick$forceDisabled = 0;
+            this.lazytick$controlState = 0;
             this.lazytick$operatorName = "";
         }
 
@@ -111,15 +113,15 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     // Interface
     @Override
-    public byte createLazyTick$ControlState() { return this.lazytick$forceDisabled; }
+    public byte createLazyTick$ControlState() { return this.lazytick$controlState; }
 
     @Override
     public void createLazyTick$SetForceControl(byte value) {
 
-        System.out.println("Change "+ value+" to "+this.lazytick$forceDisabled);
+        System.out.println("Change "+ value+" to "+this.lazytick$controlState);
 
-        if (this.lazytick$forceDisabled != value) {
-            this.lazytick$forceDisabled = value;
+        if (this.lazytick$controlState != value) {
+            this.lazytick$controlState = value;
             this.setChanged();
             this.createLazyTick$sendBlockUpdated();
         }
@@ -164,5 +166,23 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         return null;
     }
 
+    @Override
+    public void createLazyTick$setCurrentDelayTick(int tick) {
+        this.createLazyTick$CurrentDelayTick = tick;
+    }
 
+    @Override
+    public int createLazyTick$getCurrentDelayTick() {
+        return this.createLazyTick$CurrentDelayTick;
+    }
+
+    @Override
+    public void createLazyTick$setDelayForced(boolean isForced) {
+        this.createLazyTick$isDelayForced = isForced;
+    }
+
+    @Override
+    public boolean createLazyTick$isDelayForced() {
+        return this.createLazyTick$isDelayForced;
+    }
 }
