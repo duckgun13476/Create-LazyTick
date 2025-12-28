@@ -1,6 +1,6 @@
 package net.pinkcats.createlazytick.mixin.Create.Client;
 
-import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
+import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.Config;
@@ -14,21 +14,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-@Mixin(value = ItemDrainBlockEntity.class, remap = false)
-public class ItemDrainGoggleMixin {
+@Mixin(value = ArmBlockEntity.class, remap = false)
+public class ArmGoggleMixin {
 
     @Unique
     private int createLazyTick$tick = 0;
 
-    @Inject(method = "addToGoggleTooltip", at = @At("RETURN"), cancellable = true)
-    private void lazytick$appendDrainInfo(List<Component> tooltip, boolean isPlayerSneaking, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "addToTooltip", at = @At("RETURN"), cancellable = true)
+    private void lazytick$appendArmInfo(List<Component> tooltip, boolean isPlayerSneaking, CallbackInfoReturnable<Boolean> cir) {
         Minecraft mc = Minecraft.getInstance();
         if (!LazyTickTooltipHelper.shouldRender(mc)) return;
 
         if ((Object) this instanceof ISmartBlockEntityControl control) {
-            int maxDelayTick = Config.item_drain_delay_max;
+            int maxDelayTick = Config.arm_delay_max;
             this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
-            // 强制渲染
             cir.setReturnValue(true);
         }
     }
