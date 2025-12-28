@@ -1,27 +1,33 @@
 package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
+import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
 @Mixin(value = MechanicalCrafterBlockEntity.class,remap = false)
-public abstract class CrafterRedstoneLazyTickMixin {
+public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity {
 
     @Shadow(remap = false)
     protected boolean wasPoweredBefore;
 
     @Unique
-    private int lazytick$redstoneTimer = 0;
-    @Unique
-    private int lazytick$currentInterval = 1;
+    private int lazytick$redstoneTick = 0;
     @Unique
     private long lazytick$lastActiveTime = -1;
 
@@ -37,14 +43,36 @@ public abstract class CrafterRedstoneLazyTickMixin {
     @Unique
     private static final int WINDOW_UNPOWERED = 200;
 
+    public CrafterRedstoneLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
+    @Unique
+    private void createLazyTick$UserControl() {
+        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.crafter_redstone_delay_max);
+    }
+
+    @Unique
+    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
+
+    @Unique
+    private void safeChangeLazyTickInterval(int interval) {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        if (!control.createLazyTick$isDelayForced()) {
+            control.createLazyTick$setLazyTickInterval(interval);
+        }
+    }
+
     @Unique
     private void lazytick$updateInterval(boolean signalChanged, boolean isPowered, long gameTime) {
         int maxDelay = Config.crafter_redstone_delay_max;
 
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
         // 信号发生改变,变回活跃状态 (刷新活跃时间)
         if (signalChanged) {
             lazytick$lastActiveTime = gameTime;
-            lazytick$currentInterval = 1;
+            safeChangeLazyTickInterval(1);
             return;
         }
 
@@ -55,13 +83,32 @@ public abstract class CrafterRedstoneLazyTickMixin {
 
         // 如果还在活跃期内,始终保持活跃检测
         if (gameTime - lazytick$lastActiveTime < currentWindow) {
-            lazytick$currentInterval = 1;
+            safeChangeLazyTickInterval(1);
             return;
         }
 
         // 不在窗口期时,累加延时检测
-        if (lazytick$currentInterval < maxDelay) {
-            lazytick$currentInterval++;
+        int currentInterval = control.createLazyTick$getLazyTickInterval();
+        if (currentInterval < maxDelay) {
+            int newDelayTick = Math.min(currentInterval +
+                    Math.max(1, currentInterval /10), Config.crafter_redstone_delay_max);
+            safeChangeLazyTickInterval(newDelayTick);
+            currentInterval = newDelayTick;
+        }
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"), remap = false)
+    private void lazytick$onTickHead(CallbackInfo ci) {
+        if (level == null || level.isClientSide) return;
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
+        UserControl_Schedule.RandomTick();
+
+        NetworkSyncHelper.createLazyTick$syncPacketData(control,
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
+
+        if (!level.isClientSide()) {
+            System.out.println("Crafter:" + lazytick$redstoneTick + "/" + control.createLazyTick$getLazyTickInterval());
         }
     }
 
@@ -81,23 +128,27 @@ public abstract class CrafterRedstoneLazyTickMixin {
 
         long gameTime = level.getGameTime();
 
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
         // 重载时,按照正常逻辑返回
         if (IsServerReload) {
             lazytick$lastActiveTime = gameTime;
-            lazytick$currentInterval = 1;
-            lazytick$redstoneTimer = 0;
+            safeChangeLazyTickInterval(1);
+            lazytick$redstoneTick = 0;
             return level.hasNeighborSignal(pos);
         }
 
-        // 在懒加载期间时,若间隔仍大于0,则返回独立缓存的信号状态
+        // 在懒加载期间时,则返回独立缓存的信号状态
         // 防止因 Mixin 跳过检测导致机器状态与真实信号不同步,进而引发每tick的极高频震荡(单独debug三秒给你刷几十上百KB)
-        if (lazytick$redstoneTimer > 0) {
-            lazytick$redstoneTimer--;
+        if (lazytick$redstoneTick < control.createLazyTick$getLazyTickInterval()) {
+            lazytick$redstoneTick++;
             return this.lazytick$cachedSignal;
         }
 
         // 执行正常返回逻辑并重置计时器(以及查看是否需要继续懒加载)
         boolean realSignal = level.hasNeighborSignal(pos);
+
+        lazytick$redstoneTick = 0;
 
         // 更新独立缓存
         this.lazytick$cachedSignal = realSignal;
@@ -106,9 +157,6 @@ public abstract class CrafterRedstoneLazyTickMixin {
 
         // 传入 realSignal 以决定使用长窗口还是短窗口
         lazytick$updateInterval(changed, realSignal, gameTime);
-
-        // 设置计时器:Interval=1 时 Timer=0 (下tick继续查红石状态),Interval=2 时 Timer=1 (下tick跳过)
-        lazytick$redstoneTimer = lazytick$currentInterval - 1;
 
         return realSignal;
     }
