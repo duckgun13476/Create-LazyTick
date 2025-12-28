@@ -22,6 +22,7 @@ public class LazyTickTooltipHelper {
         currentTick++;
         if (currentTick >= frequent) {
             currentTick = 0;
+            // need confirm:getModelName() has special meaning?
             CLTChannel.sendToServer(new ClockSyncPacket(
                     mc.player.getModelName(),
                     control.CLT$getDimension().hashCode(),
