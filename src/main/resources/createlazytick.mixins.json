@@ -32,7 +32,8 @@
   ],
   "client": [
     "Create.Client.ItemDrainGoggleMixin",
-    "Create.Client.SmartBlockEntityGoggleMixin"
+    "Create.Client.SmartBlockEntityGoggleMixin",
+    "Create.Client.ArmGoggleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
