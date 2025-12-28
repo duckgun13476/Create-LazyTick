@@ -52,16 +52,17 @@ public class LazyTickTooltipHelper {
             tooltip.add(control.lazytick$getSyncedTier().getDisplayComponent(maxDelayTick));
         }
 
-        List<Component> customInfo = control.createLazyTick$getCustomTooltipInfo();
-        if (customInfo != null && !customInfo.isEmpty()) {
-            // 渲染自定义文本
-            tooltip.addAll(customInfo);
-        }
-
         String op = control.createLazyTick$getUserName();
         if (!op.isEmpty()) {
             // 渲染操作者
             tooltip.add(Component.literal(" 操作者: " + op).withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        List<Component> customInfo = control.createLazyTick$getCustomTooltipInfo();
+        if (customInfo != null && !customInfo.isEmpty()) {
+            // 渲染自定义文本
+            tooltip.add(Component.literal("  "));
+            tooltip.addAll(customInfo);
         }
 
         return currentTick;
