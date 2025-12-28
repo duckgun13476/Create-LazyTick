@@ -10,6 +10,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
+import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.DropResourceLocation;
@@ -44,23 +46,13 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     ArmBlockEntity.Phase phase;
 
     @Unique
-    private int createLazyTick$searchTimer = 0;
-    @Unique
-    private int createLazyTick$currentInterval = 1;
+    private int createLazyTick$armTick = 0;
 
     // 缓存状态：决定当前机械臂的运行模式
     @Unique
     private boolean createLazyTick$ignoreLazy = false; // true = 忽略懒加载，全速运行
     @Unique
     private boolean createLazyTick$weakLazy = false;   // true = 弱懒加载，使用较短的睡眠间隔
-
-    // 重校验计时器
-    @Unique
-    private int createLazyTick$revalidateTimer = 0;
-
-    // 随机数生成器,避免所有的动力臂都挤在同一刻查询方块状态
-    @Unique
-    private static final Random createLazyTick$random = new Random();
 
     // 重校验间隔: 10秒 = 200 ticks
     @Unique
@@ -176,13 +168,21 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
         this.createLazyTick$weakLazy = foundWeak;
     }
 
+    @Unique
+    private void createLazyTick$UserControl() {
+        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.chute_delay_max);
+    }
+
+    @Unique
+    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
+
+    @Unique
+    private final ScheduleTicker ScanBlockType_Schedule = new ScheduleTicker(REVALIDATE_INTERVAL, this::createLazyTick$scanUrgency);
+
     //初始化时执行一次扫描，并设置随机偏移
     @Inject(method = "initInteractionPoints", at = @At("RETURN"), remap = false)
     private void createLazyTick$onInitPoints(CallbackInfo ci) {
         createLazyTick$scanUrgency();
-        // 错峰机制,为每台机械臂赋予一个 0~199 之间的随机初始值
-        // 这样它们会在 10 秒周期内的不同 Tick 进行环境扫描，而不是全部挤在第 200 Tick
-        createLazyTick$revalidateTimer = createLazyTick$random.nextInt(REVALIDATE_INTERVAL);
     }
 
     //定期检查环境 (每 10 秒)
@@ -190,11 +190,18 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     private void createLazyTick$tickCheck(CallbackInfo ci) {
         if (level == null || level.isClientSide) return;
 
-        createLazyTick$revalidateTimer++;
-        if (createLazyTick$revalidateTimer >= REVALIDATE_INTERVAL) {
-            createLazyTick$scanUrgency();
-            createLazyTick$revalidateTimer = 0;
-        }
+        UserControl_Schedule.RandomTick();
+
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
+        NetworkSyncHelper.createLazyTick$syncPacketData(control,
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), Config.arm_delay_max);
+
+        ScanBlockType_Schedule.RandomTick();
+
+        /*if(!level.isClientSide()) {
+            System.out.println("Arm:" + createLazyTick$armTick + "|" + control.createLazyTick$getLazyTickInterval());
+        }*/
     }
 
     // 寻找输入懒加载计时器
@@ -202,16 +209,18 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     private void createLazyTick$searchForItemHead(CallbackInfo ci) {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
 
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
         if (createLazyTick$ignoreLazy) {
-            createLazyTick$currentInterval = 0;
+            control.createLazyTick$setLazyTickInterval(0);
             return;
         }
 
-        createLazyTick$searchTimer++;
-        if (createLazyTick$searchTimer < createLazyTick$currentInterval) {
+        createLazyTick$armTick++;
+        if (createLazyTick$armTick < control.createLazyTick$getLazyTickInterval()) {
             ci.cancel();
         } else {
-            createLazyTick$searchTimer = 0;
+            createLazyTick$armTick = 0;
         }
     }
 
@@ -221,19 +230,24 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
         if (createLazyTick$ignoreLazy) return;
 
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
         if (this.phase != ArmBlockEntity.Phase.SEARCH_INPUTS) {
             // 只要相位改变 (找到物品了)，立即重置等待，准备全速工作
-            createLazyTick$currentInterval = 1;
-            createLazyTick$searchTimer = 0;
+            control.createLazyTick$setLazyTickInterval(1);
+            createLazyTick$armTick = 0;
         } else {
             // 仍在寻找输入: 逐步增加睡眠时间
             int maxDelay = Config.arm_delay_max;
             if (createLazyTick$weakLazy) {
                 maxDelay = Math.min(Config.arm_weak_delay_max, maxDelay);
             }
-            if (createLazyTick$currentInterval < maxDelay) {
-                createLazyTick$currentInterval = Math.min(createLazyTick$currentInterval +
-                        Math.max(1, createLazyTick$currentInterval /10), maxDelay);
+
+            int currentInterval = control.createLazyTick$getLazyTickInterval();
+
+            if (currentInterval < maxDelay) {
+                int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
+                control.createLazyTick$setLazyTickInterval(newInterval);
             }
         }
     }
@@ -243,16 +257,18 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     private void createLazyTick$searchForDestinationHead(CallbackInfo ci) {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
 
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
         if (createLazyTick$ignoreLazy) {
-            createLazyTick$currentInterval = 0;
+            control.createLazyTick$setLazyTickInterval(0);
             return;
         }
 
-        createLazyTick$searchTimer++;
-        if (createLazyTick$searchTimer < createLazyTick$currentInterval) {
+        createLazyTick$armTick++;
+        if (createLazyTick$armTick < control.createLazyTick$getLazyTickInterval()) {
             ci.cancel();
         } else {
-            createLazyTick$searchTimer = 0;
+            createLazyTick$armTick = 0;
         }
     }
 
@@ -262,19 +278,24 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
         if (createLazyTick$ignoreLazy) return;
 
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
         if (this.phase != ArmBlockEntity.Phase.SEARCH_OUTPUTS) {
             // 只要相位改变 (找到输出容器了)，立即重置
-            createLazyTick$currentInterval = 1;
-            createLazyTick$searchTimer = 0;
+            control.createLazyTick$setLazyTickInterval(1);
+            createLazyTick$armTick = 0;
         } else {
             // 仍在寻找输出: 增加睡眠时间
             int maxDelay = Config.arm_delay_max;
             if (createLazyTick$weakLazy) {
                 maxDelay = Math.min(Config.arm_weak_delay_max, maxDelay);
             }
-            if (createLazyTick$currentInterval < maxDelay) {
-                createLazyTick$currentInterval = Math.min(createLazyTick$currentInterval +
-                        Math.max(1, createLazyTick$currentInterval /10), maxDelay);
+
+            int currentInterval = control.createLazyTick$getLazyTickInterval();
+
+            if (currentInterval < maxDelay) {
+                int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
+                control.createLazyTick$setLazyTickInterval(newInterval);
             }
         }
     }
