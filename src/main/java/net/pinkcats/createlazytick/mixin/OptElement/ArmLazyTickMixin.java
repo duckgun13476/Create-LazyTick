@@ -170,7 +170,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
 
     @Unique
     private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.chute_delay_max);
+        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.arm_delay_max);
     }
 
     @Unique

@@ -83,7 +83,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Unique
     private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this.blockEntity,Config.chute_delay_max);
+        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this.blockEntity,Config.depot_delay_max);
     }
 
     @Unique
