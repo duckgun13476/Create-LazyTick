@@ -8,13 +8,13 @@ public class ClientData {
 
     private final BlockPos pos;
     private final int dimension;
-    private final String Player;
+    private final int extraData;
 
     public boolean isSimilar(ClientData other) {
         if (other == null) {
             return false;}
 
-        if (!Objects.equals(this.Player, other.Player)) {
+        if (this.extraData != other.extraData) {
             return false;}
 
         if (this.dimension != other.dimension) {
@@ -25,10 +25,10 @@ public class ClientData {
     }
 
 
-    public ClientData(String Player , int dimension, BlockPos pos) {
+    public ClientData(int extraData , int dimension, BlockPos pos) {
         this.pos = pos;
         this.dimension = dimension;
-        this.Player = Player;
+        this.extraData = extraData;
     }
 
 
@@ -40,13 +40,16 @@ public class ClientData {
         return pos;
     }
 
+    public int getExtraData() {
+        return extraData;
+    }
 
     @Override
     public String toString() {
         return "Packet{" +
                 "dimension=" + dimension +
                 ", pos="  + pos +
-                ", Player="  + Player +
+                ", extraData="  + extraData +
                 '}';
     }
 }

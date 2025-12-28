@@ -22,8 +22,10 @@ public class LazyTickTooltipHelper {
         currentTick++;
         if (currentTick >= frequent) {
             currentTick = 0;
+
+            int extraDataToSend = 0;
             CLTChannel.sendToServer(new ClockSyncPacket(
-                    mc.player.getName().getString(),
+                    extraDataToSend,
                     control.CLT$getDimension().hashCode(),
                     control.CLT$getPos()
             ));
