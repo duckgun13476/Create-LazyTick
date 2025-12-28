@@ -149,12 +149,22 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
             return;
         }
 
-        float nextOffset = itemPosition.getValue() + itemMotion;
+        int timeMultiplier = 1;
 
+        if (level != null && !level.isClientSide) {
+            // 获取当前实际的休眠间隔
+            timeMultiplier = control.createLazyTick$getLazyTickInterval();
+        }
+
+        // 计算补偿位移
+        float compensatedMotion = itemMotion * timeMultiplier;
+
+        // 应用位移
+        float nextOffset = itemPosition.getValue() + compensatedMotion;
 
         if (level != null && !level.isClientSide) {
             createLazyTick$chuteTick++;
-            //System.out.println("chuteTick: "+createLazyTick$chuteTick+"|"+control.createLazyTick$getCurrentDelayTick());
+            //System.out.println("chuteTick: "+createLazyTick$chuteTick+"|"+control.createLazyTick$getLazyTickInterval());
             if (createLazyTick$chuteTick < control.createLazyTick$getLazyTickInterval()) {
                 ci.cancel();
                 return;
