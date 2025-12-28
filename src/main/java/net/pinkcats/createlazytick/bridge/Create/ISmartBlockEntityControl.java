@@ -45,4 +45,13 @@ public interface ISmartBlockEntityControl {
     default boolean createLazyTick$shouldRenderMode() {
         return true;
     }
+
+    // C Request S to do something(Interface)
+    default void CLT$onClientRequest(int extraData) {}
+
+    // Server Only
+    void lazytick$setExtraData(int data);
+
+    // Client Only
+    int lazytick$getExtraData();
 }
