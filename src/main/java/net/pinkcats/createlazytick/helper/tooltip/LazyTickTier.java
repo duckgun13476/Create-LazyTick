@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper;
+package net.pinkcats.createlazytick.helper.tooltip;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
