@@ -24,7 +24,7 @@ public class LazyTickTooltipHelper {
             currentTick = 0;
             // need confirm:getModelName() has special meaning?
             CLTChannel.sendToServer(new ClockSyncPacket(
-                    mc.player.getModelName(),
+                    mc.player.getName().getString(),
                     control.CLT$getDimension().hashCode(),
                     control.CLT$getPos()
             ));
