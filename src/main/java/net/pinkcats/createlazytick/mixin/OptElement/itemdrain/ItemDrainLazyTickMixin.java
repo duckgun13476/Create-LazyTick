@@ -17,6 +17,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
+import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,11 +31,15 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
     // 当前实际生效的冷却倒计时
     @Unique
-    private int outputCooldown = 0;
+    private int createLazyTick$itemDrainTick = 0;
 
-    // 动态调整的最大冷却时长
     @Unique
-    private int currentWaitTime = 1;
+    private void createLazyTick$UserControl() {
+        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.item_drain_delay_max);
+    }
+
+    @Unique
+    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
 
     public ItemDrainLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -45,21 +52,31 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
             return;
         }
 
+        UserControl_Schedule.RandomTick();
+
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+
+        NetworkSyncHelper.createLazyTick$syncPacketData(control,
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), Config.item_drain_delay_max);
+
+        /*if(!level.isClientSide()) {
+            System.out.println("ItemDrain:" + createLazyTick$itemDrainTick + "|" + control.createLazyTick$getLazyTickInterval());
+        }*/
+
         ItemDrainAccessor accessor = (ItemDrainAccessor) this;
         TransportedItemStack heldItem = accessor.getHeldItem();
         int processingTicks = accessor.getProcessingTicks();
 
         if (heldItem == null) {
             accessor.setProcessingTicks(0);
-            outputCooldown = 0;
-            currentWaitTime = 1; // 重置等待时间
+            createLazyTick$resetDelayTick(); // 重置等待时间
             ci.cancel();
             return;
         }
 
         // 无论是物品输出堵塞还是流体倾倒堵塞，有冷却就跳过
-        if (outputCooldown > 0) {
-            outputCooldown--;
+        if (createLazyTick$itemDrainTick < control.createLazyTick$getLazyTickInterval()) {
+            createLazyTick$itemDrainTick++;
             ci.cancel();
             return;
         }
@@ -92,13 +109,12 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
             // 如果 ticks 被重置回 20,说明内部流体满了,懒加载
             if (accessor.getProcessingTicks() == ItemDrainBlockEntity.FILLING_TIME) {
-                applyBackoff();
+                createLazyTick$applyBackoff();
                 ci.cancel();
                 return;
             } else {
                 // 否则说明正在倒液,重置等待时间
-                currentWaitTime = 1;
-                outputCooldown = 0;
+                createLazyTick$resetDelayTick();
             }
 
             if (wasAtBeginning != (processingTicks == ItemDrainBlockEntity.FILLING_TIME))
@@ -136,15 +152,14 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
                     notifyUpdate();
 
                     // 成功部分输出,重置冷却逻辑
-                    currentWaitTime = 1;
-                    outputCooldown = 0;
+                    createLazyTick$resetDelayTick();
 
                     ci.cancel();
                     return;
                 }
                 if (!tryExportingToBeltFunnel.isEmpty()) {
 
-                    applyBackoff(); // 漏斗阻塞,应用退避
+                    createLazyTick$applyBackoff(); // 漏斗阻塞,应用退避
                     ci.cancel();
                     return;
 
@@ -174,17 +189,16 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
                     notifyUpdate();
 
                     // 成功抛出物品,重置
-                    currentWaitTime = 1;
-                    outputCooldown = 0;
+                    createLazyTick$resetDelayTick();
                 } else {
-                    applyBackoff(); // 物理(其他类别方块)阻塞,应用退避
+                    createLazyTick$applyBackoff(); // 物理(其他类别方块)阻塞,应用退避
                 }
                 ci.cancel();
                 return;
             }
 
             if (!directBeltInputBehaviour.canInsertFromSide(side)) {
-                applyBackoff(); // 接口拒绝,应用退避
+                createLazyTick$applyBackoff(); // 接口拒绝,应用退避
                 ci.cancel();
                 return;
             }
@@ -199,8 +213,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
                 notifyUpdate();
 
                 // 完全成功(物品没了),重置
-                currentWaitTime = 1;
-                outputCooldown = 0;
+                createLazyTick$resetDelayTick();
 
                 ci.cancel();
                 return;
@@ -208,7 +221,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
             // 完全失败检测(物品数量数量没变)
             if (returned.getCount() == heldItem.stack.getCount()) {
-                applyBackoff(); // 插入失败,懒加载
+                createLazyTick$applyBackoff(); // 插入失败,懒加载
                 ci.cancel();
                 return;
             }
@@ -219,8 +232,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
                 notifyUpdate();
 
                 //能够正常运行,正常加载
-                currentWaitTime = 1;
-                outputCooldown = 0;
+                createLazyTick$resetDelayTick();
 
                 ci.cancel();
                 return;
@@ -248,9 +260,22 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
     }
 
     @Unique
-    private void applyBackoff() {
-        outputCooldown = currentWaitTime;
-        int nextTime = currentWaitTime + 5;
-        currentWaitTime = Math.min(Config.item_drain_delay_max, nextTime);
+    private void createLazyTick$applyBackoff() {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        createLazyTick$itemDrainTick = 0;
+
+        if (control.createLazyTick$isDelayForced()) return;
+        int currentInterval = control.createLazyTick$getLazyTickInterval();
+        int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), Config.item_drain_delay_max);
+        control.createLazyTick$setLazyTickInterval(newInterval);
+    }
+
+    @Unique
+    private void createLazyTick$resetDelayTick() {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        createLazyTick$itemDrainTick = 0;
+
+        if (control.createLazyTick$isDelayForced()) return;
+        control.createLazyTick$setLazyTickInterval(1);
     }
 }
