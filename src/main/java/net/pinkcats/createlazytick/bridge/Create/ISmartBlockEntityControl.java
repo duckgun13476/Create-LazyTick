@@ -13,9 +13,6 @@ public interface ISmartBlockEntityControl {
     String createLazyTick$getUserName();
     void createLazyTick$setUserName(String value);
 
-    int CLT$getMaxTicks();
-    void CLT$setMaxTicks(int value);
-
     BlockPos CLT$getPos();
     ResourceKey<Level> CLT$getDimension();
 
