@@ -30,8 +30,13 @@ public class NetworkSyncHelper {
         if (level != null && !level.isClientSide) {
             if (!PacketCache.isEmpty()){
                 for (ClientData data : PacketCache) {
-                    if (data.getDimension() == level.dimension().hashCode()) {
+                    String currentDim = level.dimension().location().toString();
+                    if (data.getDimension().equals(currentDim)) {
                         if (Objects.equals(pos, data.getPos())) {
+                            int cmd = data.getExtraData();
+                            if (cmd != 0) {
+                                control.CLT$onClientRequest(cmd);
+                            }
                             control.lazytick$setSyncedTier(currentDelayTick, maxDelayTick);
                             PacketCache.remove(data);
                             ForcedActiveManager.register(level, pos);

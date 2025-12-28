@@ -26,7 +26,7 @@ public class LazyTickTooltipHelper {
             int extraDataToSend = 0;
             CLTChannel.sendToServer(new ClockSyncPacket(
                     extraDataToSend,
-                    control.CLT$getDimension().hashCode(),
+                    control.CLT$getDimension().location().toString(),
                     control.CLT$getPos()
             ));
         }

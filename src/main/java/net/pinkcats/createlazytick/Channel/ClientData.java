@@ -7,7 +7,7 @@ import java.util.Objects;
 public class ClientData {
 
     private final BlockPos pos;
-    private final int dimension;
+    private final String dimension;
     private final int extraData;
 
     public boolean isSimilar(ClientData other) {
@@ -17,7 +17,7 @@ public class ClientData {
         if (this.extraData != other.extraData) {
             return false;}
 
-        if (this.dimension != other.dimension) {
+        if (!Objects.equals(this.dimension, other.dimension)) {
             return false;}
 
         return Objects.equals(this.pos, other.pos);
@@ -25,14 +25,14 @@ public class ClientData {
     }
 
 
-    public ClientData(int extraData , int dimension, BlockPos pos) {
+    public ClientData(int extraData , String dimension, BlockPos pos) {
         this.pos = pos;
         this.dimension = dimension;
         this.extraData = extraData;
     }
 
 
-    public int getDimension() {
+    public String getDimension() {
         return dimension;
     }
 

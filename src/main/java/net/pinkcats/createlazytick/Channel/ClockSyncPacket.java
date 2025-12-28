@@ -11,27 +11,27 @@ import java.util.function.Supplier;
 public class ClockSyncPacket {
 
     private final BlockPos pos;
-    private final int dimension;
+    private final String dimension;
     private final int extraData;
 
     public static List<ClientData> PacketCache = new ArrayList<>();
 
 
-    public ClockSyncPacket(int extraData , int dimension, BlockPos pos) {
+    public ClockSyncPacket(int extraData , String dimension, BlockPos pos) {
         this.dimension = dimension;
         this.pos = pos;
         this.extraData = extraData;
     }
 
     public ClockSyncPacket(FriendlyByteBuf buf) {
-        dimension = buf.readInt();
+        dimension = buf.readUtf();
         pos = buf.readBlockPos();
         extraData = buf.readInt();
 
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeInt(dimension);
+        buf.writeUtf(dimension);
         buf.writeBlockPos(pos);
         buf.writeInt(extraData);
     }
