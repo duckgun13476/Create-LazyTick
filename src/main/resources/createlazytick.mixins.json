@@ -31,7 +31,6 @@
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
-    "Create.Client.ArmGoggleMixin",
     "Create.Client.ItemDrainGoggleMixin",
     "Create.Client.SmartBlockEntityGoggleMixin",
     "Create.Client.KineticBlockEntityGoggleMixin"
