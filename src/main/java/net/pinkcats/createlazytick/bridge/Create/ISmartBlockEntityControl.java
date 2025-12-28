@@ -1,9 +1,13 @@
 package net.pinkcats.createlazytick.bridge.Create;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
-import net.pinkcats.createlazytick.helper.LazyTickTier;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface ISmartBlockEntityControl {
 
@@ -29,4 +33,16 @@ public interface ISmartBlockEntityControl {
 
     void createLazyTick$setDelayForced(boolean isForced);
     boolean createLazyTick$isDelayForced();
+
+    default List<Component> createLazyTick$getCustomTooltipInfo() {
+        return new ArrayList<>();
+    }
+
+    default boolean createLazyTick$shouldRenderTier() {
+        return true;
+    }
+
+    default boolean createLazyTick$shouldRenderMode() {
+        return true;
+    }
 }

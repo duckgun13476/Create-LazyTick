@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper;
+package net.pinkcats.createlazytick.helper.tooltip;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -22,7 +22,6 @@ public class LazyTickTooltipHelper {
         currentTick++;
         if (currentTick >= frequent) {
             currentTick = 0;
-            // need confirm:getModelName() has special meaning?
             CLTChannel.sendToServer(new ClockSyncPacket(
                     mc.player.getName().getString(),
                     control.CLT$getDimension().hashCode(),
@@ -30,9 +29,8 @@ public class LazyTickTooltipHelper {
             ));
         }
 
-        int state = control.createLazyTick$ControlState();
+        int stateId = control.createLazyTick$ControlState();
 
-        // [UI修复] 防止图标遮挡
         if (tooltip.isEmpty()) {
             // 如果是第一行（置物台），加4个空格缩进，给左侧图标留位置
             tooltip.add(Component.literal("    LazyTick Status:").withStyle(ChatFormatting.GRAY));
@@ -42,25 +40,25 @@ public class LazyTickTooltipHelper {
             tooltip.add(Component.literal("LazyTick Status:").withStyle(ChatFormatting.GRAY));
         }
 
-        if (state == 1) {
-            tooltip.add(Component.literal(" [强制全速模式]").withStyle(ChatFormatting.DARK_PURPLE));
-
-        } else if (state == 2) {
-            tooltip.add(Component.literal(" [强制浅度休眠模式]").withStyle(ChatFormatting.YELLOW));
-        } else if (state == 3) {
-            tooltip.add(Component.literal(" [强制中度休眠模式]").withStyle(ChatFormatting.GOLD));
-        } else if (state == 4) {
-            tooltip.add(Component.literal(" [强制深度休眠模式]").withStyle(ChatFormatting.RED));
-        } else if (state == 0) {
-            tooltip.add(Component.literal(" [自动休眠模式]").withStyle(ChatFormatting.GRAY));
+        if (control.createLazyTick$shouldRenderMode()) {
+            // 渲染目前懒加载模式
+            tooltip.add(LazyTickMode.fromId(stateId).getDisplayComponent());
         }
 
-        if (state != 1) {
+        if (control.createLazyTick$shouldRenderTier() && stateId != 1) {
+            // 渲染目前懒加载状态
             tooltip.add(control.lazytick$getSyncedTier().getDisplayComponent(maxDelayTick));
+        }
+
+        List<Component> customInfo = control.createLazyTick$getCustomTooltipInfo();
+        if (customInfo != null && !customInfo.isEmpty()) {
+            // 渲染自定义文本
+            tooltip.addAll(customInfo);
         }
 
         String op = control.createLazyTick$getUserName();
         if (!op.isEmpty()) {
+            // 渲染操作者
             tooltip.add(Component.literal(" 操作者: " + op).withStyle(ChatFormatting.DARK_GRAY));
         }
 
