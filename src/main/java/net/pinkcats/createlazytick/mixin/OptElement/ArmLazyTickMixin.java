@@ -179,6 +179,15 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     @Unique
     private final ScheduleTicker ScanBlockType_Schedule = new ScheduleTicker(REVALIDATE_INTERVAL, this::createLazyTick$scanUrgency);
 
+    @Unique
+    private void createLazyTick$resetDelayTick() {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        createLazyTick$armTick = 0;
+
+        if (control.createLazyTick$isDelayForced()) return;
+        control.createLazyTick$setLazyTickInterval(1);
+    }
+
     //初始化时执行一次扫描，并设置随机偏移
     @Inject(method = "initInteractionPoints", at = @At("RETURN"), remap = false)
     private void createLazyTick$onInitPoints(CallbackInfo ci) {
@@ -234,8 +243,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
 
         if (this.phase != ArmBlockEntity.Phase.SEARCH_INPUTS) {
             // 只要相位改变 (找到物品了)，立即重置等待，准备全速工作
-            control.createLazyTick$setLazyTickInterval(1);
-            createLazyTick$armTick = 0;
+            createLazyTick$resetDelayTick();
         } else {
             // 仍在寻找输入: 逐步增加睡眠时间
             int maxDelay = Config.arm_delay_max;
@@ -246,6 +254,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
             int currentInterval = control.createLazyTick$getLazyTickInterval();
 
             if (currentInterval < maxDelay) {
+                if (control.createLazyTick$isDelayForced()) return;
                 int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
                 control.createLazyTick$setLazyTickInterval(newInterval);
             }
@@ -282,8 +291,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
 
         if (this.phase != ArmBlockEntity.Phase.SEARCH_OUTPUTS) {
             // 只要相位改变 (找到输出容器了)，立即重置
-            control.createLazyTick$setLazyTickInterval(1);
-            createLazyTick$armTick = 0;
+            createLazyTick$resetDelayTick();
         } else {
             // 仍在寻找输出: 增加睡眠时间
             int maxDelay = Config.arm_delay_max;
@@ -294,6 +302,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
             int currentInterval = control.createLazyTick$getLazyTickInterval();
 
             if (currentInterval < maxDelay) {
+                if (control.createLazyTick$isDelayForced()) return;
                 int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
                 control.createLazyTick$setLazyTickInterval(newInterval);
             }
