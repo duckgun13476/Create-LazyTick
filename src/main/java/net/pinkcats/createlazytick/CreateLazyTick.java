@@ -57,7 +57,7 @@ public class CreateLazyTick {
         ITEMS.register(modEventBus);
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
-        modLoadingContext.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modLoadingContext.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
     }
 
 
