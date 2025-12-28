@@ -1,7 +1,6 @@
 package net.pinkcats.createlazytick.mixin.Create.Client;
 
-import com.simibubi.create.content.equipment.goggles.IHaveHoveringInformation;
-import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -14,20 +13,18 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.List;
 
 @Mixin(value = SmartBlockEntity.class, remap = false)
-public class SmartBlockEntityGoggleMixin implements IHaveHoveringInformation {
+public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
 
     @Unique
     private int createLazyTick$tick = 0;
 
     @Override
-    public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         Minecraft mc = Minecraft.getInstance();
         if (!LazyTickTooltipHelper.shouldRender(mc)) return false;
 
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
-        if (whiteItem == null) return false;
-
-        if ((Object) this instanceof ItemDrainBlockEntity) return false;
+        if (whiteItem == null || !whiteItem.isSmart()) return false;
 
         if (this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
