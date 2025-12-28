@@ -25,7 +25,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Unique private byte lazytick$controlState = 0;
     @Unique private String lazytick$operatorName = "";
     @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
-    @Unique private int createLazyTick$EntityMaxTick = 0;
     @Unique private int createLazyTick$CurrentDelayTick = 1;
     @Unique private boolean createLazyTick$isDelayForced = false;
 
@@ -136,18 +135,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         if (!Objects.equals(this.lazytick$operatorName, value)) {
 
             this.lazytick$operatorName = value;
-            this.setChanged();
-            this.createLazyTick$sendBlockUpdated();
-        }
-    }
-
-    @Override
-    public int CLT$getMaxTicks() { return this.createLazyTick$EntityMaxTick; }
-
-    @Override
-    public void CLT$setMaxTicks(int value)  {
-        if  (this.createLazyTick$EntityMaxTick != value) {
-            this.createLazyTick$EntityMaxTick = value;
             this.setChanged();
             this.createLazyTick$sendBlockUpdated();
         }
