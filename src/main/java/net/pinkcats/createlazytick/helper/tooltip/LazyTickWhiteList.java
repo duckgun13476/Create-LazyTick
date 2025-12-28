@@ -23,11 +23,11 @@ public enum LazyTickWhiteList {
     // Smart
     FUNNEL(FunnelBlockEntity.class, () -> Config.funnel_delay_max, Type.SMART),
     DEPOT(DepotBlockEntity.class, () -> Config.depot_delay_max, Type.SMART),
-    CHUTE(ChuteBlockEntity.class, () -> Config.chute_delay_max, Type.SMART),
     PIPE(FluidPipeBlockEntity.class, () -> Config.fluid_delay_max, Type.SMART),
 
-    // Special
-    DRAIN(ItemDrainBlockEntity.class, () -> Config.item_drain_delay_max, Type.SPECIAL);
+    // Special(have override)
+    DRAIN(ItemDrainBlockEntity.class, () -> Config.item_drain_delay_max, Type.SPECIAL),
+    CHUTE(ChuteBlockEntity.class, () -> Config.chute_delay_max, Type.SMART);
 
     private final Class<?> targetClass;
     private final Supplier<Integer> maxTickSupplier;
