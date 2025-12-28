@@ -14,23 +14,35 @@ import net.pinkcats.createlazytick.Config;
 import java.util.function.Supplier;
 
 public enum LazyTickWhiteList {
-    //PUMP 和 PIPE 要特殊处理,勿动
-    ARM(ArmBlockEntity.class, () -> Config.arm_delay_max),
-    FUNNEL(FunnelBlockEntity.class, () -> Config.funnel_delay_max),
-    DEPOT(DepotBlockEntity.class, () -> Config.depot_delay_max),
-    BELT(BeltBlockEntity.class, () -> Config.belt_delay_max),
-    CRAFTER(MechanicalCrafterBlockEntity.class, () -> Config.crafter_redstone_delay_max),
-    PUMP(PumpBlockEntity.class, () -> Config.fluid_delay_max),
-    PIPE(FluidPipeBlockEntity.class, () -> Config.fluid_delay_max),
-    DRAIN(ItemDrainBlockEntity.class, () -> Config.item_drain_delay_max),
-    CHUTE(ChuteBlockEntity.class, () -> Config.chute_delay_max);
+    // Kinetic
+    ARM(ArmBlockEntity.class, () -> Config.arm_delay_max, Type.KINETIC),
+    BELT(BeltBlockEntity.class, () -> Config.belt_delay_max, Type.KINETIC),
+    CRAFTER(MechanicalCrafterBlockEntity.class, () -> Config.crafter_redstone_delay_max, Type.KINETIC),
+    PUMP(PumpBlockEntity.class, () -> Config.fluid_delay_max, Type.KINETIC),
+
+    // Smart
+    FUNNEL(FunnelBlockEntity.class, () -> Config.funnel_delay_max, Type.SMART),
+    DEPOT(DepotBlockEntity.class, () -> Config.depot_delay_max, Type.SMART),
+    CHUTE(ChuteBlockEntity.class, () -> Config.chute_delay_max, Type.SMART),
+    PIPE(FluidPipeBlockEntity.class, () -> Config.fluid_delay_max, Type.SMART),
+
+    // Special
+    DRAIN(ItemDrainBlockEntity.class, () -> Config.item_drain_delay_max, Type.SPECIAL);
 
     private final Class<?> targetClass;
     private final Supplier<Integer> maxTickSupplier;
+    private final Type type; // 新增字段
 
-    LazyTickWhiteList(Class<?> targetClass, Supplier<Integer> maxTickSupplier) {
+    public enum Type {
+        KINETIC, // 继承自 KineticBlockEntity
+        SMART,    // 仅继承自 SmartBlockEntity
+        SPECIAL   // 必须单独处理的方块实体类
+    }
+
+    LazyTickWhiteList(Class<?> targetClass, Supplier<Integer> maxTickSupplier, Type type) {
         this.targetClass = targetClass;
         this.maxTickSupplier = maxTickSupplier;
+        this.type = type;
     }
 
     public static LazyTickWhiteList getByEntity(Object be) {
@@ -44,5 +56,21 @@ public enum LazyTickWhiteList {
 
     public int getMaxTick() {
         return maxTickSupplier.get();
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public boolean isKinetic() {
+        return this.type == Type.KINETIC;
+    }
+
+    public boolean isSmart() {
+        return this.type == Type.SMART;
+    }
+
+    public boolean isSpecial() {
+        return this.type == Type.SPECIAL;
     }
 }
