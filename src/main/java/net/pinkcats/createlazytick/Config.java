@@ -99,7 +99,7 @@ public class Config
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
                 .comment("Delay ticks for fluid system.(Large number is not recommended.)")
-                .defineInRange("funnel_delay_max", 10, 1, Integer.MAX_VALUE);
+                .defineInRange("Fluid_delay_max", 5, 1, 10);
 
         BUILDER.pop();
 
