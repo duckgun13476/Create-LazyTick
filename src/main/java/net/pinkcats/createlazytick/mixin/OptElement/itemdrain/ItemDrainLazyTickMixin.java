@@ -75,11 +75,12 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         }
 
         // 无论是物品输出堵塞还是流体倾倒堵塞，有冷却就跳过
+        createLazyTick$itemDrainTick++;
         if (createLazyTick$itemDrainTick < control.createLazyTick$getLazyTickInterval()) {
-            createLazyTick$itemDrainTick++;
             ci.cancel();
             return;
         }
+        createLazyTick$itemDrainTick = 0;
         // ----------------
 
         boolean onClient = level != null && level.isClientSide && !isVirtual();
