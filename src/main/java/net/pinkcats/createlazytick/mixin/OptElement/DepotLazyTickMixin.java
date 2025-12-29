@@ -89,6 +89,27 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     @Unique
     private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
 
+    @Unique
+    private void createLazyTick$applyBackoff() {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
+
+        if (control.createLazyTick$isDelayForced()) return;
+        int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
+        if (currentLazyTickInterval < depot_delay_max) {
+            int newLazyTickInterval = currentLazyTickInterval + Math.max(currentLazyTickInterval / 10, 1);
+            control.createLazyTick$setLazyTickInterval(newLazyTickInterval);
+            currentLazyTickInterval = newLazyTickInterval;
+        }
+    }
+
+    @Unique
+    private void createLazyTick$resetDelayTick() {
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
+        createLazyTick$DepotDelayTick = 0;
+
+        if (control.createLazyTick$isDelayForced()) return;
+        control.createLazyTick$setLazyTickInterval(1);
+    }
 
     @Inject(method = "tick*",at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
@@ -146,23 +167,18 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         }
 
         //tick emerge
-        //if (!world.isClientSide()) {
-        //    System.out.println("Depot" + createLazyTick$DepotDelayTick + "  " + control.createLazyTick$getLazyTickInterval());
-        //}
+        /*if (!world.isClientSide()) {
+            System.out.println("Depot" + createLazyTick$DepotDelayTick + "  " + control.createLazyTick$getLazyTickInterval());
+        }*/
 
 
-
-        if (createLazyTick$DepotDelayTick > control.createLazyTick$getLazyTickInterval()) {
-           createLazyTick$DepotDelayTick = 0;
-        } else {
-
-            createLazyTick$DepotDelayTick = createLazyTick$DepotDelayTick + 1;
-            if (createLazyTick$DepotDelayTick >5){
-
-                ci.cancel();
-                return;
-            }
+        createLazyTick$DepotDelayTick++;
+        if (createLazyTick$DepotDelayTick < control.createLazyTick$getLazyTickInterval()) {
+            ci.cancel();
+            return;
         }
+        createLazyTick$DepotDelayTick = 0;
+
 
         if (handleBeltFunnelOutput()) {
             ci.cancel();
@@ -193,18 +209,12 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
 
         if (result == BeltProcessingBehaviour.ProcessingResult.PASS) {
-            int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
-            if (currentLazyTickInterval < depot_delay_max) {
-                int newLazyTickInterval = currentLazyTickInterval + Math.max(createLazyTick$DepotDelayTick / 10, 1);
-                control.createLazyTick$setLazyTickInterval(newLazyTickInterval);
-                currentLazyTickInterval = newLazyTickInterval;
-            }
+            createLazyTick$applyBackoff();
         }
 
 
         if (result == BeltProcessingBehaviour.ProcessingResult.HOLD) {
-            control.createLazyTick$setLazyTickInterval(0);
-            createLazyTick$DepotDelayTick =0;
+            createLazyTick$resetDelayTick();
         }
 
         if (heldItem == null || result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
@@ -229,8 +239,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_depot) {
             return;
         }
-
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
 
         BlockState funnel = getWorld().getBlockState(getPos().above());
         Direction funnelFacing = AbstractFunnelBlock.getFunnelFacing(funnel);
@@ -276,15 +284,9 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         }
 
         if (afterInsert.getCount() != 0) {
-            int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
-            if (currentLazyTickInterval < depot_delay_max+20) {
-                int newLazyTickInterval = currentLazyTickInterval + Math.max(createLazyTick$DepotDelayTick / 10, 1);
-                control.createLazyTick$setLazyTickInterval(newLazyTickInterval);
-                currentLazyTickInterval = newLazyTickInterval;
-            }
+            createLazyTick$applyBackoff();
         } else {
-            control.createLazyTick$setLazyTickInterval(0);
-            createLazyTick$DepotDelayTick =0;
+            createLazyTick$resetDelayTick();
         }
 
         //System.out.println(afterInsert);
@@ -307,12 +309,12 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     }
 
     @Unique
-    public int getCurrentDelayTick() {
+    public int createLazyTick$getCurrentDelayTick() {
         return ((ISmartBlockEntityControl) this.blockEntity).createLazyTick$getLazyTickInterval();
     }
 
     @Unique
-    public int getDepotDelayTick() {
+    public int createLazyTick$getDepotDelayTick() {
         return createLazyTick$DepotDelayTick;
     }
 }
