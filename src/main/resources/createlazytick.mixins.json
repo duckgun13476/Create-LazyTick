@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "createlazytick.refmap.json",
   "mixins": [
+    "compat.createenchantment.OpenEndedPipeMixin",
     "Create.SmartBlockEntityControlMixin",
     "Minecraft.CacheLabel",
     "OptElement.ArmLazyTickMixin",
@@ -31,9 +32,9 @@
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
+    "Create.Client.ArmGoggleMixin",
     "Create.Client.ItemDrainGoggleMixin",
-    "Create.Client.SmartBlockEntityGoggleMixin",
-    "Create.Client.ArmGoggleMixin"
+    "Create.Client.SmartBlockEntityGoggleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

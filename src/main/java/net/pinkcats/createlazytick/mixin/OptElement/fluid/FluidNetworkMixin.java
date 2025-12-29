@@ -62,12 +62,12 @@ public class FluidNetworkMixin {
     private void keepPortableFluidInterfaceEngaged() {}
 
     /**
-     * @author 1
-     * @reason 1
+     * @author PinkCats
+     * @reason rewrite fluid logic
      */
     @Overwrite
     public void tick() {
-        if (pauseBeforePropagation > 0) {
+        if (pauseBeforePropagation > 1) {
             pauseBeforePropagation--;
             return;
         }
