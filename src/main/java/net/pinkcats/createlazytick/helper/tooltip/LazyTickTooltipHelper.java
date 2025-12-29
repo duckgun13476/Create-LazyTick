@@ -35,7 +35,7 @@ public class LazyTickTooltipHelper {
 
         if (tooltip.isEmpty()) {
             // 如果是第一行（置物台），加4个空格缩进，给左侧图标留位置
-            tooltip.add(Component.literal("    LazyTick Status:").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("        LazyTick Status:").withStyle(ChatFormatting.GRAY));
         } else {
             // 如果不是第一行，先加个空行隔开
             tooltip.add(Component.literal("   "));
@@ -66,6 +66,24 @@ public class LazyTickTooltipHelper {
         }
 
         return currentTick;
+    }
+
+
+    public static void appendSimpleConfigInfo(Object be, List<Component> tooltip) {
+        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+        if (whiteItem != null) {
+            if (tooltip.isEmpty()) {
+                tooltip.add(Component.literal("        LazyTick Status:").withStyle(ChatFormatting.GRAY));
+            } else {
+                tooltip.add(Component.literal("   "));
+                tooltip.add(Component.literal("LazyTick Status:").withStyle(ChatFormatting.GRAY));
+            }
+
+            tooltip.add(Component.literal("流体系统延迟刻(懒惰刻): " + whiteItem.getMaxTick())
+                    .withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("* 此为全局配置，不可单独调整")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
     }
 
 

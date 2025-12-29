@@ -30,6 +30,12 @@ public class KineticBlockEntityGoggleMixin {
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null || !whiteItem.isKinetic()) return;
 
+        if (whiteItem == LazyTickWhiteList.PUMP) {
+            LazyTickTooltipHelper.appendSimpleConfigInfo(this, tooltip);
+            cir.setReturnValue(true);
+            return;
+        }
+
         if ((Object) this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
             this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
