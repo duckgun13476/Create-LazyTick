@@ -63,6 +63,24 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
     private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
 
     @Unique
+    private void lazytick$lowFrequencySync() {
+        if (level == null) return;
+        long time = level.getGameTime();
+        boolean isPowered = this.lazytick$cachedSignal;
+
+        boolean lazytick$cachedInWindow = lazytick$isInWindow(time, isPowered);
+
+        boolean isDelayForced = this.createLazyTick$isDelayForced();
+        this.lazytick$setExtraData(packCrafterData(isPowered, lazytick$cachedInWindow, isDelayForced));
+
+        NetworkSyncHelper.createLazyTick$syncPacketData(this,
+                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
+    }
+
+    @Unique
+    private final ScheduleTicker LowFreq_Schedule = new ScheduleTicker(10, this::lazytick$lowFrequencySync);
+
+    @Unique
     private void createLazyTick$safeChangeLazyTickInterval(int interval) {
         if (!this.createLazyTick$isDelayForced()) {
             this.createLazyTick$setLazyTickInterval(interval);
@@ -111,14 +129,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
 
         UserControl_Schedule.RandomTick();
 
-        boolean isPowered = this.lazytick$cachedSignal;
-        boolean isDelayForced = this.createLazyTick$isDelayForced();
-        boolean isInWindow = lazytick$isInWindow(level.getGameTime(), isPowered);
-
-        this.lazytick$setExtraData(packCrafterData(isPowered, isInWindow, isDelayForced));
-
-        NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
+        LowFreq_Schedule.RandomTick();
 
         /*if (!level.isClientSide()) {
             System.out.println("Crafter:" + lazytick$redstoneTick + "/" + this.createLazyTick$getLazyTickInterval());
@@ -140,16 +151,6 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
             return level.hasNeighborSignal(pos);
         }
 
-        long gameTime = level.getGameTime();
-
-        // 重载时,按照正常逻辑返回
-        if (IsServerReload) {
-            lazytick$lastActiveTime = gameTime;
-            createLazyTick$safeChangeLazyTickInterval(1);
-            lazytick$redstoneTick = 0;
-            return level.hasNeighborSignal(pos);
-        }
-
         // 在懒加载期间时,则返回独立缓存的信号状态
         // 防止因 Mixin 跳过检测导致机器状态与真实信号不同步,进而引发每tick的极高频震荡(单独debug三秒给你刷几十上百KB)
         int interval = this.createLazyTick$getLazyTickInterval();
@@ -159,6 +160,16 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
                 return this.lazytick$cachedSignal;
             }
             lazytick$redstoneTick = 0;
+        }
+
+        long gameTime = level.getGameTime();
+
+        // 重载时,按照正常逻辑返回
+        if (IsServerReload) {
+            lazytick$lastActiveTime = gameTime;
+            createLazyTick$safeChangeLazyTickInterval(1);
+            lazytick$redstoneTick = 0;
+            return level.hasNeighborSignal(pos);
         }
 
         // 执行正常返回逻辑并重置计时器(以及查看是否需要继续懒加载)
