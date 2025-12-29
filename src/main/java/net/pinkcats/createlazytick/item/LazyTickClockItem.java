@@ -1,6 +1,8 @@
 package net.pinkcats.createlazytick.item;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -8,6 +10,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import org.jetbrains.annotations.NotNull;
 
 public class LazyTickClockItem extends Item {
@@ -34,6 +37,18 @@ public class LazyTickClockItem extends Item {
 
         if (be instanceof ISmartBlockEntityControl control) {
 
+            LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+
+            if (whiteItem == null) {
+                return InteractionResult.PASS;
+            }
+
+            if (whiteItem == LazyTickWhiteList.PUMP || whiteItem == LazyTickWhiteList.PIPE) {
+                player.displayClientMessage(Component.literal("此元件受全局配置控制，不可手动调整")
+                        .withStyle(ChatFormatting.RED), true);
+                return InteractionResult.FAIL;
+            }
+
             byte ControlState = control.createLazyTick$ControlState();
 
             System.out.println("UseOn:ControlState" + ControlState);
@@ -50,6 +65,7 @@ public class LazyTickClockItem extends Item {
             } else {
                 SetOperatorName(control, player.getName().getString());
             }
+            return InteractionResult.SUCCESS;
         }
 
         return InteractionResult.PASS;

@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -36,6 +37,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "initialize", at = @At("RETURN"), remap = false)
     private void lazytick$onInit(CallbackInfo ci) {
+        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        if (whiteItem == null) return;
         System.out.println("init PARA" + this.lazytick$controlState);
         if (this.lazytick$controlState != 0 && this.level != null) {
             ForcedActiveManager.register(this.level, this.worldPosition);
@@ -52,6 +55,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     // Server -> disk
     @Inject(method = "write", at = @At("RETURN"))
     private void lazytick$writeNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
+        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        if (whiteItem == null) return;
 
         tag.putByte("LazyTickForceDisabled", this.lazytick$controlState);
         tag.putString("LazyTickOperator", this.lazytick$operatorName);
