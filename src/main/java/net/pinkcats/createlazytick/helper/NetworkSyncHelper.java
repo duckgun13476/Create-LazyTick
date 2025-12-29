@@ -22,8 +22,11 @@ public class NetworkSyncHelper {
             control.createLazyTick$setDelayForced(true);
             return;
         }
-        control.createLazyTick$setDelayForced(false);
-        control.createLazyTick$setLazyTickInterval(1);
+        // When CLTState = 0...
+        if (control.createLazyTick$isDelayForced()) {
+            control.createLazyTick$setDelayForced(false);
+            control.createLazyTick$setLazyTickInterval(1);
+        }
         //System.out.println(createLazyTick$CurrentDelayTick);
     }
 
