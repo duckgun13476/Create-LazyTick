@@ -23,6 +23,7 @@ public class NetworkSyncHelper {
             return;
         }
         control.createLazyTick$setDelayForced(false);
+        control.createLazyTick$setLazyTickInterval(1);
         //System.out.println(createLazyTick$CurrentDelayTick);
     }
 
