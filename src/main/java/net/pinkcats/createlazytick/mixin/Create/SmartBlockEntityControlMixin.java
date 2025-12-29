@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,7 +28,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
     @Unique private int createLazyTick$CurrentDelayTick = 1;
     @Unique private boolean createLazyTick$isDelayForced = false;
-
+    @Unique private int lazytick$extraData = 0;
 
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -36,6 +37,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "initialize", at = @At("RETURN"), remap = false)
     private void lazytick$onInit(CallbackInfo ci) {
+        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        if (whiteItem == null) return;
         System.out.println("init PARA" + this.lazytick$controlState);
         if (this.lazytick$controlState != 0 && this.level != null) {
             ForcedActiveManager.register(this.level, this.worldPosition);
@@ -49,9 +52,11 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         }
     }
 
-
+    // Server -> disk
     @Inject(method = "write", at = @At("RETURN"))
     private void lazytick$writeNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
+        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        if (whiteItem == null) return;
 
         tag.putByte("LazyTickForceDisabled", this.lazytick$controlState);
         tag.putString("LazyTickOperator", this.lazytick$operatorName);
@@ -59,12 +64,15 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         if (this.lazytick$syncedTier != LazyTickTier.ACTIVE) {
             tag.putInt("LazyTickTier", this.lazytick$syncedTier.ordinal());
         }
+        if (this.lazytick$extraData != 0) {
+            tag.putInt("LazyTickExtraData", this.lazytick$extraData);
+        }
     }
 
+    // disk -> Client
     @Inject(method = "read", at = @At("RETURN"))
     private void lazytick$readNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
         if (tag.contains("LazyTickForceDisabled")) {
-
             this.lazytick$controlState = tag.getByte("LazyTickForceDisabled");
             this.lazytick$operatorName = tag.getString("LazyTickOperator");
         } else {
@@ -81,6 +89,12 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
             this.lazytick$syncedTier = LazyTickTier.ACTIVE;
         }
 
+
+        if (tag.contains("LazyTickExtraData")) {
+            this.lazytick$extraData = tag.getInt("LazyTickExtraData");
+        } else {
+            this.lazytick$extraData = 0;
+        }
     }
 
 
@@ -93,6 +107,20 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         LazyTickTier newTier = LazyTickTier.fromTicks(currentTick, maxTick);
         if (this.lazytick$syncedTier != newTier) {
             this.lazytick$syncedTier = newTier;
+            this.setChanged();
+            this.createLazyTick$sendBlockUpdated();
+        }
+    }
+
+    @Override
+    public int lazytick$getExtraData() {
+        return this.lazytick$extraData;
+    }
+
+    @Override
+    public void lazytick$setExtraData(int data) {
+        if (this.lazytick$extraData != data) {
+            this.lazytick$extraData = data;
             this.setChanged();
             this.createLazyTick$sendBlockUpdated();
         }

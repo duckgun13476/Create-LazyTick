@@ -11,35 +11,35 @@ import java.util.function.Supplier;
 public class ClockSyncPacket {
 
     private final BlockPos pos;
-    private final int dimension;
-    private final String Player;
+    private final String dimension;
+    private final int extraData;
 
     public static List<ClientData> PacketCache = new ArrayList<>();
 
 
-    public ClockSyncPacket(String Player , int dimension, BlockPos pos) {
+    public ClockSyncPacket(int extraData , String dimension, BlockPos pos) {
         this.dimension = dimension;
         this.pos = pos;
-        this.Player = Player;
+        this.extraData = extraData;
     }
 
     public ClockSyncPacket(FriendlyByteBuf buf) {
-        dimension = buf.readInt();
+        dimension = buf.readUtf();
         pos = buf.readBlockPos();
-        Player = buf.readUtf();
+        extraData = buf.readInt();
 
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeInt(dimension);
+        buf.writeUtf(dimension);
         buf.writeBlockPos(pos);
-        buf.writeUtf(Player);
+        buf.writeInt(extraData);
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {
         var ctx = supplier.get();
-        ClientData data = new ClientData(Player,dimension,pos);
-        System.out.println(data);
+        ClientData data = new ClientData(extraData,dimension,pos);
+        System.out.println("handle:" + data);
         for (ClientData existingData : PacketCache) {
             System.out.println("awa "+existingData.toString());
             if (data.isSimilar(existingData))
@@ -55,7 +55,7 @@ public class ClockSyncPacket {
         return "Packet{" +
                 "dimension=" + dimension +
                 ", pos="  + pos +
-                ", Player="  + Player +
+                ", extraData="  + extraData +
                 '}';
     }
 }
