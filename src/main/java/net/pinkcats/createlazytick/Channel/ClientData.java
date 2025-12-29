@@ -7,17 +7,17 @@ import java.util.Objects;
 public class ClientData {
 
     private final BlockPos pos;
-    private final int dimension;
-    private final String Player;
+    private final String dimension;
+    private final int extraData;
 
     public boolean isSimilar(ClientData other) {
         if (other == null) {
             return false;}
 
-        if (!Objects.equals(this.Player, other.Player)) {
+        if (this.extraData != other.extraData) {
             return false;}
 
-        if (this.dimension != other.dimension) {
+        if (!Objects.equals(this.dimension, other.dimension)) {
             return false;}
 
         return Objects.equals(this.pos, other.pos);
@@ -25,14 +25,14 @@ public class ClientData {
     }
 
 
-    public ClientData(String Player , int dimension, BlockPos pos) {
+    public ClientData(int extraData , String dimension, BlockPos pos) {
         this.pos = pos;
         this.dimension = dimension;
-        this.Player = Player;
+        this.extraData = extraData;
     }
 
 
-    public int getDimension() {
+    public String getDimension() {
         return dimension;
     }
 
@@ -40,13 +40,16 @@ public class ClientData {
         return pos;
     }
 
+    public int getExtraData() {
+        return extraData;
+    }
 
     @Override
     public String toString() {
         return "Packet{" +
                 "dimension=" + dimension +
                 ", pos="  + pos +
-                ", Player="  + Player +
+                ", extraData="  + extraData +
                 '}';
     }
 }

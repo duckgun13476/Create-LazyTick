@@ -16,12 +16,17 @@ public class NetworkSyncHelper {
         // Force Control
         byte CLTState = control.createLazyTick$ControlState();
         if (CLTState != 0){
-            int CurrentDelayTick = maxDelayTick * (CLTState - 1) / Math.max(1, StateDirection - 2);
-            control.createLazyTick$setLazyTickInterval(CurrentDelayTick);
+            int rawDelayTick = maxDelayTick * (CLTState - 1) / Math.max(1, StateDirection - 2);
+            int currentDelayTick = Math.max(1, rawDelayTick);
+            control.createLazyTick$setLazyTickInterval(currentDelayTick);
             control.createLazyTick$setDelayForced(true);
             return;
         }
-        control.createLazyTick$setDelayForced(false);
+        // When CLTState = 0...
+        if (control.createLazyTick$isDelayForced()) {
+            control.createLazyTick$setDelayForced(false);
+            control.createLazyTick$setLazyTickInterval(1);
+        }
         //System.out.println(createLazyTick$CurrentDelayTick);
     }
 
@@ -30,8 +35,13 @@ public class NetworkSyncHelper {
         if (level != null && !level.isClientSide) {
             if (!PacketCache.isEmpty()){
                 for (ClientData data : PacketCache) {
-                    if (data.getDimension() == level.dimension().hashCode()) {
+                    String currentDim = level.dimension().location().toString();
+                    if (data.getDimension().equals(currentDim)) {
                         if (Objects.equals(pos, data.getPos())) {
+                            int cmd = data.getExtraData();
+                            if (cmd != 0) {
+                                control.CLT$onClientRequest(cmd);
+                            }
                             control.lazytick$setSyncedTier(currentDelayTick, maxDelayTick);
                             PacketCache.remove(data);
                             ForcedActiveManager.register(level, pos);
