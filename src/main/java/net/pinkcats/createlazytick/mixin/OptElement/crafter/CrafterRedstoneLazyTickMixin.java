@@ -153,15 +153,16 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         // 在懒加载期间时,则返回独立缓存的信号状态
         // 防止因 Mixin 跳过检测导致机器状态与真实信号不同步,进而引发每tick的极高频震荡(单独debug三秒给你刷几十上百KB)
         int interval = this.createLazyTick$getLazyTickInterval();
-        if (interval > 1 && lazytick$redstoneTick < interval) {
+        if (interval > 1) {
             lazytick$redstoneTick++;
-            return this.lazytick$cachedSignal;
+            if (lazytick$redstoneTick < interval) {
+                return this.lazytick$cachedSignal;
+            }
+            lazytick$redstoneTick = 0;
         }
 
         // 执行正常返回逻辑并重置计时器(以及查看是否需要继续懒加载)
         boolean realSignal = level.hasNeighborSignal(pos);
-
-        lazytick$redstoneTick = 0;
 
         // 更新独立缓存
         this.lazytick$cachedSignal = realSignal;
