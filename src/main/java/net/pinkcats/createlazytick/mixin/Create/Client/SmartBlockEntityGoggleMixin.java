@@ -26,6 +26,11 @@ public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null || !whiteItem.isSmart()) return false;
 
+        if (whiteItem == LazyTickWhiteList.PIPE) {
+            LazyTickTooltipHelper.appendSimpleConfigInfo(this, tooltip);
+            return true;
+        }
+
         if (this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
             this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
