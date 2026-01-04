@@ -51,6 +51,9 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     @Shadow(remap = false)
     public ProcessingInventory inventory;
 
+    @Unique
+    private ItemStack createLazyTick$lastFilter = ItemStack.EMPTY;
+
     public SawRecipeMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -62,6 +65,13 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
         }
         if (IsServerReload)
             createLazyTick$ClearCache();
+
+        // 检测过滤器变化，变化时清除缓存
+        ItemStack currentFilter = filtering.getFilter();
+        if (!ItemStack.isSameItemSameTags(currentFilter, createLazyTick$lastFilter)) {
+            createLazyTick$lastFilter = currentFilter.copy();
+            createLazyTick$ClearCache();
+        }
 
         ItemStack HandleItem = inventory.getStackInSlot(0);
         if (HandleItem.hasTag()) return;
