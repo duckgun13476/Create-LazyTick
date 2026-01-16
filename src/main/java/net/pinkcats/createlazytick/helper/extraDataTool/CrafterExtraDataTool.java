@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper.extradatatool;
+package net.pinkcats.createlazytick.helper.extraDataTool;
 
 public class CrafterExtraDataTool {
     public static int packCrafterData(boolean isPowered, boolean isInWindow, boolean isDelayForced) {
