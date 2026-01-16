@@ -12,7 +12,7 @@ import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
-import net.pinkcats.createlazytick.helper.extradatatool.CrafterExtraDataTool;
+import net.pinkcats.createlazytick.helper.extraDataTool.CrafterExtraDataTool;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
-import static net.pinkcats.createlazytick.helper.extradatatool.CrafterExtraDataTool.packCrafterData;
+import static net.pinkcats.createlazytick.helper.extraDataTool.CrafterExtraDataTool.packCrafterData;
 
 @Mixin(value = MechanicalCrafterBlockEntity.class,remap = false)
 public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity implements ISmartBlockEntityControl {
@@ -72,9 +72,6 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
 
         boolean isDelayForced = this.createLazyTick$isDelayForced();
         this.lazytick$setExtraData(packCrafterData(isPowered, lazytick$cachedInWindow, isDelayForced));
-
-        NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
     }
 
     @Unique
@@ -130,6 +127,9 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         UserControl_Schedule.RandomTick();
 
         LowFreq_Schedule.RandomTick();
+
+        NetworkSyncHelper.createLazyTick$syncPacketData(this,
+                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
 
         /*if (!level.isClientSide()) {
             System.out.println("Crafter:" + lazytick$redstoneTick + "/" + this.createLazyTick$getLazyTickInterval());

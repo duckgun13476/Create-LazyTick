@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper.extradatatool;
+package net.pinkcats.createlazytick.helper.extraDataTool;
 
 public class ArmExtraDataTool {
     public static int packArmData(boolean ignoreLazy, boolean weakLazy) {

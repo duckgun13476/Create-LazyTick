@@ -15,7 +15,7 @@ import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
-import net.pinkcats.createlazytick.helper.extradatatool.ArmExtraDataTool;
+import net.pinkcats.createlazytick.helper.extraDataTool.ArmExtraDataTool;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
