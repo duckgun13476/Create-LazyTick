@@ -39,6 +39,14 @@ public class CreateLazyTick {
         return ResourceLocation.fromNamespaceAndPath(NameSpace,Path);
     }
 
+    /** If you can't use level.isClientSide(),use this.</p>
+     * Especially for LazyTickScrollBehaviour.addTo()
+     * **/
+    public static boolean isClient() {
+        return net.minecraftforge.fml.loading.FMLEnvironment.dist == net.minecraftforge.api.distmarker.Dist.CLIENT;
+    }
+
+
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS,MODID);
 
     public static final RegistryObject<Item> CLOCK = ITEMS.register("clock",
