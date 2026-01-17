@@ -51,6 +51,15 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     @Shadow(remap = false)
     public ProcessingInventory inventory;
 
+    @Unique private ItemStack lazytick$lastFilterStackSnapshot = ItemStack.EMPTY;
+
+    // Address
+    @Unique private ItemStack lazytick$lastFilterInstance = null;
+
+    @Unique private Item lazytick$lastInputItem = null;
+
+    @Unique private List<? extends Recipe<?>> lazytick$lastFilteredResult = null;
+
     public SawRecipeMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -64,24 +73,86 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
             createLazyTick$ClearCache();
 
         ItemStack HandleItem = inventory.getStackInSlot(0);
+        if (HandleItem.isEmpty()) return;
         if (HandleItem.hasTag()) return;
         //System.out.println(inventory.getStackInSlot(0));
-        ImmutableList
-                <com.simibubi.create.content.kinetics.saw.CuttingRecipe> A = createLazyTick$GetAssemblyRecipeCache(HandleItem);
 
-        if (!A.isEmpty()) {
-            cir.setReturnValue(A);
+        // 1.get current status
+        ItemStack currentFilter = filtering.getFilter();
+        Item currentInputItem = HandleItem.getItem();
+
+        // 2.If address(filter) is same & input item is same
+        if (lazytick$lastFilteredResult != null &&
+                currentInputItem == lazytick$lastInputItem &&
+                currentFilter == lazytick$lastFilterInstance) {
+
+            cir.setReturnValue(lazytick$lastFilteredResult);
             cir.cancel();
             return;
         }
 
-        List<? extends Recipe<?>> V = createLazyTick$GetRecipeCache(HandleItem);
-        cir.setReturnValue(V);
+        // 3.If address changed but content isn't
+        if (lazytick$lastFilteredResult != null &&
+                currentInputItem == lazytick$lastInputItem &&
+                ItemStack.isSameItemSameTags(currentFilter, lazytick$lastFilterStackSnapshot)) {
+
+            this.lazytick$lastFilterInstance = currentFilter;
+
+            cir.setReturnValue(lazytick$lastFilteredResult);
+            cir.cancel();
+            return;
+        }
+
+        // 4.If both of address & content changed
+        // assemblyRecipes -> (old name: A,type: ImmutableList
+        //                <com.simibubi.create.content.kinetics.saw.CuttingRecipe>)
+        // check assembly recipe first
+        List<? extends Recipe<?>> assemblyRecipes = createLazyTick$GetAssemblyRecipeCache(HandleItem);
+
+        if (!assemblyRecipes.isEmpty()) {
+            Recipe<?> recipe = assemblyRecipes.get(0);
+            // check filter here
+            if (level != null && filtering.test(recipe.getResultItem(level.registryAccess()))) {
+                createLazyTick$UpdateSnapshot(currentInputItem, currentFilter, assemblyRecipes);
+                cir.setReturnValue(assemblyRecipes);
+                cir.cancel();
+                return;
+            }
+        }
+
+        // check normal cutting recipe then
+        // cachedAllRecipes -> (old name: V,type: List<? extends Recipe<?>>)
+        List<? extends Recipe<?>> cachedAllRecipes = createLazyTick$GetRecipeCache(HandleItem);
+
+        // here fix the bug
+        List<Recipe<?>> filteredRecipes = cachedAllRecipes.stream()
+                .filter(RecipeConditions.outputMatchesFilter(filtering))
+                .collect(Collectors.toList());
+
+        createLazyTick$UpdateSnapshot(currentInputItem, currentFilter, filteredRecipes);
+
+        cir.setReturnValue(filteredRecipes);
         cir.cancel();
     }
 
 
+    @Unique
+    private void createLazyTick$UpdateSnapshot(Item input, ItemStack filter, List<? extends Recipe<?>> result) {
+        this.lazytick$lastInputItem = input;
 
+        this.lazytick$lastFilterStackSnapshot = filter.copy(); // deep copy for compare when filter changed
+        this.lazytick$lastFilterInstance = filter;             // instance for address compare when not changed
+
+        this.lazytick$lastFilteredResult = result;
+    }
+
+    @Unique
+    private Map<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> createLazyTick$assemblyRecipeCache = new LinkedHashMap<>() {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> eldest) {
+            return size() > saw_cache_max; // max cache count
+        }
+    };
 
     @Unique
     private ImmutableList
@@ -97,9 +168,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
                 assemblyRecipe = SequencedAssemblyRecipe.getRecipe(level, itemStack,
                         AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
             }
-            if (assemblyRecipe.isPresent() && filtering.test(assemblyRecipe.get()
-                    .getResultItem(level.registryAccess()))) {
-
+            if (assemblyRecipe.isPresent()) {
                 createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of(assemblyRecipe.get()));
                 return ImmutableList.of(assemblyRecipe.get());
             } else  {
@@ -128,15 +197,6 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
         }
     };
 
-
-    @Unique
-    private Map<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> createLazyTick$assemblyRecipeCache = new LinkedHashMap<>() {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> eldest) {
-            return size() > saw_cache_max; // max cache count
-        }
-    };
-
     @Unique
     private List<? extends Recipe<?>> createLazyTick$GetRecipeCache(ItemStack itemStack) {
 
@@ -152,7 +212,6 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
             List<Recipe<?>> startedSearch = RecipeFinder.get(cuttingRecipesKey, level, types);
             List<? extends Recipe<?>> recipes = startedSearch.stream()
-                    .filter(RecipeConditions.outputMatchesFilter(filtering))
                     .filter(RecipeConditions.firstIngredientMatches(inventory.getStackInSlot(0)))
                     .filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
                     .collect(Collectors.toList());
@@ -167,6 +226,10 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     private void createLazyTick$ClearCache() {
         createLazyTick$recipeCache.clear();
         createLazyTick$assemblyRecipeCache.clear();
+        lazytick$lastInputItem = null;
+        lazytick$lastFilterStackSnapshot = ItemStack.EMPTY;
+        lazytick$lastFilterInstance = null;
+        lazytick$lastFilteredResult = null;
     }
 
 }
