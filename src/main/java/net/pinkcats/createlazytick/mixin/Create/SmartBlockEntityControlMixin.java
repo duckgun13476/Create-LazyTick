@@ -29,6 +29,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Unique private int createLazyTick$CurrentDelayTick = 1;
     @Unique private boolean createLazyTick$isDelayForced = false;
     @Unique private int lazytick$extraData = 0;
+    @Unique private int lazyTick$dynamicValue = 100;
+    @Unique private int lazyTick$forcedValue = -1;
 
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -58,7 +60,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null) return;
 
-        tag.putByte("LazyTickForceDisabled", this.lazytick$controlState);
+        tag.putByte("LazyTickControlState", this.lazytick$controlState);
         tag.putString("LazyTickOperator", this.lazytick$operatorName);
 
         if (this.lazytick$syncedTier != LazyTickTier.ACTIVE) {
@@ -67,13 +69,21 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         if (this.lazytick$extraData != 0) {
             tag.putInt("LazyTickExtraData", this.lazytick$extraData);
         }
+
+        if (this.lazyTick$dynamicValue != 100) {
+            tag.putInt("LazyTickDynamic", this.lazyTick$dynamicValue);
+        }
+
+        if (this.lazyTick$forcedValue != -1) {
+            tag.putInt("LazyTickForced", this.lazyTick$forcedValue);
+        }
     }
 
     // disk -> Client
     @Inject(method = "read", at = @At("RETURN"))
     private void lazytick$readNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
-        if (tag.contains("LazyTickForceDisabled")) {
-            this.lazytick$controlState = tag.getByte("LazyTickForceDisabled");
+        if (tag.contains("LazyTickControlState")) {
+            this.lazytick$controlState = tag.getByte("LazyTickControlState");
             this.lazytick$operatorName = tag.getString("LazyTickOperator");
         } else {
             this.lazytick$controlState = 0;
@@ -94,6 +104,18 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
             this.lazytick$extraData = tag.getInt("LazyTickExtraData");
         } else {
             this.lazytick$extraData = 0;
+        }
+
+        if (tag.contains("LazyTickDynamic")) {
+            this.lazyTick$dynamicValue = tag.getInt("LazyTickDynamic");
+        } else {
+            this.lazyTick$dynamicValue = 100;
+        }
+
+        if (tag.contains("LazyTickForced")) {
+            this.lazyTick$forcedValue = tag.getInt("LazyTickForced");
+        } else {
+            this.lazyTick$forcedValue = -1;
         }
     }
 
@@ -199,5 +221,33 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Override
     public boolean createLazyTick$isDelayForced() {
         return this.createLazyTick$isDelayForced;
+    }
+
+    @Override
+    public int createLazyTick$getDynamicValue() {
+        return this.lazyTick$dynamicValue;
+    }
+
+    @Override
+    public void createLazyTick$setDynamicValue(int value) {
+        if (this.lazyTick$dynamicValue != value) {
+            this.lazyTick$dynamicValue = value;
+            this.setChanged(); // save
+            this.createLazyTick$sendBlockUpdated(); // sync to client (UI render)
+        }
+    }
+
+    @Override
+    public int createLazyTick$getForcedValue() {
+        return this.lazyTick$forcedValue;
+    }
+
+    @Override
+    public void createLazyTick$setForcedValue(int value) {
+        if (this.lazyTick$forcedValue != value) {
+            this.lazyTick$forcedValue = value;
+            this.setChanged();
+            this.createLazyTick$sendBlockUpdated();
+        }
     }
 }

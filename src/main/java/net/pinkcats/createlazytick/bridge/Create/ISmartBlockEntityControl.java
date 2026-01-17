@@ -27,7 +27,18 @@ public interface ISmartBlockEntityControl {
     // 获取当前档位 (客户端渲染用)
     LazyTickTier lazytick$getSyncedTier();
 
+    // 动态控制百分比 (Dynamic)
+    // 默认为 100(完全开启优化)
+    default int createLazyTick$getDynamicValue() { return 100; }
+    default void createLazyTick$setDynamicValue(int value) {}
+
+    // 强制控制百分比 (Forced)
+    // 默认为 -1 (关闭)
+    default int createLazyTick$getForcedValue() { return -1; }
+    default void createLazyTick$setForcedValue(int value) {}
+
     // mixin的一般是private,如果需要让Helper使用,需要一个Interface
+    // (这玩意是老版本Forced)
     void createLazyTick$setLazyTickInterval(int tick);
     int createLazyTick$getLazyTickInterval();
 
