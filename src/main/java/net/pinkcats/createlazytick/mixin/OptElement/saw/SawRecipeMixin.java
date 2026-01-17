@@ -74,7 +74,6 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
         ItemStack HandleItem = inventory.getStackInSlot(0);
         if (HandleItem.isEmpty()) return;
-        if (HandleItem.hasTag()) return;
         //System.out.println(inventory.getStackInSlot(0));
 
         // 1.get current status
@@ -160,29 +159,46 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
         if (createLazyTick$assemblyRecipeCache.containsKey(itemStack.getItem())) {
             return createLazyTick$assemblyRecipeCache.get(itemStack.getItem());
-
-        } else {
-            //System.out.println("not use cache original "+itemStack.getItem()+" "+createLazyTick$assemblyRecipeCache.size());
-            Optional<CuttingRecipe> assemblyRecipe = Optional.empty();
-            if (level != null) {
-                assemblyRecipe = SequencedAssemblyRecipe.getRecipe(level, itemStack,
-                        AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
-            }
-            if (assemblyRecipe.isPresent()) {
-                createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of(assemblyRecipe.get()));
-                return ImmutableList.of(assemblyRecipe.get());
-            } else  {
-                //System.out.println("Is empty");
-                createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of());
-                return ImmutableList.of();
-            }
-
-
         }
 
+        boolean hasTag = itemStack.hasTag();
+
+        //System.out.println("not use cache original "+itemStack.getItem()+" "+createLazyTick$assemblyRecipeCache.size());
+        Optional<CuttingRecipe> assemblyRecipe = Optional.empty();
+        if (level != null) {
+            assemblyRecipe = SequencedAssemblyRecipe.getRecipe(level, itemStack,
+                    AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
+        }
+        // has A recipe
+        if (assemblyRecipe.isPresent()) {
+            if (!hasTag) {
+                // has no NBT -> cache?(A?) and return
+                createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of(assemblyRecipe.get()));
+            }
+            return ImmutableList.of(assemblyRecipe.get());
+        } else {
+            //has no A recipe
+            if (!hasTag) {
+                // has no NBT -> blacklist and return
+                createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of());
+                return ImmutableList.of();
+                //System.out.println("Is empty");
+            } else {
+                // has NBT
+                if (level == null) return ImmutableList.of();
+                Optional<CuttingRecipe> cleanCheck = SequencedAssemblyRecipe.getRecipe(level, new ItemStack(itemStack.getItem()),
+                        AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
+                // clean item has no recipe -> blacklist and return
+                if (cleanCheck.isEmpty()) {
+                    createLazyTick$assemblyRecipeCache.put(itemStack.getItem(), ImmutableList.of());
+                }
+                // clean item has recipe -> just return
+                return ImmutableList.of();
+            }
+        }
+
+
     }
-
-
 
     @Override
     protected BlockPos getBreakingPos() {
@@ -205,20 +221,47 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
             return createLazyTick$recipeCache.get(itemStack.getItem());
         }
 
-        else {
-            //System.out.println("not use cache "+itemStack+createLazyTick$recipeCache.size());
-            Predicate<Recipe<?>> types = RecipeConditions.isOfType(AllRecipeTypes.CUTTING.getType(),
-                    AllConfigs.server().recipes.allowStonecuttingOnSaw.get() ? RecipeType.STONECUTTING : null);
+        boolean hasTag = itemStack.hasTag();
+        //System.out.println("not use cache "+itemStack+createLazyTick$recipeCache.size());
+        Predicate<Recipe<?>> types = RecipeConditions.isOfType(AllRecipeTypes.CUTTING.getType(),
+                AllConfigs.server().recipes.allowStonecuttingOnSaw.get() ? RecipeType.STONECUTTING : null);
 
-            List<Recipe<?>> startedSearch = RecipeFinder.get(cuttingRecipesKey, level, types);
-            List<? extends Recipe<?>> recipes = startedSearch.stream()
-                    .filter(RecipeConditions.firstIngredientMatches(inventory.getStackInSlot(0)))
-                    .filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
-                    .collect(Collectors.toList());
+        List<Recipe<?>> startedSearch = RecipeFinder.get(cuttingRecipesKey, level, types);
 
-            createLazyTick$recipeCache.put(itemStack.getItem(), recipes);
+        List<? extends Recipe<?>> recipes = startedSearch.stream()
+                .filter(RecipeConditions.firstIngredientMatches(inventory.getStackInSlot(0)))
+                .filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
+                .collect(Collectors.toList());
+
+        // has recipe
+        if (!recipes.isEmpty()) {
+            // has no tag -> cache
+            if (!hasTag) {
+                createLazyTick$recipeCache.put(itemStack.getItem(), recipes);
+            }
             return recipes;
+        } else {
+            // has no recipe
+            if (!hasTag) {
+                // has no tag -> blacklist and return
+                createLazyTick$recipeCache.put(itemStack.getItem(), Collections.emptyList());
+                return Collections.emptyList();
+            } else {
+                // has tag -> clean test
+                ItemStack cleanStack = new ItemStack(itemStack.getItem());
 
+                boolean cleanHasRecipe = startedSearch.stream()
+                        .filter(RecipeConditions.firstIngredientMatches(cleanStack))
+                        .anyMatch(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r));
+
+                // clean has no recipe -> blacklist and return
+                if (!cleanHasRecipe) {
+                    createLazyTick$recipeCache.put(itemStack.getItem(), Collections.emptyList());
+                }
+
+                // clean has recipe -> just return
+                return Collections.emptyList();
+            }
         }
     }
 
