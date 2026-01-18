@@ -56,14 +56,6 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
     }
 
     @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl(this,Config.crafter_redstone_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
-    @Unique
     private void lazytick$lowFrequencySync() {
         if (level == null) return;
         long time = level.getGameTime();
@@ -118,8 +110,6 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
     private void lazytick$onTickHead(CallbackInfo ci) {
         if (level == null || level.isClientSide) return;
-
-        UserControl_Schedule.RandomTick();
 
         LowFreq_Schedule.RandomTick();
 
