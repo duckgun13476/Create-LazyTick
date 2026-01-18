@@ -60,6 +60,10 @@ public class Config
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_WEAK_LAZYTICK_LIST;
     public static final ForgeConfigSpec.IntValue ARM_WEAK_DELAY_MAX;
 
+    // LazyTick-Clock
+    public static final ForgeConfigSpec.ConfigValue<List<? extends Integer>> CLOCK_MODE_SEQUENCE;
+    public static final ForgeConfigSpec.BooleanValue CLOCK_MODE_DEFAULT_DYNAMIC;
+
     static final ForgeConfigSpec SPEC;
 
     // ==========================================
@@ -287,8 +291,31 @@ public class Config
 
         BUILDER.pop();
 
+        BUILDER.comment("Lazytick-Clock Settings").push("lazytick-clock");
 
+        CLOCK_MODE_SEQUENCE = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment(" [Clock Item] Right-click Cycle Sequence")
+                .comment(" Defines the sequence of values cycled through when right-clicking a machine with the Clock Item.")
+                .comment(" Only integers between 0 and 100 are allowed.")
+                .comment("   0   = Disable Optimization (Run at full speed)")
+                .comment("   100 = Maximum Effect (Represents Max Dynamic Limit % or Max Forced Interval %, depending on the mode)")
+                .comment(" Default: [0, 25, 50, 75, 100]")
+                .defineList("clock_mode_sequence",
+                        List.of(0, 25, 50, 75, 100),
+                        obj -> obj instanceof Integer && (Integer) obj >= 0 && (Integer) obj <= 100);
 
+        CLOCK_MODE_DEFAULT_DYNAMIC = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment(" [Clock Item] Default Mode Preference")
+                .comment(" Determines which mode the clock item will adjust when right-clicking.")
+                .comment("   true  = Dynamic Mode (Adjusts the dynamic optimization limit %)")
+                .comment("   false = Forced Mode (Adjusts the fixed sleep interval %)")
+                .define("clock_mode_default_dynamic", true);
+
+        BUILDER.pop();
 
         SPEC = BUILDER.build();
     }
@@ -332,6 +359,9 @@ public class Config
     public static int arm_delay_max;
     public static int spout_cache_max;
 
+    public static List<? extends Integer> clock_mode_sequence;
+    public static boolean clock_mode_default_dynamic;
+
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event)
     {
@@ -368,5 +398,8 @@ public class Config
         arm_weak_delay_max = ARM_WEAK_DELAY_MAX.get();
         arm_delay_max = ARM_DELAY_MAX.get();
         spout_cache_max = SPOUT_CACHE_MAX.get();
+
+        clock_mode_default_dynamic = CLOCK_MODE_DEFAULT_DYNAMIC.get();
+        clock_mode_sequence = CLOCK_MODE_SEQUENCE.get();
     }
 }
