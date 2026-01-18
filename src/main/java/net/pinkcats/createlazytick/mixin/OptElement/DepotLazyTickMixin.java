@@ -24,7 +24,6 @@ import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
-import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -81,14 +80,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private int createLazyTick$DepotDelayTick = 0;
 
     @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this.blockEntity,Config.depot_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
-    @Unique
     private void createLazyTick$applyBackoff() {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
 
@@ -118,7 +109,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
 
         super.tick();
-        UserControl_Schedule.RandomTick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control, this.blockEntity.getLevel(),
                 this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), Config.depot_delay_max);

@@ -181,14 +181,6 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     }
 
     @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl(this,Config.arm_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
-    @Unique
     private final ScheduleTicker ScanBlockType_Schedule = new ScheduleTicker(REVALIDATE_INTERVAL, this::createLazyTick$scanUrgency);
 
     @Unique
@@ -208,8 +200,6 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
     private void createLazyTick$tickCheck(CallbackInfo ci) {
         if (level == null || level.isClientSide) return;
-
-        UserControl_Schedule.RandomTick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
                 this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.arm_delay_max);

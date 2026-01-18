@@ -17,7 +17,6 @@ import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
-import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -105,15 +104,6 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         }
     }
 
-    @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.chute_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
-
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
 
@@ -122,7 +112,6 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         }
 
         super.tick();
-        UserControl_Schedule.RandomTick();
 
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
