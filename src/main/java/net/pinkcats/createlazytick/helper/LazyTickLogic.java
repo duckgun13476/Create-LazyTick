@@ -1,0 +1,67 @@
+package net.pinkcats.createlazytick.helper;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
+
+public class LazyTickLogic {
+    /**
+     * Use this when block's lazytick status is changed.
+     * @param control 接口实例
+     */
+    public static void updateState(ISmartBlockEntityControl control) {
+        if (!(control instanceof BlockEntity be) || be.getLevel() == null || be.getLevel().isClientSide) {
+            return;
+        }
+
+        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+        if (whiteItem == null) {
+            return;
+        }
+        int maxConfigDelay = whiteItem.getMaxTick(); // get config max delay
+
+        Level level = be.getLevel();
+        BlockPos pos = be.getBlockPos();
+
+        int dyn = control.createLazyTick$getDynamicValue();
+        int frc = control.createLazyTick$getForcedValue();
+
+        // 2. Logic A: 是否需要列入“监测名单”
+        // default status: Dynamic = 100, Forced = -1
+        boolean isDefault = (dyn == 100 && frc == -1);
+
+        if (isDefault) {
+            // default -> remove from list
+            ForcedActiveManager.unregister(level, pos);
+
+            control.createLazyTick$setDelayForced(false);
+            control.createLazyTick$setLazyTickInterval(1);
+        } else {
+            // non-default -> add to list
+            ForcedActiveManager.register(level, pos);
+
+            // 3. Logic B: compute delay
+            if (frc > 0) {
+                // Forced delay mode
+                // (percentage / 100.0) * max_delay from config
+                int targetTick = (int) ((frc / 100.0f) * maxConfigDelay);
+                targetTick = Math.max(1, targetTick);
+
+                control.createLazyTick$setLazyTickInterval(targetTick);
+                control.createLazyTick$setDelayForced(true);
+
+            } else if (dyn > 0) {
+                // Dynamic delay mode
+                // 动态模式的具体计算在 Mixin tick() 里，这里只需解除强制标记(需要提取)
+                control.createLazyTick$setDelayForced(false);
+            } else {
+                // 0 -> disable
+                control.createLazyTick$setLazyTickInterval(1);
+                control.createLazyTick$setDelayForced(true);
+            }
+        }
+    }
+}
