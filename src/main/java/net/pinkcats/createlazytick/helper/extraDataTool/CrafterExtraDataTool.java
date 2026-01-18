@@ -2,8 +2,8 @@ package net.pinkcats.createlazytick.helper.extraDataTool;
 
 public class CrafterExtraDataTool {
     public static int packCrafterData(boolean isPowered, boolean isInWindow, boolean isDelayForced) {
-        int data = 0;               //isInWindow  isPowered
-        if (isPowered)  data += 1;  // 0/1(F/T)    0/1(F/T)  (binary)
+        int data = 0;               //isInWindow  isPowered  isDelayForced
+        if (isPowered)  data += 1;  // 0/1(F/T)    0/1(F/T)       0/1        (binary)  -> 000/001/010/011/100/101/110/111
         if (isInWindow) data += 2;
         if (isDelayForced) data += 4;
         return data;
