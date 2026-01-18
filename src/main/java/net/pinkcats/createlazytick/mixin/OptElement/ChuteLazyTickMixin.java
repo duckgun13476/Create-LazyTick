@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
@@ -83,22 +84,19 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     @Unique
     private void createLazyTick$LazyTickChute(boolean CanDownload){
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
-        if (control.createLazyTick$isDelayForced()) return;
 
         int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
         if (level != null && !level.isClientSide) {
             // Current tick
             if (CanDownload) {
-                control.createLazyTick$setLazyTickInterval(1);
-                currentLazyTickInterval = 1;
+                LazyTickLogic.setIntervalSafe(control,1);
                 createLazyTick$mistake = false;
             } else {
                 if (currentLazyTickInterval < Config.chute_delay_max) {
                     if (createLazyTick$mistake) {
-                        int newDelayTick = Math.min(currentLazyTickInterval +
-                                Math.max(1, currentLazyTickInterval /10), Config.chute_delay_max);
-                        control.createLazyTick$setLazyTickInterval(newDelayTick);
-                        currentLazyTickInterval = newDelayTick;
+                        int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, Config.chute_delay_max);
+                        LazyTickLogic.setIntervalSafe(control, newInterval);
+                        currentLazyTickInterval = newInterval;
                     }
                     if (currentLazyTickInterval == 1) {
                         createLazyTick$mistake = true;
