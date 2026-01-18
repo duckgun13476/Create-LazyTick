@@ -27,7 +27,7 @@ public class LazyTickClockItem extends Item {
         Level level = context.getLevel();
         Player player = context.getPlayer();
 
-        //Is Server Logic
+        //Server Logic Only
         if (level.isClientSide || player == null)
             return InteractionResult.SUCCESS;
 

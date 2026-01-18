@@ -8,6 +8,8 @@ import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 public class LazyTickLogic {
+    // Entry Point: Called on Init or Player Interaction to register state & apply limits.
+    // 入口点:在初始化或玩家交互时调用,用于注册状态并应用配置限制
     /**
      * Use this when block's lazytick status is changed.
      * @param control 接口实例
@@ -55,7 +57,7 @@ public class LazyTickLogic {
 
             } else if (dyn > 0) {
                 // Dynamic delay mode
-                // 动态模式的具体计算在 Mixin tick() 里，这里只需解除强制标记(需要提取)
+                // 动态模式的具体计算在 computeNextInterval & setIntervalSafe中
                 control.createLazyTick$setDelayForced(false);
             } else {
                 // 0 -> disable
@@ -64,6 +66,9 @@ public class LazyTickLogic {
             }
         }
     }
+
+    // Runtime Logic: Computes the dynamic interval for the next tick cycle.
+    // 运行时逻辑:计算下一个 Tick 循环的动态间隔时间
     /**
      * Computes the next backoff interval.</p>
      * Integrates: Forced mode check, exponential backoff (+10%), and dynamic limit restrictions.<br><i>

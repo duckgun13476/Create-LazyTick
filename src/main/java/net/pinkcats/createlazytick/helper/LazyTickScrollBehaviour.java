@@ -61,6 +61,10 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
                 control.createLazyTick$setDynamicValue(-1);
                 control.createLazyTick$setForcedValue(-1);
             }
+
+            if (!CreateLazyTick.isClient()) {
+                LazyTickLogic.updateState(control);
+            }
         });
 
         // 6. Init ui renderer(value) (value of NBT/Memory -> UI)
