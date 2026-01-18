@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import net.pinkcats.createlazytick.helper.extraDataTool.ArmExtraDataTool;
@@ -194,8 +195,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     private void createLazyTick$resetDelayTick() {
         createLazyTick$armTick = 0;
 
-        if (this.createLazyTick$isDelayForced()) return;
-        this.createLazyTick$setLazyTickInterval(1);
+        LazyTickLogic.setIntervalSafe(this, 1);
     }
 
     //初始化时执行一次扫描，并设置随机偏移
@@ -259,9 +259,10 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
             int currentInterval = this.createLazyTick$getLazyTickInterval();
 
             if (currentInterval < maxDelay) {
-                if (this.createLazyTick$isDelayForced()) return;
-                int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
-                this.createLazyTick$setLazyTickInterval(newInterval);
+                int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
+                if (newInterval != currentInterval) {
+                    LazyTickLogic.setIntervalSafe(this, newInterval);
+                }
             }
         }
     }
@@ -303,9 +304,10 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
             int currentInterval = this.createLazyTick$getLazyTickInterval();
 
             if (currentInterval < maxDelay) {
-                if (this.createLazyTick$isDelayForced()) return;
-                int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
-                this.createLazyTick$setLazyTickInterval(newInterval);
+                int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
+                if (newInterval != currentInterval) {
+                    LazyTickLogic.setIntervalSafe(this, newInterval);
+                }
             }
         }
     }
