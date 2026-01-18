@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
@@ -42,8 +43,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null) return;
         System.out.println("init PARA" + this.lazytick$controlState);
-        if (this.lazytick$controlState != 0 && this.level != null) {
-            ForcedActiveManager.register(this.level, this.worldPosition);
+        if (this.level != null && !this.level.isClientSide()) {
+            LazyTickLogic.updateState(this);
         }
     }
 

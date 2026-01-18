@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.pinkcats.createlazytick.Channel.ClientData;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import java.util.Objects;
 
@@ -44,7 +43,7 @@ public class NetworkSyncHelper {
                             }
                             control.lazytick$setSyncedTier(currentDelayTick, maxDelayTick);
                             PacketCache.remove(data);
-                            ForcedActiveManager.register(level, pos);
+                            LazyTickLogic.updateState(control);
                             break;
                         }
                     }
