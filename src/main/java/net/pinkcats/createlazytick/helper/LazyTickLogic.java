@@ -64,4 +64,38 @@ public class LazyTickLogic {
             }
         }
     }
+    /**
+     * Computes the next backoff interval.</p>
+     * Integrates: Forced mode check, exponential backoff (+10%), and dynamic limit restrictions.<br><i>
+     * 强制模式检查、指数退避(+10%)、动态上限限制
+     */
+    public static int computeNextInterval(ISmartBlockEntityControl control, int currentInterval, int maxConfigInterval) {
+        // 1. if mode is Forced -> Interval won't change(return immediately)
+        if (control.createLazyTick$isDelayForced()) {
+            return currentInterval;
+        }
+
+        // 2. compute next interval (指数退避: 10%)
+        int nextInterval = currentInterval + Math.max(1, currentInterval / 10);
+
+        // 3. compute dynamic max value limit
+        int dynamicPercent = control.createLazyTick$getDynamicValue();
+        // normally, it prevents status error(if block is forced,it will return in step 1)
+        if (dynamicPercent <= 0) dynamicPercent = 100;
+
+        int effectiveMax = (int) (maxConfigInterval * (dynamicPercent / 100.0f));
+        effectiveMax = Math.max(1, effectiveMax);
+
+        // 4. return min of(next interval from compute & max limit)
+        return Math.min(nextInterval, effectiveMax);
+    }
+
+    /**
+     * When a block entity is not forced,its interval can be set.
+     */
+    public static void setIntervalSafe(ISmartBlockEntityControl control, int interval) {
+        if (!control.createLazyTick$isDelayForced()) {
+            control.createLazyTick$setLazyTickInterval(interval);
+        }
+    }
 }
