@@ -22,8 +22,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
-import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,8 +35,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
-
-import static net.pinkcats.createlazytick.Config.depot_delay_max;
 
 @Mixin(value = DepotBehaviour.class, remap = false)
 public class DepotLazyTickMixin extends BlockEntityBehaviour {
@@ -82,23 +80,15 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private int createLazyTick$DepotDelayTick = 0;
 
     @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this.blockEntity,Config.depot_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
-    @Unique
     private void createLazyTick$applyBackoff() {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
 
-        if (control.createLazyTick$isDelayForced()) return;
         int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
-        if (currentLazyTickInterval < depot_delay_max) {
-            int newLazyTickInterval = currentLazyTickInterval + Math.max(currentLazyTickInterval / 10, 1);
-            control.createLazyTick$setLazyTickInterval(newLazyTickInterval);
-            currentLazyTickInterval = newLazyTickInterval;
+
+        int newLazyTickInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, Config.depot_delay_max);
+
+        if (newLazyTickInterval != currentLazyTickInterval) {
+            LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
         }
     }
 
@@ -107,8 +97,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
         createLazyTick$DepotDelayTick = 0;
 
-        if (control.createLazyTick$isDelayForced()) return;
-        control.createLazyTick$setLazyTickInterval(1);
+        LazyTickLogic.setIntervalSafe(control, 1);
     }
 
     @Inject(method = "tick*",at=@At("HEAD" ),cancellable = true,remap = false)
@@ -120,7 +109,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
 
         super.tick();
-        UserControl_Schedule.RandomTick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control, this.blockEntity.getLevel(),
                 this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), Config.depot_delay_max);
@@ -141,7 +129,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             } else {
                 if (!ItemHelper.canItemStackAmountsStack(heldItem.stack, ts.stack)) {
                     Vec3 vec = VecHelper.getCenterOf(blockEntity.getBlockPos());
-                    Containers.dropItemStack(blockEntity.getLevel(), vec.x, vec.y + .5f, vec.z, ts.stack);
+                    Containers.dropItemStack(world, vec.x, vec.y + .5f, vec.z, ts.stack);
                 } else {
                     heldItem.stack.grow(ts.stack.getCount());
                 }

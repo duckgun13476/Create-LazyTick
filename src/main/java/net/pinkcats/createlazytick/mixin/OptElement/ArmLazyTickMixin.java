@@ -13,9 +13,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
-import net.pinkcats.createlazytick.helper.extradatatool.ArmExtraDataTool;
+import net.pinkcats.createlazytick.helper.extraDataTool.ArmExtraDataTool;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -180,22 +181,13 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     }
 
     @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl(this,Config.arm_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
-    @Unique
     private final ScheduleTicker ScanBlockType_Schedule = new ScheduleTicker(REVALIDATE_INTERVAL, this::createLazyTick$scanUrgency);
 
     @Unique
     private void createLazyTick$resetDelayTick() {
         createLazyTick$armTick = 0;
 
-        if (this.createLazyTick$isDelayForced()) return;
-        this.createLazyTick$setLazyTickInterval(1);
+        LazyTickLogic.setIntervalSafe(this, 1);
     }
 
     //初始化时执行一次扫描，并设置随机偏移
@@ -208,8 +200,6 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
     private void createLazyTick$tickCheck(CallbackInfo ci) {
         if (level == null || level.isClientSide) return;
-
-        UserControl_Schedule.RandomTick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
                 this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.arm_delay_max);
@@ -259,9 +249,10 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
             int currentInterval = this.createLazyTick$getLazyTickInterval();
 
             if (currentInterval < maxDelay) {
-                if (this.createLazyTick$isDelayForced()) return;
-                int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
-                this.createLazyTick$setLazyTickInterval(newInterval);
+                int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
+                if (newInterval != currentInterval) {
+                    LazyTickLogic.setIntervalSafe(this, newInterval);
+                }
             }
         }
     }
@@ -303,9 +294,10 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
             int currentInterval = this.createLazyTick$getLazyTickInterval();
 
             if (currentInterval < maxDelay) {
-                if (this.createLazyTick$isDelayForced()) return;
-                int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), maxDelay);
-                this.createLazyTick$setLazyTickInterval(newInterval);
+                int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
+                if (newInterval != currentInterval) {
+                    LazyTickLogic.setIntervalSafe(this, newInterval);
+                }
             }
         }
     }

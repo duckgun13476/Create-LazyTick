@@ -18,8 +18,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
-import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,14 +33,6 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
     @Unique
     private int createLazyTick$itemDrainTick = 0;
 
-    @Unique
-    private void createLazyTick$UserControl() {
-        NetworkSyncHelper.createLazyTick$processUserControl((ISmartBlockEntityControl) this,Config.item_drain_delay_max);
-    }
-
-    @Unique
-    private final ScheduleTicker UserControl_Schedule = new ScheduleTicker(5, this::createLazyTick$UserControl);
-
     public ItemDrainLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -51,8 +43,6 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         if (!Config.enable_lazy_tick || !Config.enable_lazy_item_drain) {
             return;
         }
-
-        UserControl_Schedule.RandomTick();
 
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
@@ -265,10 +255,11 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
         createLazyTick$itemDrainTick = 0;
 
-        if (control.createLazyTick$isDelayForced()) return;
         int currentInterval = control.createLazyTick$getLazyTickInterval();
-        int newInterval = Math.min(currentInterval + Math.max(1, currentInterval /10), Config.item_drain_delay_max);
-        control.createLazyTick$setLazyTickInterval(newInterval);
+        int newInterval = LazyTickLogic.computeNextInterval(control, currentInterval, Config.item_drain_delay_max);
+        if (newInterval != currentInterval) {
+            LazyTickLogic.setIntervalSafe(control, newInterval);
+        }
     }
 
     @Unique
@@ -276,7 +267,6 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
         createLazyTick$itemDrainTick = 0;
 
-        if (control.createLazyTick$isDelayForced()) return;
-        control.createLazyTick$setLazyTickInterval(1);
+        LazyTickLogic.setIntervalSafe(control, 1);
     }
 }
