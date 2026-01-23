@@ -3,6 +3,7 @@ package net.pinkcats.createlazytick.mixin.OptElement;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPoint;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -14,6 +15,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
+import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import net.pinkcats.createlazytick.helper.extraDataTool.ArmExtraDataTool;
@@ -31,7 +33,7 @@ import java.util.Set;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.DropResourceLocation;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
-
+//需要翻译文本
 /**
  * 机械臂 (Mechanical Arm) 的懒加载优化 Mixin
  * <p>
@@ -207,9 +209,14 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         ScanBlockType_Schedule.RandomTick();
 
         this.lazytick$setExtraData(ArmExtraDataTool.packArmData(createLazyTick$ignoreLazy, createLazyTick$weakLazy));
-        /*if(!level.isClientSide()) {
+        if(!level.isClientSide()) {
             System.out.println("Arm:" + createLazyTick$armTick + "|" + this.createLazyTick$getLazyTickInterval());
-        }*/
+        }
+    }
+
+    @Inject(method = "addBehaviours", at = @At("RETURN"), remap = false)
+    private void lazytick$addScrollBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo ci) {
+        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 
     // 寻找输入懒加载计时器
