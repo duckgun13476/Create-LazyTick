@@ -11,7 +11,7 @@
     "OptElement.ArmLazyTickMixin",
     "OptElement.ChuteLazyTickMixin",
     "OptElement.DeployerRecipeMixin",
-    "OptElement.DepotLazyTickMixin",
+    "OptElement.depot.DepotLazyTickMixin",
     "OptElement.FunnelLazyTickMixin",
     "OptElement.SpoutRecipeMixin",
     "OptElement.basin.BasinLazyTickMixin",
