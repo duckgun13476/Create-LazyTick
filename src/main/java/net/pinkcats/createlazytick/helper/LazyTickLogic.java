@@ -107,13 +107,13 @@ public class LazyTickLogic {
     public static int computeNextInterval(ISmartBlockEntityControl control, int currentInterval, int maxConfigInterval) {
         // 1. if mode is Forced -> Interval won't change(return immediately)
         if (control.createLazyTick$isDelayForced()) {
-            System.out.println("dont change");
+            //System.out.println("dont change");
             int frc = control.createLazyTick$getForcedValue();
             if (frc == 0) return 1; // [修改] 强制 0 返回 1
             return Math.max(1, (int) (maxConfigInterval * (frc / 100.0f)));
         }
 
-        System.out.println("change");
+        //System.out.println("change");
         // 2. compute next interval (指数退避: 10%)
         int nextInterval = currentInterval + Math.max(1, currentInterval / 10);
 

@@ -68,14 +68,14 @@ public class ClockSyncPacket {
         }
 
         ClientData data = new ClientData(extraData,dimension,pos);
-        System.out.println("handle:" + data);
+        //System.out.println("handle:" + data);
 
         if (PacketCache.size() > 80) {
             PacketCache.clear();
         }
 
         for (ClientData existingData : PacketCache) {
-            System.out.println("awa "+existingData.toString());
+            //System.out.println("awa "+existingData.toString());
             if (data.isSimilar(existingData))
                     return;
         }
