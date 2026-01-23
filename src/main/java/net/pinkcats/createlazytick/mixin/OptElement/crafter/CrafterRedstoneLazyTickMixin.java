@@ -123,9 +123,9 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
                 this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
 
-        if (!level.isClientSide()) {
+        /*if (!level.isClientSide()) {
             System.out.println("Crafter:" + lazytick$redstoneTick + "/" + this.createLazyTick$getLazyTickInterval());
-        }
+        }*/
 
     }
 

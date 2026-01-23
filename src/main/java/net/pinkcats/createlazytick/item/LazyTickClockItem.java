@@ -56,9 +56,9 @@ public class LazyTickClockItem extends Item {
                 return InteractionResult.FAIL;
             }
 
-            System.out.println("UseOn:ControlState:" + "FAIL"/*ControlState*/);
+            /*System.out.println("UseOn:ControlState:" + "FAIL" + "ControlState");
             System.out.println("UseOn:clickPos" + context.getClickedPos());
-            System.out.println("UseOn:UserName" + control.createLazyTick$getUserName());
+            System.out.println("UseOn:UserName" + control.createLazyTick$getUserName());*/
 
             // 2. 获取清洗后的安全序列 (调用内部私有方法，不信任 Config 直接返回的数据)
             List<Integer> sequence = getSafeSequence();

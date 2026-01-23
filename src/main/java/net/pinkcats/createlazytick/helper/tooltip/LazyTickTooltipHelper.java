@@ -27,7 +27,7 @@ public class LazyTickTooltipHelper {
             // 使用新的构造函数 (isQuery = true)
             lastQueryTick = currentGameTime;
 
-            System.out.println("new (Throttled)"); // 这样应该就只输出一次了
+            //System.out.println("new (Throttled)"); // 这样应该就只输出一次了
             CLTChannel.sendToServer(new ClockSyncPacket(control.CLT$getPos()));
         }
 
