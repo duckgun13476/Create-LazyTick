@@ -24,11 +24,9 @@ import java.util.Objects;
 @Mixin(value = SmartBlockEntity.class,remap = false)
 public abstract class SmartBlockEntityControlMixin extends BlockEntity implements ISmartBlockEntityControl {
 
-    @Deprecated @Unique private byte lazytick$controlState = 0;
     @Unique private String lazytick$operatorName = "";
     @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
     @Unique private int createLazyTick$CurrentDelayTick = 1;
-    @Deprecated @Unique private boolean createLazyTick$isDelayForced = false;
     @Unique private int lazytick$extraData = 0;
     @Unique private int lazyTick$dynamicValue = 100;
     @Unique private int lazyTick$forcedValue = -1;
@@ -198,24 +196,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     }
 
     // Interface
-    @Deprecated
-    @Override
-    public byte createLazyTick$ControlState() { return this.lazytick$controlState; }
-
-
-    @Deprecated
-    @Override
-    public void createLazyTick$SetForceControl(byte value) {
-
-        System.out.println("Change "+ value+" to "+this.lazytick$controlState);
-
-        if (this.lazytick$controlState != value) {
-            this.lazytick$controlState = value;
-            this.setChanged();
-            this.createLazyTick$sendBlockUpdated();
-        }
-
-    }
 
     @Override
     public String createLazyTick$getUserName() { return this.lazytick$operatorName; }
