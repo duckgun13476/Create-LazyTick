@@ -52,7 +52,17 @@ public class LazyTickTooltipHelper {
 
         if (control.createLazyTick$shouldRenderTier() && stateId != 1) {
             // 渲染目前懒加载状态
-            tooltip.add(control.lazytick$getSyncedTier().getDisplayComponent(maxDelayTick));
+            //tooltip.add(control.lazytick$getSyncedTier().getDisplayComponent(maxDelayTick));
+            int currentInterval = control.createLazyTick$getLazyTickInterval();
+
+            // 计算百分比上限 (用于绘制紫色游标)
+            // 优先取强制值，否则取动态上限。
+            if (currentInterval < 1) currentInterval = 1;
+            int limitPercent = (forcedValue > 0) ? forcedValue : dynamicValue;
+
+            // 渲染高级进度条 (调用新方法)
+            tooltip.add(control.lazytick$getSyncedTier()
+                    .getAdvancedProgressBar(currentInterval, maxDelayTick, limitPercent));
         }
 
         String op = control.createLazyTick$getUserName();
