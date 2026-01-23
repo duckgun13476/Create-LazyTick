@@ -1,3 +1,56 @@
 {
-  "item.createlazytick.clock": "Lazytick CLock"
+  "item.createlazytick.clock": "Lazytick CLock",
+
+  "createlazytick.arm.config_exemption_full_speed": "[Config Exemption] Full Speed Response",
+  "createlazytick.arm.ignore_list_disabled": "Target blocks in ignore lazy tick list, lazy tick disabled",
+  "createlazytick.arm.cannot_change_interval": "Cannot change lazy tick interval",
+  "createlazytick.arm.config_exemption_weak": "[Config Exemption] Weak Lazy Tick",
+  "createlazytick.arm.weak_list_shortened": "Target blocks in weak lazy tick list, shortened interval",
+  "createlazytick.arm.can_change_by_force": "Can change interval by forced state",
+
+  "createlazytick.crafter.redstone_powered": "Redstone: Powered",
+  "createlazytick.crafter.full_speed_window": "Full speed response (2min window)",
+  "createlazytick.crafter.idle_too_long": "Idle too long, sleeping",
+  "createlazytick.crafter.forced_control": "Forced lazy tick limit control, sleeping by selected mode",
+  "createlazytick.crafter.redstone_unpowered": "Redstone: Unpowered",
+  "createlazytick.crafter.no_delay_full_slots": "No delay for full slots crafting, only redstone detection may have delay",
+
+  "createlazytick.clock.global_config_locked": "This component is controlled by global config, cannot adjust manually",
+  "createlazytick.clock.mode_changed": "Lazy tick mode changed: ",
+
+  "createlazytick.mode.auto_sleep_light": " [Light Auto Sleep Mode]",
+  "createlazytick.mode.auto_sleep_medium": " [Medium Auto Sleep Mode]",
+  "createlazytick.mode.auto_sleep_deep": " [Deep Auto Sleep Mode]",
+  "createlazytick.mode.auto_sleep_default": " [Deep Auto Sleep Mode](Default)",
+  "createlazytick.mode.forced_full": " [Forced Full Speed Mode]",
+  "createlazytick.mode.forced_sleep_light": " [Forced Light Sleep Mode]",
+  "createlazytick.mode.forced_sleep_medium": " [Forced Medium Sleep Mode]",
+  "createlazytick.mode.forced_sleep_deep": " [Forced Deep Sleep Mode]",
+  "createlazytick.mode.forced_sleep_info": " (Forced sleep: %d%%|%dt)",
+  "createlazytick.mode.dynamic_limit_info": " (Dynamic limit: %d%%|%dt)",
+  "createlazytick.mode.unknown": " [Unknown Mode]",
+  "createlazytick.mode.description.forced_full": "  Description: Lazy tick optimization disabled, machine runs at full speed.",
+  "createlazytick.mode.description.forced_sleep": "  Description: Ignore machine load, run at fixed frequency.",
+  "createlazytick.mode.description.auto_default": "  Description: Default config. Machine sleeps as much as possible without affecting functionality.",
+  "createlazytick.mode.description.auto_dynamic": "  Description: Calculate sleep duration dynamically based on load, but not exceeding set limit.",
+  "createlazytick.mode.description.unknown_bug": "  Description: If you see this, there might be a bug.",
+
+  "createlazytick.scroll.config": "Config",
+  "createlazytick.scroll.dynamic_control": "Dynamic Control",
+  "createlazytick.scroll.forced_control": "Forced Control",
+  "createlazytick.scroll.forced_active": "Forced Active",
+
+  "createlazytick.tooltip.status_indented": "        LazyTick Status:",
+  "createlazytick.tooltip.status": "LazyTick Status:",
+  "createlazytick.tooltip.operator": " Operator: %s",
+  "createlazytick.tooltip.fluid_system_delay": "Fluid system delay ticks (lazy ticks): %d",
+  "createlazytick.tooltip.global_config_note": "* This is global config, cannot adjust individually",
+
+  "createlazytick.command.no_forced_machines": "No forced active machines in loaded chunks.",
+  "createlazytick.command.forced_machines_header": "=== Forced Active Machines List (Page %d/%d | Total %d) ===",
+  "createlazytick.command.invalid_or_unloaded": "Invalid/Unloaded",
+  "createlazytick.command.unknown": "Unknown",
+  "createlazytick.command.click_to_teleport": "Click to teleport",
+  "createlazytick.command.operator": " (Operator: %s)",
+  "createlazytick.command.next_page": ">>> Click for next page >>>"
 }
