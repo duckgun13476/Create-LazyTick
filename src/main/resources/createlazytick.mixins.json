@@ -11,7 +11,6 @@
     "OptElement.ArmLazyTickMixin",
     "OptElement.ChuteLazyTickMixin",
     "OptElement.DeployerRecipeMixin",
-    "OptElement.DepotLazyTickMixin",
     "OptElement.FunnelLazyTickMixin",
     "OptElement.SpoutRecipeMixin",
     "OptElement.basin.BasinLazyTickMixin",
@@ -22,6 +21,8 @@
     "OptElement.crafter.CrafterAccessor",
     "OptElement.crafter.CrafterRecipeMixin",
     "OptElement.crafter.CrafterRedstoneLazyTickMixin",
+    "OptElement.depot.DepotBlockEntityMixin",
+    "OptElement.depot.DepotLazyTickMixin",
     "OptElement.fluid.FluidAccessor",
     "OptElement.fluid.FluidLazyTickMixin",
     "OptElement.fluid.FluidNetworkAccessor",
@@ -32,10 +33,10 @@
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
+    "Create.Client.ChuteGoggleMixin",
     "Create.Client.ItemDrainGoggleMixin",
     "Create.Client.KineticBlockEntityGoggleMixin",
-    "Create.Client.SmartBlockEntityGoggleMixin",
-    "Create.Client.ChuteGoggleMixin"
+    "Create.Client.SmartBlockEntityGoggleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

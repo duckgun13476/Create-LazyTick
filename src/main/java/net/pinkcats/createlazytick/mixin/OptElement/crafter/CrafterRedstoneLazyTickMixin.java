@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -11,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
+import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.ScheduleTicker;
 import net.pinkcats.createlazytick.helper.extraDataTool.CrafterExtraDataTool;
@@ -27,7 +29,7 @@ import java.util.List;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.helper.extraDataTool.CrafterExtraDataTool.packCrafterData;
-
+//需要翻译文本
 @Mixin(value = MechanicalCrafterBlockEntity.class,remap = false)
 public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity implements ISmartBlockEntityControl {
 
@@ -107,6 +109,11 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         }
     }
 
+    @Inject(method = "addBehaviours", at = @At("RETURN"), remap = false)
+    private void lazytick$addScrollBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo ci) {
+        LazyTickScrollBehaviour.addTo(this, behaviours);
+    }
+
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
     private void lazytick$onTickHead(CallbackInfo ci) {
         if (level == null || level.isClientSide) return;
@@ -132,7 +139,9 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
             remap = true
     )
     private boolean lazytick$dynamicRedstoneCheck(Level level, BlockPos pos) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_crafter_redstone) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_crafter_redstone || level.isClientSide) {
+            // 如果是客户端/优化未开，直接返回原版逻辑（Level.hasNeighborSignal）
+            // 不要碰 redstoneTick/updateInterval
             return level.hasNeighborSignal(pos);
         }
 

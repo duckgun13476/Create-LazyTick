@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.OptElement;
+package net.pinkcats.createlazytick.mixin.OptElement.depot;
 
 
 import com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour;

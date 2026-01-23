@@ -9,29 +9,30 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.item.LazyTickClockItem;
 
 import java.util.List;
-
+//需要翻译文本
 public class LazyTickTooltipHelper {
-    private static final int frequent = 60;
+    // 记录上一次发送的时间，防止同一 tick 内发多次
+    private static long lastQueryTick = -1;
 
     public static int appendLazyTickInfo(ISmartBlockEntityControl control, List<Component> tooltip,
                                          int currentTick, int maxDelayTick) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return currentTick;
+        if (mc.player == null || mc.level == null) return currentTick;
 
-        // Handle packet
-        currentTick++;
-        if (currentTick >= frequent) {
-            currentTick = 0;
+        long currentGameTime = mc.level.getGameTime();
 
-            int extraDataToSend = 0;
-            CLTChannel.sendToServer(new ClockSyncPacket(
-                    extraDataToSend,
-                    control.CLT$getDimension().location().toString(),
-                    control.CLT$getPos()
-            ));
+        // [修改] 增加 && currentGameTime != lastQueryTick 判断
+        if (currentGameTime % 10 == 0 && currentGameTime != lastQueryTick) {
+            // 记录当前时间，锁住这一 tick 后续的帧
+            // 使用新的构造函数 (isQuery = true)
+            lastQueryTick = currentGameTime;
+
+            //System.out.println("new (Throttled)"); // 这样应该就只输出一次了
+            CLTChannel.sendToServer(new ClockSyncPacket(control.CLT$getPos()));
         }
 
-        int stateId = control.createLazyTick$ControlState();
+        int dynamicValue = control.createLazyTick$getDynamicValue();
+        int forcedValue = control.createLazyTick$getForcedValue();
 
         if (tooltip.isEmpty()) {
             // 如果是第一行（置物台），加4个空格缩进，给左侧图标留位置
@@ -44,18 +45,31 @@ public class LazyTickTooltipHelper {
 
         if (control.createLazyTick$shouldRenderMode()) {
             // 渲染目前懒加载模式
-            tooltip.add(LazyTickMode.fromId(stateId).getDisplayComponent());
+            tooltip.add(LazyTickMode.getDisplayComponent(dynamicValue, forcedValue, maxDelayTick));
         }
 
-        if (control.createLazyTick$shouldRenderTier() && stateId != 1) {
+        if (control.createLazyTick$shouldRenderTier()) {
             // 渲染目前懒加载状态
-            tooltip.add(control.lazytick$getSyncedTier().getDisplayComponent(maxDelayTick));
+            int currentInterval = control.createLazyTick$getLazyTickInterval();
+
+            // 2. 计算百分比上限 (用于绘制紫色游标)
+            // 优先取强制值，否则取动态上限。
+            if (currentInterval < 1) currentInterval = 1;
+            int limitPercent = (forcedValue > 0) ? forcedValue : dynamicValue;
+
+            // 3. 渲染高级进度条 (调用新方法)
+            tooltip.add(control.lazytick$getSyncedTier()
+                    .getAdvancedProgressBar(currentInterval, maxDelayTick, limitPercent));
         }
 
         String op = control.createLazyTick$getUserName();
         if (!op.isEmpty()) {
             // 渲染操作者
             tooltip.add(Component.literal(" 操作者: " + op).withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (control.createLazyTick$shouldRenderMode()) {
+            tooltip.add(LazyTickMode.getModeDescription(dynamicValue, forcedValue));
         }
 
         List<Component> customInfo = control.createLazyTick$getCustomTooltipInfo();
