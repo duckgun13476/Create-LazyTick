@@ -3,79 +3,137 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-
+//需要秒和tick(转换)
 public enum LazyTickTier {
-    ACTIVE("活跃", ChatFormatting.GREEN),       // <= 1
-    LIGHT("浅度休眠", ChatFormatting.YELLOW),   // 2 ~ 33% Max
-    MEDIUM("中度休眠", ChatFormatting.GOLD),    // 33% Max ~ Max
-    DEEP("深度休眠", ChatFormatting.RED);       // >= Max
+    ACTIVE(ChatFormatting.GREEN),
+    LIGHT(ChatFormatting.YELLOW),
+    MEDIUM(ChatFormatting.GOLD),
+    DEEP(ChatFormatting.RED);
 
-    public final String name;
     public final ChatFormatting color;
 
-    // 定义轻度睡眠的阈值比例 (例如 0.33 表示最大值的 1/3 算作轻度)
-    private static final float LIGHT_THRESHOLD_RATIO = 0.33f;
+    // 总格数 34
+    // 逻辑：前 33 格每格代表 3% (0~99%)，第 34 格代表最后 1% (100%)
+    private static final int BAR_COUNT = 34;
 
-    LazyTickTier(String name, ChatFormatting color) {
-        this.name = name;
+    LazyTickTier(ChatFormatting color) {
         this.color = color;
+    }
+
+    /**
+     * @param currentInterval 当前实际休眠刻数 (动态变化的延迟)
+     * @param maxTick 配置最大刻数
+     * @param limitPercent 玩家设定的上限百分比 (0-100)
+     */
+    public MutableComponent getAdvancedProgressBar(int currentInterval, int maxTick, int limitPercent) {
+        if (maxTick < 1) maxTick = 1;
+
+        // 1. 活跃机器判定 (配置上限极低的机器)
+        // 如果 maxTick <= 2，说明机器本身就没有多少"懒惰"的空间，总是视为活跃
+        boolean isActiveMachine = maxTick <= 2;
+
+        // 2. 低负载判定 (新增逻辑)
+        // 只要当前延迟 <= 3t (约 0.15秒)，无论占比多少，都视为"绿色/低负载"
+        boolean isLowLoad = currentInterval <= 3;
+
+        // 3. 计算填充格数
+        int filledBars;
+
+        if (isActiveMachine) {
+            // 活跃机器强制显示 1 格
+            filledBars = 1;
+        } else {
+            // 计算百分比
+            float percent = (float) currentInterval / maxTick * 100f;
+
+            if (percent >= 99.1f) {
+                filledBars = 34; // >99% 填满
+            } else {
+                filledBars = (int) Math.ceil(percent / 3.0f); // 0-99% 每 3% 一格
+            }
+
+            // 边界修正
+            if (filledBars > BAR_COUNT) filledBars = BAR_COUNT;
+            // 只要有延迟，至少亮一格
+            if (filledBars == 0 && currentInterval > 0) filledBars = 1;
+        }
+
+        // 4. 计算紫色游标位置
+        int limitIndex;
+        if (limitPercent >= 100) {
+            limitIndex = 33;
+        } else if (limitPercent <= 0) {
+            limitIndex = 0;
+        } else {
+            limitIndex = limitPercent / 3;
+        }
+
+        MutableComponent bar = Component.literal(" [").withStyle(ChatFormatting.GRAY);
+
+        // 5. 循环渲染
+        for (int i = 0; i < BAR_COUNT; i++) {
+            ChatFormatting barColor;
+
+            // 优先级 A: 紫色游标
+            if (i == limitIndex) {
+                barColor = ChatFormatting.DARK_PURPLE;
+            }
+            // 优先级 B: 进度条填充部分
+            else if (i < filledBars) {
+                if (isActiveMachine || isLowLoad) {
+                    // [修改点] 活跃机器 或 低负载(<=3t) -> 强制绿色
+                    barColor = ChatFormatting.GREEN;
+                } else {
+                    // [修改点] 其他情况走百分比渐变
+                    float progress = (float) i / BAR_COUNT;
+                    // 这里去掉了之前的 <0.15f 判断，因为已经被 isLowLoad 接管了
+                    // 直接从黄色开始过渡颜色，视觉上更清晰
+                    if (progress < 0.40f) {
+                        barColor = ChatFormatting.YELLOW; // < 40%
+                    } else if (progress < 0.70f) {
+                        barColor = ChatFormatting.GOLD;   // 40% - 70%
+                    } else {
+                        barColor = ChatFormatting.RED;    // > 70%
+                    }
+                }
+            }
+            // 优先级 C: 背景
+            else {
+                barColor = ChatFormatting.DARK_GRAY;
+            }
+
+            bar.append(Component.literal("|").withStyle(barColor));
+        }
+
+        // 6. 尾部数值
+        bar.append(Component.literal("] ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal("(" + currentInterval + "/" + maxTick + "t)")
+                        .withStyle(ChatFormatting.GRAY));
+
+        return bar;
     }
 
     /**
      * 根据当前的延迟 tick 数，计算出它属于哪个档位。
      * 逻辑修改为动态比例，以适应不同机器配置的不同 maxTick。
      */
-    public static LazyTickTier fromTicks(int currentTick, int maxTick) {
-        if (currentTick <= 1) {
-            return ACTIVE;
-        }
+    public static LazyTickTier fromTicks(int currentInterval, int maxTick) {
+        if (maxTick < 1) maxTick = 1;
+
+        if (maxTick <= 2) return ACTIVE;
+
+        // 2. 低负载 (延迟很低) -> 总是 Active (对应绿色)
+        if (currentInterval <= 3) return ACTIVE;
 
         // 如果当前延迟已经达到或超过最大值，直接判定为深度睡眠
-        if (currentTick >= maxTick) {
+        if (currentInterval >= maxTick) {
             return DEEP;
         }
 
-        // 动态计算轻度睡眠的边界
-        // 例如 max=60，threshold=20。 2~20 为 Light, 21~59 为 Medium
-        int lightThreshold = (int) (maxTick * LIGHT_THRESHOLD_RATIO);
+        float percent = (float) currentInterval / maxTick;
 
-        // 保证阈值至少为 2，防止 maxTick 很小时出现逻辑错误
-        if (lightThreshold < 2) lightThreshold = 2;
-
-        if (currentTick <= lightThreshold) {
-            return LIGHT;
-        } else {
-            return MEDIUM;
-        }
-    }
-
-    // 获取显示文本
-    // 优化：避免使用 String "+" 拼接，改用 Component 链式构建，减少内存垃圾
-    public MutableComponent getDisplayComponent(int maxTick) {
-        // 动态计算显示范围文本
-        int lightThreshold = (int) (maxTick * LIGHT_THRESHOLD_RATIO);
-        if (lightThreshold < 2) lightThreshold = 2;
-
-        MutableComponent rangeText;
-
-        if (this == ACTIVE) {
-            rangeText = Component.literal("<= 1t");
-        } else if (this == LIGHT) {
-            rangeText = Component.literal("2-").append(String.valueOf(lightThreshold)).append("t");
-        } else if (this == MEDIUM) {
-            // 显示范围：(阈值+1) 到 (最大值-1)
-            rangeText = Component.literal((lightThreshold + 1) + "-" + (maxTick - 1) + "t");
-        } else { // DEEP
-            rangeText = Component.literal(">=" + maxTick + "t");
-        }
-
-        // 构建最终组件: " [名称] (范围)"
-        // 使用 append 避免创建大的 String 对象
-        return Component.literal(" [")
-                .append(Component.literal(this.name).withStyle(this.color))
-                .append("] ")
-                .append(Component.literal("(").withStyle(ChatFormatting.GRAY))
-                .append(rangeText.withStyle(ChatFormatting.GRAY))
-                .append(Component.literal(")").withStyle(ChatFormatting.GRAY));
+        if (percent < 0.40f) return LIGHT;   // < 40% Yellow
+        if (percent < 0.70f) return MEDIUM;  // 40-70% Gold
+        return DEEP;
     }
 }
