@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.Config;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
+import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -76,8 +77,6 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     @Unique
     int createLazyTick$chuteTick = 0;
-    @Unique
-    boolean createLazyTick$mistake = false;
 
 
     @Unique
@@ -89,17 +88,10 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
             // Current tick
             if (CanDownload) {
                 LazyTickLogic.setIntervalSafe(control,1);
-                createLazyTick$mistake = false;
             } else {
                 if (currentLazyTickInterval < Config.chute_delay_max) {
-                    if (createLazyTick$mistake) {
-                        int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, Config.chute_delay_max);
-                        LazyTickLogic.setIntervalSafe(control, newInterval);
-                        currentLazyTickInterval = newInterval;
-                    }
-                    if (currentLazyTickInterval == 1) {
-                        createLazyTick$mistake = true;
-                    }
+                    int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, Config.chute_delay_max);
+                    LazyTickLogic.setIntervalSafe(control, newInterval);
                 }
             }
         }
@@ -133,6 +125,10 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                 handleInputFromAbove();
             if (itemMotion > 0)
                 handleInputFromBelow();
+            if (item.isEmpty()) {
+                // 空了要把计时器归零
+                createLazyTick$chuteTick = 0;
+            }
             ci.cancel();
             return;
         }
@@ -210,5 +206,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         behaviours.add(new DirectBeltInputBehaviour(this).onlyInsertWhen((d) -> canDirectlyInsertCached()));
         behaviours.add(invVersionTracker = new VersionedInventoryTrackerBehaviour(this));
         registerAwardables(behaviours, AllAdvancements.CHUTE);
+        // new ↓
+        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 }
