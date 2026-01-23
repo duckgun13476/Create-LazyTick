@@ -11,7 +11,10 @@ import java.util.List;
 
 public interface ISmartBlockEntityControl {
 
+    @Deprecated
     byte createLazyTick$ControlState();
+
+    @Deprecated
     void createLazyTick$SetForceControl(byte value);
 
     String createLazyTick$getUserName();
@@ -37,13 +40,12 @@ public interface ISmartBlockEntityControl {
     default int createLazyTick$getForcedValue() { return -1; }
     default void createLazyTick$setForcedValue(int value) {}
 
-    // mixin的一般是private,如果需要让Helper使用,需要一个Interface
-    // (这玩意是老版本Forced)
-    void createLazyTick$setLazyTickInterval(int tick);
-    int createLazyTick$getLazyTickInterval();
-
     void createLazyTick$setDelayForced(boolean isForced);
     boolean createLazyTick$isDelayForced();
+
+    // mixin的一般是private,如果需要让Helper使用,需要一个Interface
+    void createLazyTick$setLazyTickInterval(int tick);
+    int createLazyTick$getLazyTickInterval();
 
     default List<Component> createLazyTick$getCustomTooltipInfo() {
         return new ArrayList<>();
@@ -65,4 +67,7 @@ public interface ISmartBlockEntityControl {
 
     // Client Only
     int lazytick$getExtraData();
+
+    // 纯净发包接口 (Server Only)
+    void createLazyTick$sendBlockUpdated();
 }
