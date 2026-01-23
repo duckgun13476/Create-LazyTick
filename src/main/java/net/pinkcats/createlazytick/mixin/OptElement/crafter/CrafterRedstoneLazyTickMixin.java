@@ -27,7 +27,7 @@ import java.util.List;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.helper.extraDataTool.CrafterExtraDataTool.packCrafterData;
-
+//需要翻译文本
 @Mixin(value = MechanicalCrafterBlockEntity.class,remap = false)
 public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity implements ISmartBlockEntityControl {
 
@@ -116,9 +116,9 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
                 this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.crafter_redstone_delay_max);
 
-        /*if (!level.isClientSide()) {
+        if (!level.isClientSide()) {
             System.out.println("Crafter:" + lazytick$redstoneTick + "/" + this.createLazyTick$getLazyTickInterval());
-        }*/
+        }
 
     }
 
@@ -132,7 +132,9 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
             remap = true
     )
     private boolean lazytick$dynamicRedstoneCheck(Level level, BlockPos pos) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_crafter_redstone) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_crafter_redstone || level.isClientSide) {
+            // 如果是客户端/优化未开，直接返回原版逻辑（Level.hasNeighborSignal）
+            // 不要碰 redstoneTick/updateInterval
             return level.hasNeighborSignal(pos);
         }
 
