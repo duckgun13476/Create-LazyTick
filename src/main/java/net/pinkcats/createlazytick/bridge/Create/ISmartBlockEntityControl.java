@@ -11,12 +11,6 @@ import java.util.List;
 
 public interface ISmartBlockEntityControl {
 
-    @Deprecated
-    byte createLazyTick$ControlState();
-
-    @Deprecated
-    void createLazyTick$SetForceControl(byte value);
-
     String createLazyTick$getUserName();
     void createLazyTick$setUserName(String value);
 
