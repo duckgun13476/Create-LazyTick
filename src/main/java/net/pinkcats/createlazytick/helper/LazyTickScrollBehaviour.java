@@ -16,7 +16,7 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 
 import java.util.List;
-
+//需要翻译文本
 public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
 
     public LazyTickScrollBehaviour(Component label, SmartBlockEntity be) {
@@ -46,24 +46,17 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
             ClientSetup.configureActiveCondition(behaviour);
         }
 
-        // 5. Set callback
+        // 5. Set callback (i:inputValue)
         behaviour.withCallback(i -> {
             if (i > 0) {
                 // 正数:动态调控 (Dynamic)(上限不断提高,直到动态调控的上限(动态调控上限为100%时则为配置项上限))
-                control.createLazyTick$setDynamicValue(i);
-                control.createLazyTick$setForcedValue(-1);
+                LazyTickLogic.switchMode(control, false, i);
             } else if (i < 0) {
                 // 负数:强制调控 (Forced)(必须间隔多少时间才会运行一次原逻辑)
-                control.createLazyTick$setForcedValue(Math.abs(i));
-                control.createLazyTick$setDynamicValue(-1);
+                LazyTickLogic.switchMode(control, true, Math.abs(i));
             } else {
                 // 0:强制活跃 (关闭优化)
-                control.createLazyTick$setDynamicValue(-1);
-                control.createLazyTick$setForcedValue(-1);
-            }
-
-            if (!CreateLazyTick.isClient()) {
-                LazyTickLogic.updateState(control);
+                LazyTickLogic.switchMode(control, true, 0);
             }
         });
 
@@ -128,6 +121,10 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
     // Write
     @Override
     public void setValueSettings(Player player, ValueSettings settings, boolean ctrlDown) {
+        if (blockEntity instanceof ISmartBlockEntityControl control) {
+            control.createLazyTick$setUserName(player.getName().getString());
+        }
+
         int newValue = settings.value();
 
         // if control Row 1 (Forced) -> write as negative number
@@ -152,7 +149,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
                 localHit.z >= 0 && localHit.z <= 1;
         if (!insideBlock) return false;
         return localHit.y < 0.3;
-        }
+    }
 
     // make value box disappear
     private static class InvisibleSlot extends ValueBoxTransform.Sided {
