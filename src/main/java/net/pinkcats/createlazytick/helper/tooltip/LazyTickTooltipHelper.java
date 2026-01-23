@@ -32,6 +32,8 @@ public class LazyTickTooltipHelper {
         }
 
         int stateId = control.createLazyTick$ControlState();
+        int dynamicValue = control.createLazyTick$getDynamicValue();
+        int forcedValue = control.createLazyTick$getForcedValue();
 
         if (tooltip.isEmpty()) {
             // 如果是第一行（置物台），加4个空格缩进，给左侧图标留位置
@@ -44,7 +46,8 @@ public class LazyTickTooltipHelper {
 
         if (control.createLazyTick$shouldRenderMode()) {
             // 渲染目前懒加载模式
-            tooltip.add(LazyTickMode.fromId(stateId).getDisplayComponent());
+            //tooltip.add(LazyTickMode.fromId(stateId).getDisplayComponent());
+            tooltip.add(LazyTickMode.getDisplayComponent(dynamicValue, forcedValue, maxDelayTick));
         }
 
         if (control.createLazyTick$shouldRenderTier() && stateId != 1) {
