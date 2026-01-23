@@ -1,3 +1,56 @@
 {
-  "item.createlazytick.clock": "懒惰刻时钟"
+  "item.createlazytick.clock": "懒惰刻时钟",
+
+  "createlazytick.arm.config_exemption_full_speed": "[配置豁免]全速响应",
+  "createlazytick.arm.ignore_list_disabled": "有目标方块在忽略懒加载名单内，已禁用懒加载",
+  "createlazytick.arm.cannot_change_interval": "不可更改懒加载休眠间隔",
+  "createlazytick.arm.config_exemption_weak": "[配置豁免]弱懒加载",
+  "createlazytick.arm.weak_list_shortened": "有目标方块在弱懒加载名单内，缩短休眠间隔",
+  "createlazytick.arm.can_change_by_force": "可通过强制指定状态更改懒加载休眠间隔",
+
+  "createlazytick.crafter.redstone_powered": "红石状态: 已激活",
+  "createlazytick.crafter.full_speed_window": "全速响应中(窗口期2分钟)",
+  "createlazytick.crafter.idle_too_long": "闲置过久,已休眠",
+  "createlazytick.crafter.forced_control": "已被强行控制懒加载时间上限,按照所选模式进行休眠",
+  "createlazytick.crafter.redstone_unpowered": " 红石状态: 无信号",
+  "createlazytick.crafter.no_delay_full_slots": "正常满槽位合成没有延迟,仅红石检测可能有延迟",
+
+  "createlazytick.clock.global_config_locked": "此元件受全局配置控制，不可手动调整",
+  "createlazytick.clock.mode_changed": "懒加载模式已切换: ",
+
+  "createlazytick.mode.auto_sleep_light": " [浅度自动休眠模式]",
+  "createlazytick.mode.auto_sleep_medium": " [中度自动休眠模式]",
+  "createlazytick.mode.auto_sleep_deep": " [深度自动休眠模式]",
+  "createlazytick.mode.auto_sleep_default": " [深度自动休眠模式](默认)",
+  "createlazytick.mode.forced_full": " [强制全速模式]",
+  "createlazytick.mode.forced_sleep_light": " [强制浅度休眠模式]",
+  "createlazytick.mode.forced_sleep_medium": " [强制中度休眠模式]",
+  "createlazytick.mode.forced_sleep_deep": " [强制深度休眠模式]",
+  "createlazytick.mode.forced_sleep_info": " (固定休眠: %d%%|%dt)",
+  "createlazytick.mode.dynamic_limit_info": " (动态上限: %d%%|%dt)",
+  "createlazytick.mode.unknown": " [未知模式]",
+  "createlazytick.mode.description.forced_full": "  说明: 懒加载优化已关闭，机器将保持全速运行。",
+  "createlazytick.mode.description.forced_sleep": "  说明: 忽略机器负载，强制按照固定的频率运行。",
+  "createlazytick.mode.description.auto_default": "  说明: 默认配置。机器将在不影响功能的前提下尽可能休眠。",
+  "createlazytick.mode.description.auto_dynamic": "  说明: 根据负载动态计算休眠时长，但不会超过设定的上限。",
+  "createlazytick.mode.description.unknown_bug": "  说明: 如果你看到这个，可能哪里出了bug",
+
+  "createlazytick.scroll.config": "配置",
+  "createlazytick.scroll.dynamic_control": "动态控制",
+  "createlazytick.scroll.forced_control": "强制控制",
+  "createlazytick.scroll.forced_active": "强制活跃",
+
+  "createlazytick.tooltip.status_indented": "        LazyTick Status:",
+  "createlazytick.tooltip.status": "LazyTick Status:",
+  "createlazytick.tooltip.operator": " 操作者: %s",
+  "createlazytick.tooltip.fluid_system_delay": "流体系统延迟刻(懒惰刻): %d",
+  "createlazytick.tooltip.global_config_note": "* 此为全局配置，不可单独调整",
+
+  "createlazytick.command.no_forced_machines": "当前已加载区块中没有被强制活跃的机器。",
+  "createlazytick.command.forced_machines_header": "=== 强制活跃机器名单 (第 %d/%d 页 | 共 %d 个) ===",
+  "createlazytick.command.invalid_or_unloaded": "已失效/未加载",
+  "createlazytick.command.unknown": "未知",
+  "createlazytick.command.click_to_teleport": "点击传送到此位置",
+  "createlazytick.command.operator": " (操作者: %s)",
+  "createlazytick.command.next_page": ">>> 点击查看下一页 >>>"
 }
