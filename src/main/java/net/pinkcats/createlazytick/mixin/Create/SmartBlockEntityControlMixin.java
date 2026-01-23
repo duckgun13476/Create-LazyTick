@@ -45,9 +45,9 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     private void lazytick$onInit(CallbackInfo ci) {
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null) return;
-        System.out.println("[LazyTick Init] Pos: " + this.worldPosition +
+        /*System.out.println("[LazyTick Init] Pos: " + this.worldPosition +
                 " | Dyn: " + this.lazyTick$dynamicValue +
-                " | Frc: " + this.lazyTick$forcedValue);
+                " | Frc: " + this.lazyTick$forcedValue);*/
         if (this.level != null && !this.level.isClientSide()) {
             LazyTickLogic.updateState(this);
         }
@@ -71,38 +71,32 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         }
 
         tag.putInt("LazyTickCurrentInterval", this.createLazyTick$CurrentDelayTick); // [关键新增]
-        System.out.println("interval write");
+        //System.out.println("interval write");
 
         if (this.lazytick$syncedTier != LazyTickTier.ACTIVE) {
             tag.putInt("LazyTickTier", this.lazytick$syncedTier.ordinal());
-            System.out.println("tier write");
+            //System.out.println("tier write");
         }
         if (this.lazytick$extraData != 0) {
             tag.putInt("LazyTickExtraData", this.lazytick$extraData);
-            System.out.println("extradata write");
+            //System.out.println("extradata write");
         }
 
         if (this.lazyTick$dynamicValue != 100) {
             tag.putInt("LazyTickDynamic", this.lazyTick$dynamicValue);
-            System.out.println("dynamic write");
+            //System.out.println("dynamic write");
         }
 
         if (this.lazyTick$forcedValue != -1) {
             tag.putInt("LazyTickForced", this.lazyTick$forcedValue);
-            System.out.println("force write");
+            //System.out.println("force write");
         }
     }
 
     // disk -> Client
     @Inject(method = "read", at = @At("RETURN"))
     private void lazytick$readNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
-        /*if (tag.contains("LazyTickControlState")) {
-            this.lazytick$operatorName = tag.getString("LazyTickOperator");
-        } else {
-            this.lazytick$controlState = 0;
-            this.lazytick$operatorName = "";
-        }*/
-        System.out.println("data read");
+        //System.out.println("data read");
 
         if (tag.contains("LazyTickOperator")) {
             this.lazytick$operatorName = tag.getString("LazyTickOperator");
@@ -159,13 +153,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Override
     public void lazytick$setSyncedTier(int currentTick, int maxTick) {
-        System.out.println("Update Sync Entity Data");
+        //System.out.println("Update Sync Entity Data");
         this.lazytick$syncedTier = LazyTickTier.fromTicks(currentTick, maxTick);
-        /*if (this.lazytick$syncedTier != newTier) {
-            this.lazytick$syncedTier = newTier;
-            this.setChanged();
-            this.createLazyTick$sendBlockUpdated();
-        }*/
     }
 
     @Override
@@ -187,10 +176,10 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$sendBlockUpdated() {
         if (this.level != null) {
             BlockState state = this.getBlockState();
-            if (!this.level.isClientSide) {
+            /*if (!this.level.isClientSide) {
                 long time = this.level.getGameTime();
                 System.out.println("[Packet Check] 发送更新包 -> Pos: " + this.worldPosition + " | Time: " + time);
-            }
+            }*/
             this.level.sendBlockUpdated(this.worldPosition, state, state, 3);
         }
     }

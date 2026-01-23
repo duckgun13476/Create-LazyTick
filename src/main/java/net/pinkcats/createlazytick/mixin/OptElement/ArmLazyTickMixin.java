@@ -209,9 +209,9 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         ScanBlockType_Schedule.RandomTick();
 
         this.lazytick$setExtraData(ArmExtraDataTool.packArmData(createLazyTick$ignoreLazy, createLazyTick$weakLazy));
-        if(!level.isClientSide()) {
+        /*if(!level.isClientSide()) {
             System.out.println("Arm:" + createLazyTick$armTick + "|" + this.createLazyTick$getLazyTickInterval());
-        }
+        }*/
     }
 
     @Inject(method = "addBehaviours", at = @At("RETURN"), remap = false)

@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-
+//DEVELOPING
 @Mixin(value = OpenEndedPipe.class)
 public class OpenEndedPipeMixin {
 
@@ -38,6 +38,6 @@ public class OpenEndedPipeMixin {
 
     @Inject(method = "provideFluidToSpace", at = @At("HEAD"), cancellable = true, remap = false)
     private void inject(FluidStack fluid, boolean simulate, CallbackInfoReturnable<Boolean> cir){
-        System.out.println("provideFluidToSpace");
+        //System.out.println("provideFluidToSpace");
     }
 }
