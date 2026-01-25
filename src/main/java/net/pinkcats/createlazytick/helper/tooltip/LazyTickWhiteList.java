@@ -6,6 +6,7 @@ import com.simibubi.create.content.fluids.pump.PumpBlockEntity;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity;
+import com.simibubi.create.content.kinetics.saw.SawBlockEntity;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.simibubi.create.content.logistics.depot.DepotBlockEntity;
 import com.simibubi.create.content.logistics.funnel.FunnelBlockEntity;
@@ -19,6 +20,7 @@ public enum LazyTickWhiteList {
     BELT(BeltBlockEntity.class, () -> Config.belt_delay_max, Type.KINETIC),
     CRAFTER(MechanicalCrafterBlockEntity.class, () -> Config.crafter_redstone_delay_max, Type.KINETIC),
     PUMP(PumpBlockEntity.class, () -> Config.fluid_delay_max, Type.KINETIC),
+    SAW(SawBlockEntity.class, () -> Config.saw_delay_max, Type.KINETIC),
 
     // Smart
     FUNNEL(FunnelBlockEntity.class, () -> Config.funnel_delay_max, Type.SMART),
