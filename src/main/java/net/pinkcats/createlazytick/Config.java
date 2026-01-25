@@ -37,6 +37,8 @@ public class Config
     // Processing (Depot, Saw, Basin, Item Drain, Deployer, Spout)
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
     public static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_SAW;
+    public static final ForgeConfigSpec.IntValue SAW_DELAY_MAX;
     public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
     public static final ForgeConfigSpec.IntValue SAW_CACHE_MAX;
     public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
@@ -164,6 +166,16 @@ public class Config
                 .defineInRange("depot_delay_max", 60, 20, Integer.MAX_VALUE);
 
         // Saw
+        ENABLE_LAZY_SAW = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Whether to enable saw lazy tick")
+                .define("enable_lazy_saw", true);
+        SAW_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("max delay tick if saw is rest")
+                .defineInRange("saw_delay_max", 60, 20, Integer.MAX_VALUE);
         ENABLE_CACHE_SAW = BUILDER
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
@@ -332,6 +344,7 @@ public class Config
     public static boolean enable_lazy_funnel;
     public static boolean enable_lazy_chute;
     public static boolean enable_lazy_depot;
+    public static boolean enable_lazy_saw;
     public static boolean enable_cache_saw;
     public static boolean enable_belt_delay;
     public static boolean enable_lazy_basin;
@@ -350,6 +363,7 @@ public class Config
     public static int funnel_delay_max;
     public static int chute_delay_max;
     public static int depot_delay_max;
+    public static int saw_delay_max;
     public static int saw_cache_max;
     public static int belt_delay_max;
     public static int item_drain_delay_max;
@@ -371,6 +385,7 @@ public class Config
         enable_lazy_funnel = ENABLE_LAZY_FUNNEL.get();
         enable_lazy_chute = ENABLE_LAZY_CHUTE.get();
         enable_lazy_depot = ENABLE_LAZY_DEPOT.get();
+        enable_lazy_saw = ENABLE_LAZY_SAW.get();
         enable_cache_saw = ENABLE_CACHE_SAW.get();
         enable_belt_delay = ENABLE_LAZY_BELT.get();
         enable_lazy_basin = ENABLE_LAZY_BASIN.get();
@@ -389,6 +404,7 @@ public class Config
         funnel_delay_max = FUNNEL_DELAY_MAX.get();
         chute_delay_max = CHUTE_DELAY_MAX.get();
         depot_delay_max = DEPOT_DELAY_MAX.get();
+        saw_delay_max = SAW_DELAY_MAX.get();
         saw_cache_max = SAW_CACHE_MAX.get();
         belt_delay_max = BELT_DELAY_MAX.get();
         item_drain_delay_max = ITEM_DRAIN_DELAY_MAX.get();

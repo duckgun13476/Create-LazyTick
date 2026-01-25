@@ -201,6 +201,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     //定期检查环境 (每 10 秒)
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
     private void createLazyTick$tickCheck(CallbackInfo ci) {
+        if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
         if (level == null || level.isClientSide) return;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
