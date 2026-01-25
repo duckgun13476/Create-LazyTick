@@ -30,6 +30,7 @@
     "OptElement.fluid.PipeConnectionAccessor",
     "OptElement.itemdrain.ItemDrainAccessor",
     "OptElement.itemdrain.ItemDrainLazyTickMixin",
+    "OptElement.saw.SawLazyTickMixin",
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
