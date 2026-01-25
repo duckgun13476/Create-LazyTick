@@ -74,7 +74,7 @@ public class CreateLazyTick {
         modLoadingContext.registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (Minecraft mc, Screen screen) -> new BaseConfigScreen(screen, "Create Lazy Tick Config")
+                        (Minecraft mc, Screen screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
                                 .withSpecs(null, null, Config.SPEC)
                 )
         );
