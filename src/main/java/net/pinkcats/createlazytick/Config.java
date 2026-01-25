@@ -376,9 +376,7 @@ public class Config
     public static List<? extends Integer> clock_mode_sequence;
     public static boolean clock_mode_default_dynamic;
 
-    @SubscribeEvent
-    static void onLoad(final ModConfigEvent event)
-    {
+    public static void configSync() {
         enable_lazy_tick = ENABLE_LAZY_TICK.get();
 
         enable_lazy_fluid = ENABLE_LAZY_FLUID.get();
@@ -417,5 +415,16 @@ public class Config
 
         clock_mode_default_dynamic = CLOCK_MODE_DEFAULT_DYNAMIC.get();
         clock_mode_sequence = CLOCK_MODE_SEQUENCE.get();
+    }
+
+    @SubscribeEvent
+    static void onLoad(final ModConfigEvent.Loading event)
+    {
+        configSync();
+    }
+
+    @SubscribeEvent
+    static void onReload(final ModConfigEvent.Reloading event) {
+        configSync();
     }
 }

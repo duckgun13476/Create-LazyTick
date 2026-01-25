@@ -1,9 +1,13 @@
 package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
+import net.createmod.catnip.config.ui.BaseConfigScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -65,7 +69,15 @@ public class CreateLazyTick {
         ITEMS.register(modEventBus);
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
+
         modLoadingContext.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
+        modLoadingContext.registerExtensionPoint(
+                ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory(
+                        (Minecraft mc, Screen screen) -> new BaseConfigScreen(screen, "Create Lazy Tick Config")
+                                .withSpecs(null, null, Config.SPEC)
+                )
+        );
     }
 
 
