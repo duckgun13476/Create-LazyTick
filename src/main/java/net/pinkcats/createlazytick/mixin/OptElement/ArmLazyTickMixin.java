@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
@@ -83,7 +83,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         createLazyTick$cachedWeakBlocks = new HashSet<>();
 
         // 解析忽略列表
-        for (String id : Config.arm_ignore_lazytick_list) {
+        for (String id : ServerConfig.arm_ignore_lazytick_list) {
             ResourceLocation loc = DropResourceLocation(id);
             if (ForgeRegistries.BLOCKS.containsKey(loc)) {
                 createLazyTick$cachedIgnoreBlocks.add(ForgeRegistries.BLOCKS.getValue(loc));
@@ -91,7 +91,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         }
 
         // 解析弱懒加载列表
-        for (String id : Config.arm_weak_lazytick_list) {
+        for (String id : ServerConfig.arm_weak_lazytick_list) {
             ResourceLocation loc = DropResourceLocation(id);
             if (ForgeRegistries.BLOCKS.containsKey(loc)) {
                 createLazyTick$cachedWeakBlocks.add(ForgeRegistries.BLOCKS.getValue(loc));
@@ -201,11 +201,11 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     //定期检查环境 (每 10 秒)
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
     private void createLazyTick$tickCheck(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_arm) return;
         if (level == null || level.isClientSide) return;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.arm_delay_max);
+                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.arm_delay_max);
 
         ScanBlockType_Schedule.RandomTick();
 
@@ -223,7 +223,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     // 寻找输入懒加载计时器
     @Inject(method = "searchForItem", at = @At("HEAD"), cancellable = true, remap = false)
     private void createLazyTick$searchForItemHead(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_arm) return;
 
         if (createLazyTick$ignoreLazy) {
             this.createLazyTick$setLazyTickInterval(1);
@@ -241,7 +241,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     // 寻找输入懒加载
     @Inject(method = "searchForItem", at = @At("RETURN"), remap = false)
     private void createLazyTick$searchForItemReturn(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_arm) return;
         if (createLazyTick$ignoreLazy) return;
 
         if (this.phase != ArmBlockEntity.Phase.SEARCH_INPUTS) {
@@ -249,9 +249,9 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
             createLazyTick$resetDelayTick();
         } else {
             // 仍在寻找输入: 逐步增加睡眠时间
-            int maxDelay = Config.arm_delay_max;
+            int maxDelay = ServerConfig.arm_delay_max;
             if (createLazyTick$weakLazy) {
-                maxDelay = Math.min(Config.arm_weak_delay_max, maxDelay);
+                maxDelay = Math.min(ServerConfig.arm_weak_delay_max, maxDelay);
             }
 
             int currentInterval = this.createLazyTick$getLazyTickInterval();
@@ -268,7 +268,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     // 寻找输出懒加载计时器(注:机械臂搜索输入与搜索输出是互斥的)
     @Inject(method = "searchForDestination", at = @At("HEAD"), cancellable = true, remap = false)
     private void createLazyTick$searchForDestinationHead(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_arm) return;
 
         if (createLazyTick$ignoreLazy) {
             this.createLazyTick$setLazyTickInterval(1);
@@ -286,7 +286,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     // 寻找输出懒加载逻辑
     @Inject(method = "searchForDestination", at = @At("RETURN"), remap = false)
     private void createLazyTick$searchForDestinationReturn(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_arm) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_arm) return;
         if (createLazyTick$ignoreLazy) return;
 
         if (this.phase != ArmBlockEntity.Phase.SEARCH_OUTPUTS) {
@@ -294,9 +294,9 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
             createLazyTick$resetDelayTick();
         } else {
             // 仍在寻找输出: 增加睡眠时间
-            int maxDelay = Config.arm_delay_max;
+            int maxDelay = ServerConfig.arm_delay_max;
             if (createLazyTick$weakLazy) {
-                maxDelay = Math.min(Config.arm_weak_delay_max, maxDelay);
+                maxDelay = Math.min(ServerConfig.arm_weak_delay_max, maxDelay);
             }
 
             int currentInterval = this.createLazyTick$getLazyTickInterval();

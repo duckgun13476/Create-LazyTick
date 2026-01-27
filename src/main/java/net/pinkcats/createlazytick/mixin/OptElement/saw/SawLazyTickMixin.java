@@ -7,7 +7,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
@@ -43,7 +43,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     private void createLazyTick$applyBackoff() {
         createLazyTick$sawTick = 0;
         int currentInterval = this.createLazyTick$getLazyTickInterval();
-        int newInterval = LazyTickLogic.computeNextInterval(this, currentInterval, Config.saw_delay_max);
+        int newInterval = LazyTickLogic.computeNextInterval(this, currentInterval, ServerConfig.saw_delay_max);
 
         if (newInterval != currentInterval) {
             LazyTickLogic.setIntervalSafe(this, newInterval);
@@ -56,11 +56,11 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void tick_Head(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_saw) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_saw) return;
         if (level == null || level.isClientSide) return;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), Config.saw_delay_max);
+                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.saw_delay_max);
 
         createLazyTick$inventoryChanged = false;
     }
@@ -69,7 +69,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
             value = "INVOKE",
             target = "Lcom/simibubi/create/content/kinetics/saw/SawBlockEntity;getItemMovementVec()Lnet/minecraft/world/phys/Vec3;"), cancellable = true)
     public void optimizedTick(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_saw) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_saw) return;
         if (level == null || level.isClientSide) return;
 
         /*if(!level.isClientSide()) {
@@ -97,7 +97,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
             value = "INVOKE",
             target = "Lcom/simibubi/create/content/processing/recipe/ProcessingInventory;setStackInSlot(ILnet/minecraft/world/item/ItemStack;)V"))
     public void onInventoryChange(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_saw) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_saw) return;
 
         if (level == null || level.isClientSide) return;
         createLazyTick$inventoryChanged = true;
@@ -106,7 +106,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
 
     @Inject(method = "tick", at = @At("RETURN"), remap = false)
     public void onOutputFail(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_saw) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_saw) return;
 
         if (level == null || level.isClientSide) return;
 

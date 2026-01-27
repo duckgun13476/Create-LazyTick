@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
@@ -48,14 +48,14 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/foundation/blockEntity/SmartBlockEntity;tick()V", shift = At.Shift.AFTER), cancellable = true, remap = false)
     public void optimizedTick(CallbackInfo ci) {
 
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_item_drain) {
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_item_drain) {
             return;
         }
 
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), Config.item_drain_delay_max);
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.item_drain_delay_max);
 
         /*if(!level.isClientSide()) {
             System.out.println("ItemDrain:" + createLazyTick$itemDrainTick + "|" + control.createLazyTick$getLazyTickInterval());
@@ -264,7 +264,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         createLazyTick$itemDrainTick = 0;
 
         int currentInterval = control.createLazyTick$getLazyTickInterval();
-        int newInterval = LazyTickLogic.computeNextInterval(control, currentInterval, Config.item_drain_delay_max);
+        int newInterval = LazyTickLogic.computeNextInterval(control, currentInterval, ServerConfig.item_drain_delay_max);
         if (newInterval != currentInterval) {
             LazyTickLogic.setIntervalSafe(control, newInterval);
         }

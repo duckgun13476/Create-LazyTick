@@ -1,6 +1,6 @@
 package net.pinkcats.createlazytick.bridge.Crafter;
 
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick; // 引入主类以使用 LOGGER
 
 import java.text.DecimalFormat;
@@ -32,7 +32,7 @@ public class CrafterCacheStats {
 
     public static void onNbtSkip(String itemName) {
         long count = nbtSkips.incrementAndGet();
-        if (Config.enable_cache_crafter && Config.enable_cache_crafter_debugger) {
+        if (ServerConfig.enable_cache_crafter && ServerConfig.enable_cache_crafter_debugger) {
             CreateLazyTick.LOGGER.info("[LazyTick] [DEBUG] Skipped cache due to NBT item: {} (Total Skips: {})", itemName, count);
         }
         checkPrint();
@@ -51,14 +51,14 @@ public class CrafterCacheStats {
         intervalOps.set(0);
         lastPrintTime = System.currentTimeMillis();
 
-        if (Config.enable_cache_crafter && Config.enable_cache_crafter_debugger) {
+        if (ServerConfig.enable_cache_crafter && ServerConfig.enable_cache_crafter_debugger) {
             CreateLazyTick.LOGGER.info("[LazyTick] Crafter Stats reset.");
         }
     }
 
     private static void checkPrint() {
         // 合成器缓存开关关闭 或 Debug开关关闭，均不输出
-        if (!Config.enable_cache_crafter || !Config.enable_cache_crafter_debugger) return;
+        if (!ServerConfig.enable_cache_crafter || !ServerConfig.enable_cache_crafter_debugger) return;
 
         intervalOps.incrementAndGet();
         long now = System.currentTimeMillis();

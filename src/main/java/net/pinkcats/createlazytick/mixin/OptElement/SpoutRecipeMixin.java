@@ -6,7 +6,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidStack;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Spout.SpoutCacheKey;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -86,6 +86,6 @@ public abstract class SpoutRecipeMixin {
 
     @Unique
     private static boolean createLazyTick$NotEnable() {
-        return !Config.enable_lazy_tick || !Config.enable_cache_spout || IsServerReload;
+        return !ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_spout || IsServerReload;
     }
 }
