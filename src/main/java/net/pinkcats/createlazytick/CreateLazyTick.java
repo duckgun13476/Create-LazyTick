@@ -21,7 +21,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.pinkcats.createlazytick.config.ServerConfig;
-import net.pinkcats.createlazytick.config.TestClientConfig;
+import net.pinkcats.createlazytick.config.ClientConfig;
 import net.pinkcats.createlazytick.item.LazyTickClockItem;
 import org.slf4j.Logger;
 
@@ -70,13 +70,13 @@ public class CreateLazyTick {
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
 
-        //modLoadingContext.registerConfig(ModConfig.Type.CLIENT, TestClientConfig.SPEC);
+        modLoadingContext.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modLoadingContext.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         modLoadingContext.registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
                         (mc, screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
-                                .withSpecs(TestClientConfig.SPEC, null, ServerConfig.SPEC)
+                                .withSpecs(ClientConfig.SPEC, null, ServerConfig.SPEC)
                 )
         );
     }

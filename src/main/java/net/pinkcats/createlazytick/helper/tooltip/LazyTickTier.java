@@ -3,6 +3,9 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+
+import java.util.List;
+
 //需要秒和tick(转换)
 public enum LazyTickTier {
     ACTIVE(ChatFormatting.GREEN),
@@ -25,7 +28,7 @@ public enum LazyTickTier {
      * @param maxTick 配置最大刻数
      * @param limitPercent 玩家设定的上限百分比 (0-100)
      */
-    public MutableComponent getAdvancedProgressBar(int currentInterval, int maxTick, int limitPercent) {
+    public List<MutableComponent> getAdvancedProgressBar(int currentInterval, int maxTick, int limitPercent) {
         if (maxTick < 1) maxTick = 1;
 
         // 1. 活跃机器判定 (配置上限极低的机器)
@@ -106,11 +109,17 @@ public enum LazyTickTier {
         }
 
         // 6. 尾部数值
-        bar.append(Component.literal("] ").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal("(" + currentInterval + "/" + maxTick + "t)")
-                        .withStyle(ChatFormatting.GRAY));
+        bar.append(Component.literal("] ").withStyle(ChatFormatting.GRAY));
 
-        return bar;
+        String currStr = LazyTickTooltipHelper.formatTime(currentInterval);
+        String maxStr = LazyTickTooltipHelper.formatTime(maxTick);
+
+        String timeText = String.format("(%s / %s)", currStr, maxStr);
+
+        MutableComponent statsLine = Component.literal("  " + timeText)
+                .withStyle(ChatFormatting.GRAY);
+
+        return List.of(bar, statsLine);
     }
 
     /**
