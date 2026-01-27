@@ -14,7 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.BeltEum;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.simibubi.create.content.kinetics.belt.transport.BeltTunnelInteractionHandler.flapTunnel;
-import static net.pinkcats.createlazytick.Config.belt_delay_max;
+import static net.pinkcats.createlazytick.config.ServerConfig.belt_delay_max;
 
 @Mixin(value = BeltInventory.class,remap = false)
 public class BeltTickMixin {
@@ -63,7 +63,7 @@ public class BeltTickMixin {
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_belt_delay) {
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_belt_delay) {
             return;
         }
 

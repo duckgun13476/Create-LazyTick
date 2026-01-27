@@ -1,21 +1,22 @@
-package net.pinkcats.createlazytick;
+package net.pinkcats.createlazytick.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.pinkcats.createlazytick.CreateLazyTick;
 
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = CreateLazyTick.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class Config
+public class ServerConfig
 {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
     // 声明 public static final 并在 static 块中赋值,以获得更好的分割效果
 
     // ==========================================
-    // Config Spec Objects
+    // ServerConfig Spec Objects
     // ==========================================
 
     // General
@@ -66,7 +67,7 @@ public class Config
     public static final ForgeConfigSpec.ConfigValue<List<? extends Integer>> CLOCK_MODE_SEQUENCE;
     public static final ForgeConfigSpec.BooleanValue CLOCK_MODE_DEFAULT_DYNAMIC;
 
-    static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec SPEC;
 
     // ==========================================
     // Initialization Block (Organizing Categories)
@@ -418,13 +419,13 @@ public class Config
     }
 
     @SubscribeEvent
-    static void onLoad(final ModConfigEvent.Loading event)
+    public static void onLoad(final ModConfigEvent.Loading event)
     {
         configSync();
     }
 
     @SubscribeEvent
-    static void onReload(final ModConfigEvent.Reloading event) {
+    public static void onReload(final ModConfigEvent.Reloading event) {
         configSync();
     }
 }

@@ -20,7 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
@@ -85,7 +85,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
         int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
 
-        int newLazyTickInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, Config.depot_delay_max);
+        int newLazyTickInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.depot_delay_max);
 
         if (newLazyTickInterval != currentLazyTickInterval) {
             LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
@@ -102,7 +102,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "tick*",at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_depot) {
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_depot) {
             return;
         }
 
@@ -111,7 +111,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         super.tick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control, this.blockEntity.getLevel(),
-                this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), Config.depot_delay_max);
+                this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), ServerConfig.depot_delay_max);
 
         Level world = blockEntity.getLevel();
 
@@ -224,7 +224,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "handleBeltFunnelOutput",at=@At("HEAD" ),remap = false,cancellable = true)
     private void handleBeltFunnelOutput(CallbackInfoReturnable<Boolean> cir) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_depot) {
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_depot) {
             return;
         }
 

@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
-import static net.pinkcats.createlazytick.Config.global_cache_record_delay;
+import static net.pinkcats.createlazytick.config.ServerConfig.global_cache_record_delay;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 import static net.pinkcats.createlazytick.helper.RecipeCacheTool.*;
