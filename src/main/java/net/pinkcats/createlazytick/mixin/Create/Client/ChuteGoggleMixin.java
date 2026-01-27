@@ -5,7 +5,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipHelper;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,11 +23,11 @@ public class ChuteGoggleMixin {
     @Inject(method = "addToGoggleTooltip", at = @At("RETURN"), cancellable = true)
     private void lazytick$appendChuteInfo(List<Component> tooltip, boolean isPlayerSneaking, CallbackInfoReturnable<Boolean> cir) {
         Minecraft mc = Minecraft.getInstance();
-        if (!LazyTickTooltipHelper.shouldRender(mc)) return;
+        if (!LazyTickTooltipTool.shouldRender(mc)) return;
 
         if ((Object) this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = ServerConfig.chute_delay_max;
-            this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
+            this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             cir.setReturnValue(true);
         }
     }

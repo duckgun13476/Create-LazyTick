@@ -3,7 +3,9 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.pinkcats.createlazytick.config.ClientConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 
 //需要秒和tick(转换)
@@ -28,9 +30,47 @@ public enum LazyTickTier {
      * @param maxTick 配置最大刻数
      * @param limitPercent 玩家设定的上限百分比 (0-100)
      */
-    public List<MutableComponent> getAdvancedProgressBar(int currentInterval, int maxTick, int limitPercent) {
+    public List<Component> getDisplayComponents(int currentInterval, int maxTick, int limitPercent) {
         if (maxTick < 1) maxTick = 1;
 
+        // 1. 绘制进度条组件
+        MutableComponent bar = createBarComponent(currentInterval, maxTick, limitPercent);
+
+        // 2. 生成数值统计组件
+        MutableComponent stats = createStatsComponent(currentInterval, maxTick);
+
+        // 3. 拼装
+        return renderByConfig(bar, stats);
+    }
+
+    private List<Component> renderByConfig(MutableComponent bar, MutableComponent stats) {
+        ClientConfig.TierFormat format = ClientConfig.getTierFormat();
+        List<Component> list = new ArrayList<>();
+
+        // 1. 进度条 (BAR 或 BOTH)
+        if (format == ClientConfig.TierFormat.BAR || format == ClientConfig.TierFormat.BOTH) {
+            list.add(bar);
+        }
+
+        // 2. 数值 (NUMBER 或 BOTH)
+        if (format == ClientConfig.TierFormat.NUMBER || format == ClientConfig.TierFormat.BOTH) {
+            if (format == ClientConfig.TierFormat.BOTH) {
+                list.add(Component.literal(" ").append(stats));
+            } else {
+                // 如果单显数值，顶格显示
+                list.add(stats);
+            }
+        }
+
+        // (啥都没有的情况下)默认显示进度条
+        if (list.isEmpty()) {
+            list.add(bar);
+        }
+
+        return list;
+    }
+
+    private MutableComponent createBarComponent(int currentInterval, int maxTick, int limitPercent) {
         // 1. 活跃机器判定 (配置上限极低的机器)
         // 如果 maxTick <= 2，说明机器本身就没有多少"懒惰"的空间，总是视为活跃
         boolean isActiveMachine = maxTick <= 2;
@@ -111,15 +151,15 @@ public enum LazyTickTier {
         // 6. 尾部数值
         bar.append(Component.literal("] ").withStyle(ChatFormatting.GRAY));
 
-        String currStr = LazyTickTooltipHelper.formatTime(currentInterval);
-        String maxStr = LazyTickTooltipHelper.formatTime(maxTick);
+        return bar;
+    }
 
-        String timeText = String.format("(%s / %s)", currStr, maxStr);
+    public MutableComponent createStatsComponent(int currentInterval, int maxTick) {
+        String currStr = LazyTickTooltipTool.formatTime(currentInterval);
+        String maxStr = LazyTickTooltipTool.formatTime(maxTick);
 
-        MutableComponent statsLine = Component.literal("  " + timeText)
+        return Component.literal(String.format("(%s / %s)", currStr, maxStr))
                 .withStyle(ChatFormatting.GRAY);
-
-        return List.of(bar, statsLine);
     }
 
     /**
