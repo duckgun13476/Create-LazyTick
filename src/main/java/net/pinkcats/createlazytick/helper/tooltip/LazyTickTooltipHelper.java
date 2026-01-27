@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.Channel.CLTChannel;
 import net.pinkcats.createlazytick.Channel.ClockSyncPacket;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.config.ClientConfig;
 import net.pinkcats.createlazytick.item.LazyTickClockItem;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class LazyTickTooltipHelper {
 
         long currentGameTime = mc.level.getGameTime();
 
-        // [修改] 增加 && currentGameTime != lastQueryTick 判断
+        // 增加 && currentGameTime != lastQueryTick 判断
         if (currentGameTime % 10 == 0 && currentGameTime != lastQueryTick) {
             // 记录当前时间，锁住这一 tick 后续的帧
             // 使用新的构造函数 (isQuery = true)
@@ -45,7 +46,7 @@ public class LazyTickTooltipHelper {
 
         if (control.createLazyTick$shouldRenderMode()) {
             // 渲染目前懒加载模式
-            tooltip.add(LazyTickMode.getDisplayComponent(dynamicValue, forcedValue, maxDelayTick));
+            tooltip.addAll(LazyTickMode.getDisplayComponents(dynamicValue, forcedValue, maxDelayTick));
         }
 
         if (control.createLazyTick$shouldRenderTier()) {
@@ -57,8 +58,8 @@ public class LazyTickTooltipHelper {
             if (currentInterval < 1) currentInterval = 1;
             int limitPercent = (forcedValue > 0) ? forcedValue : dynamicValue;
 
-            // 3. 渲染高级进度条 (调用新方法)
-            tooltip.add(control.lazytick$getSyncedTier()
+            // 3. 渲染高级进度条
+            tooltip.addAll(control.lazytick$getSyncedTier()
                     .getAdvancedProgressBar(currentInterval, maxDelayTick, limitPercent));
         }
 
@@ -103,5 +104,15 @@ public class LazyTickTooltipHelper {
 
     public static boolean shouldRender(Minecraft mc) {
         return mc.player != null && mc.player.getMainHandItem().getItem() instanceof LazyTickClockItem;
+    }
+
+    public static String formatTime(int ticks) {
+        if (ticks < 0) ticks = 0;
+
+        return switch (ClientConfig.getTimeFormat()) {
+            case SECONDS -> String.format("%.1fs", ticks / 20.0f); // 除以 20.0f 得到秒数，保留1位小数
+            case BOTH -> String.format("%dt | %.1fs", ticks, ticks / 20.0f); // 60t | 3.0s
+            default -> ticks + "t";  // 默认仅显示 tick
+        };
     }
 }

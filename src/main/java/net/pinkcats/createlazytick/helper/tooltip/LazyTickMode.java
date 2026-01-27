@@ -3,6 +3,10 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+
+import java.util.ArrayList;
+import java.util.List;
+
 //需要翻译文本
 public enum LazyTickMode {
     AUTO_SLEEP_LIGHT(" [浅度自动休眠模式]", ChatFormatting.YELLOW, false),
@@ -24,12 +28,12 @@ public enum LazyTickMode {
         this.isBold = isBold;
     }
 
-    public static Component getDisplayComponent(int dynamicValue, int forcedValue, int maxTick) {
+    public static List<Component> getDisplayComponents(int dynamicValue, int forcedValue, int maxTick) {
         // 1. 优先判断强制模式 (只要不是 -1)
         if (forcedValue != -1) {
             if (forcedValue == 0) {
                 // 强制全速 (Forced 0)
-                return FORCED_FULL.getComponentWithExtra(null);
+                return List.of(FORCED_FULL.getBaseComponent());  // 直接getBase
             } else {
                 // 强制休眠 (Forced 1~100)
                 LazyTickMode mode = forcedValue <= 30 ? FORCED_SLEEP_LIGHT :
@@ -39,8 +43,9 @@ public enum LazyTickMode {
                 // 这里的 Math.max(1, ...) 是为了显示严谨，虽然显示0t也不影响理解
                 actualInterval = Math.max(1, actualInterval);
 
-                String extraInfo = " (固定休眠: " + forcedValue + "%" + "|" + actualInterval + "t" + ")";
-                return mode.getComponentWithExtra(extraInfo);
+                String timeStr = LazyTickTooltipHelper.formatTime(actualInterval);
+                String extraInfo = String.format("(固定休眠: %d%% | %s)", forcedValue, timeStr);
+                return mode.getComponentsWithExtra(extraInfo); //内部getBase
             }
         }
 
@@ -58,23 +63,27 @@ public enum LazyTickMode {
             int actualLimit = maxTick * dynamicValue / 100;
             actualLimit = Math.max(1, actualLimit);
 
-            String extraInfo = " (动态上限: " + dynamicValue + "%" + "|" + actualLimit + "t" + ")";
-            return mode.getComponentWithExtra(extraInfo);
+            String timeStr = LazyTickTooltipHelper.formatTime(actualLimit);
+            String extraInfo = String.format("(动态上限: %d%% | %s)", dynamicValue, timeStr);
+            return mode.getComponentsWithExtra(extraInfo);
         }
-        return Component.literal(" [未知模式]").withStyle(ChatFormatting.GRAY);
+        return List.of(Component.literal(" [未知模式]").withStyle(ChatFormatting.DARK_RED));
     }
 
-    private Component getComponentWithExtra(String extra) {
-        MutableComponent base = Component.literal(text);
-        if (extra != null) {
-            base.append(Component.literal(extra));
-        }
-
+    private MutableComponent getBaseComponent() {
+        MutableComponent base = Component.literal(text);  // -> 比如 "[中度自动休眠模式]"
         base.withStyle(color);
-        if (isBold) {
-            base.withStyle(style -> style.withBold(true));
-        }
+        if (isBold) base.withStyle(style -> style.withBold(true));
         return base;
+    }
+
+    private List<Component> getComponentsWithExtra(String extra) {
+        List<Component> list = new ArrayList<>();
+        list.add(getBaseComponent());
+        if (extra != null) {
+            list.add(Component.literal("  " + extra).withStyle(ChatFormatting.GRAY));
+        }
+        return list;
     }
 
     public static Component getModeDescription(int dynamicValue, int forcedValue) {
