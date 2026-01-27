@@ -82,9 +82,7 @@ public class LazyTickLogic {
                 // 默认模式 -> 移除监视
                 ForcedActiveManager.unregister(level, pos);
                 control.createLazyTick$setLazyTickInterval(1);
-            }
-            // ============================
-            else {
+            } else {
                 // 动态限制模式 (1% ~ 99%)
                 ForcedActiveManager.register(level, pos);
 
@@ -92,7 +90,17 @@ public class LazyTickLogic {
                 if (dyn <= 0) {
                     control.createLazyTick$setLazyTickInterval(1);
                 }
-                // 正常的 Interval 计算交给 computeNextInterval
+
+                // 计算修改后的理论最大休眠上限时间
+                int effectiveMaxLimit = Math.max(1, (int) ((dyn / 100.0f) * maxConfigDelay));
+                // 获取当前休眠上限时间
+                int currentInterval = control.createLazyTick$getLazyTickInterval();
+                // 如果当前上限超过理论最大上限,则强制拉回
+                if (currentInterval > effectiveMaxLimit) {
+                    control.createLazyTick$setLazyTickInterval(effectiveMaxLimit);
+                }
+
+                // 其他正常的 Interval 计算交给 computeNextInterval
             }
         }
     }

@@ -58,6 +58,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
                 // 0:强制活跃 (关闭优化)
                 LazyTickLogic.switchMode(control, true, 0);
             }
+            LazyTickLogic.updateState(control);
         });
 
         // 6. Init ui renderer(value) (value of NBT/Memory -> UI)
