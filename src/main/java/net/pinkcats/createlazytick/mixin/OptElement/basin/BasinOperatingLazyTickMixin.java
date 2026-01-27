@@ -4,7 +4,7 @@ import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinOperatingBlockEntity;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import net.minecraft.world.item.crafting.Recipe;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Basin.IBasinOptimization;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,7 +32,7 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("HEAD"), cancellable = true, remap = false)
     private void onGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_basin) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_basin) return;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
 
@@ -63,7 +63,7 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("RETURN"), remap = false)
     private void captureMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_basin) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_basin) return;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
         if (basinOpt.isPresent()) {

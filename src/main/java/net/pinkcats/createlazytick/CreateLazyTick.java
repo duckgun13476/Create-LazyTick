@@ -2,8 +2,6 @@ package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
 import net.createmod.catnip.config.ui.BaseConfigScreen;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
@@ -22,6 +20,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.pinkcats.createlazytick.config.ServerConfig;
+import net.pinkcats.createlazytick.config.TestClientConfig;
 import net.pinkcats.createlazytick.item.LazyTickClockItem;
 import org.slf4j.Logger;
 
@@ -70,12 +70,13 @@ public class CreateLazyTick {
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
 
-        modLoadingContext.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
+        //modLoadingContext.registerConfig(ModConfig.Type.CLIENT, TestClientConfig.SPEC);
+        modLoadingContext.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         modLoadingContext.registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (Minecraft mc, Screen screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
-                                .withSpecs(null, null, Config.SPEC)
+                        (mc, screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
+                                .withSpecs(TestClientConfig.SPEC, null, ServerConfig.SPEC)
                 )
         );
     }

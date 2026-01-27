@@ -3,7 +3,7 @@ package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
 import net.minecraft.world.item.ItemStack;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Crafter.CrafterCacheStats;
 import net.pinkcats.createlazytick.bridge.Crafter.CrafterGridSignature;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,7 +60,7 @@ public abstract class CrafterRecipeMixin {
 
     @Unique
     private static boolean createLazyTick$NotEnable() {
-        return !Config.enable_lazy_tick || !Config.enable_cache_crafter || IsServerReload;
+        return !ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_crafter || IsServerReload;
     }
 
 }

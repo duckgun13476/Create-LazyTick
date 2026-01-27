@@ -10,26 +10,26 @@ import com.simibubi.create.content.kinetics.saw.SawBlockEntity;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.simibubi.create.content.logistics.depot.DepotBlockEntity;
 import com.simibubi.create.content.logistics.funnel.FunnelBlockEntity;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 
 import java.util.function.Supplier;
 
 public enum LazyTickWhiteList {
     // Kinetic
-    ARM(ArmBlockEntity.class, () -> Config.arm_delay_max, Type.KINETIC),
-    BELT(BeltBlockEntity.class, () -> Config.belt_delay_max, Type.KINETIC),
-    CRAFTER(MechanicalCrafterBlockEntity.class, () -> Config.crafter_redstone_delay_max, Type.KINETIC),
-    PUMP(PumpBlockEntity.class, () -> Config.fluid_delay_max, Type.KINETIC),
-    SAW(SawBlockEntity.class, () -> Config.saw_delay_max, Type.KINETIC),
+    ARM(ArmBlockEntity.class, () -> ServerConfig.arm_delay_max, Type.KINETIC),
+    BELT(BeltBlockEntity.class, () -> ServerConfig.belt_delay_max, Type.KINETIC),
+    CRAFTER(MechanicalCrafterBlockEntity.class, () -> ServerConfig.crafter_redstone_delay_max, Type.KINETIC),
+    PUMP(PumpBlockEntity.class, () -> ServerConfig.fluid_delay_max, Type.KINETIC),
+    SAW(SawBlockEntity.class, () -> ServerConfig.saw_delay_max, Type.KINETIC),
 
     // Smart
-    FUNNEL(FunnelBlockEntity.class, () -> Config.funnel_delay_max, Type.SMART),
-    DEPOT(DepotBlockEntity.class, () -> Config.depot_delay_max, Type.SMART),
-    PIPE(FluidPipeBlockEntity.class, () -> Config.fluid_delay_max, Type.SMART),
+    FUNNEL(FunnelBlockEntity.class, () -> ServerConfig.funnel_delay_max, Type.SMART),
+    DEPOT(DepotBlockEntity.class, () -> ServerConfig.depot_delay_max, Type.SMART),
+    PIPE(FluidPipeBlockEntity.class, () -> ServerConfig.fluid_delay_max, Type.SMART),
 
     // Special(have override)
-    DRAIN(ItemDrainBlockEntity.class, () -> Config.item_drain_delay_max, Type.SPECIAL),
-    CHUTE(ChuteBlockEntity.class, () -> Config.chute_delay_max, Type.SMART);
+    DRAIN(ItemDrainBlockEntity.class, () -> ServerConfig.item_drain_delay_max, Type.SPECIAL),
+    CHUTE(ChuteBlockEntity.class, () -> ServerConfig.chute_delay_max, Type.SMART);
 
     private final Class<?> targetClass;
     private final Supplier<Integer> maxTickSupplier;

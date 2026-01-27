@@ -12,7 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.fluids.FluidStack;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static net.pinkcats.createlazytick.Config.fluid_delay_max;
+import static net.pinkcats.createlazytick.config.ServerConfig.fluid_delay_max;
 
 //记得补偿流体(目前速度有异常)
 @Mixin(value = FluidTransportBehaviour.class, remap = false)
@@ -55,7 +55,7 @@ public class FluidLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_fluid) {
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_fluid) {
             return;
         }
 

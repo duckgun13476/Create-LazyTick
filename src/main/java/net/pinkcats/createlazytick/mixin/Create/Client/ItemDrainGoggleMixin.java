@@ -3,7 +3,7 @@ package net.pinkcats.createlazytick.mixin.Create.Client;
 import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +26,7 @@ public class ItemDrainGoggleMixin {
         if (!LazyTickTooltipHelper.shouldRender(mc)) return;
 
         if ((Object) this instanceof ISmartBlockEntityControl control) {
-            int maxDelayTick = Config.item_drain_delay_max;
+            int maxDelayTick = ServerConfig.item_drain_delay_max;
             this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             // 强制渲染
             cir.setReturnValue(true);

@@ -6,7 +6,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Basin.IBasinOptimization;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -62,7 +62,7 @@ public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBa
         this.lazytick$cachedHeatLevel = null;
 
         // 如果 Create 认为内容变了,让版本号 +1,否则维持原态(如果在没变化的情况下再次查询直接返回原状态值)
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_basin) return;
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_basin) return;
         if (this.contentsChanged) {
             optimization$inventoryVersion++;
         }

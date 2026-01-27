@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
@@ -88,8 +88,8 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
             if (CanDownload) {
                 LazyTickLogic.setIntervalSafe(control,1);
             } else {
-                if (currentLazyTickInterval < Config.chute_delay_max) {
-                    int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, Config.chute_delay_max);
+                if (currentLazyTickInterval < ServerConfig.chute_delay_max) {
+                    int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.chute_delay_max);
                     LazyTickLogic.setIntervalSafe(control, newInterval);
                 }
             }
@@ -99,7 +99,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
 
-        if (!Config.enable_lazy_tick || !Config.enable_lazy_chute) {
+        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_chute) {
             return;
         }
 
@@ -108,7 +108,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), Config.chute_delay_max);
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.chute_delay_max);
 
 
         if (level != null && !level.isClientSide) canPickUpItems = canDirectlyInsert();

@@ -23,7 +23,7 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static net.pinkcats.createlazytick.Config.fluid_delay_max;
+import static net.pinkcats.createlazytick.config.ServerConfig.fluid_delay_max;
 
 @Mixin(value = FluidNetwork.class,remap = false)
 public class FluidNetworkMixin {

@@ -2,7 +2,7 @@ package net.pinkcats.createlazytick.helper;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.pinkcats.createlazytick.Config;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Crafter.CrafterGridSignature;
 import net.pinkcats.createlazytick.bridge.Spout.SpoutCacheKey;
@@ -17,7 +17,7 @@ public class RecipeCacheTool {
     public static final Map<Item, Boolean> CAN_FILL_CACHE = Collections.synchronizedMap(new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Item, Boolean> eldest) {
-            return size() > Config.spout_cache_max;
+            return size() > ServerConfig.spout_cache_max;
         }
     });
 
@@ -25,7 +25,7 @@ public class RecipeCacheTool {
     public static final Map<SpoutCacheKey, Integer> AMOUNT_CACHE = Collections.synchronizedMap(new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<SpoutCacheKey, Integer> eldest) {
-            return size() > Config.spout_cache_max;
+            return size() > ServerConfig.spout_cache_max;
         }
     });
 
@@ -38,10 +38,10 @@ public class RecipeCacheTool {
         @Override
         protected boolean removeEldestEntry(Map.Entry<CrafterGridSignature, ItemStack> eldest) {
             // 使用配置项 crafter_global_cache_max
-            int maxCacheSize = Config.crafter_global_cache_max;
+            int maxCacheSize = ServerConfig.crafter_global_cache_max;
             if (size() > maxCacheSize) {
                 // 日志需要检查 Debug 开关
-                if (!IsCrafterCacheFull && Config.enable_cache_crafter_debugger) {
+                if (!IsCrafterCacheFull && ServerConfig.enable_cache_crafter_debugger) {
                     CreateLazyTick.LOGGER.info("[CreateLazyTick] Crafter Cache hit max capacity ({}). Eviction started.", maxCacheSize);
                     IsCrafterCacheFull = true;
                 }
