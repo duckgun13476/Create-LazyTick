@@ -4,6 +4,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -96,9 +97,19 @@ public class LazyTickClockItem extends Item {
 
             // 8. 反馈消息 & 添加冷却 (0.5秒)
             int maxDelayTick = whiteItem.getMaxTick();
-            player.displayClientMessage(Component.literal("懒加载模式已切换: ")
-                    .append(LazyTickMode.getDisplayComponent(control.createLazyTick$getDynamicValue(),
-                            control.createLazyTick$getForcedValue(),maxDelayTick)), true);
+            MutableComponent message = Component.literal("懒加载模式已切换: ");
+
+            List<Component> infoList = LazyTickMode.getDisplayComponents(
+                    control.createLazyTick$getDynamicValue(),
+                    control.createLazyTick$getForcedValue(),
+                    maxDelayTick
+            );
+            // 遍历列表，将它们依次拼接到消息后面
+            for (Component c : infoList) {
+                message.append(c);
+            }
+
+            player.displayClientMessage(message, true);
 
             player.getCooldowns().addCooldown(this, 10);
 
