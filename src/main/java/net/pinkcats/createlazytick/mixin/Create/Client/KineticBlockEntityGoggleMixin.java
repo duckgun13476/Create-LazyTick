@@ -4,7 +4,8 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipHelper;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,20 +26,20 @@ public class KineticBlockEntityGoggleMixin {
     private void lazytick$appendKineticInfo(List<Component> tooltip, boolean isPlayerSneaking, CallbackInfoReturnable<Boolean> cir) {
 
         Minecraft mc = Minecraft.getInstance();
-        if (!LazyTickTooltipHelper.shouldRender(mc)) return;
+        if (!LazyTickTooltipTool.shouldRender(mc)) return;
 
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null || !whiteItem.isKinetic()) return;
 
         if (whiteItem == LazyTickWhiteList.PUMP) {
-            LazyTickTooltipHelper.appendSimpleConfigInfo(this, tooltip);
+            LazyTickTooltipRenderer.appendSimpleConfigInfo(this, tooltip);
             cir.setReturnValue(true);
             return;
         }
 
         if ((Object) this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
-            this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
+            this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             cir.setReturnValue(true);
         }
     }

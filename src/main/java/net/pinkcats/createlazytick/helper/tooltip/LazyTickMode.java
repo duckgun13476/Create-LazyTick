@@ -3,6 +3,7 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.pinkcats.createlazytick.config.ClientConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,45 +30,69 @@ public enum LazyTickMode {
     }
 
     public static List<Component> getDisplayComponents(int dynamicValue, int forcedValue, int maxTick) {
-        // 1. 优先判断强制模式 (只要不是 -1)
+        // 1. 决定当前模式
+        LazyTickMode mode = resolveMode(dynamicValue, forcedValue);
+
+        if (mode == null) {
+            return List.of(Component.literal(" [未知模式]").withStyle(ChatFormatting.DARK_RED));
+        }
+
+        // 2. 生成额外数值说明信息
+        MutableComponent extraInfo = generateExtraInfo(dynamicValue, forcedValue, maxTick);
+
+        // 3. 根据配置渲染
+        return renderByConfig(mode, extraInfo);
+    }
+
+    private static LazyTickMode resolveMode(int dynamicValue, int forcedValue) {
+        // 优先判断强制模式
         if (forcedValue != -1) {
-            if (forcedValue == 0) {
-                // 强制全速 (Forced 0)
-                return List.of(FORCED_FULL.getBaseComponent());  // 直接getBase
-            } else {
-                // 强制休眠 (Forced 1~100)
-                LazyTickMode mode = forcedValue <= 30 ? FORCED_SLEEP_LIGHT :
-                        forcedValue <= 70 ? FORCED_SLEEP_MEDIUM : FORCED_SLEEP_DEEP;
-
-                int actualInterval = maxTick * forcedValue / 100;
-                // 这里的 Math.max(1, ...) 是为了显示严谨，虽然显示0t也不影响理解
-                actualInterval = Math.max(1, actualInterval);
-
-                String timeStr = LazyTickTooltipHelper.formatTime(actualInterval);
-                String extraInfo = String.format("(固定休眠: %d%% | %s)", forcedValue, timeStr);
-                return mode.getComponentsWithExtra(extraInfo); //内部getBase
-            }
+            if (forcedValue == 0) return FORCED_FULL;
+            return getTierMode(forcedValue, true); // true 代表强制系列
         }
 
-        // 2. 动态模式
-        // (理论上 Dynamic 不会是 -1，因为原子切换保证了互斥)
+        // 判断动态模式
         if (dynamicValue > 0) {
-            LazyTickMode mode;
-            if (dynamicValue == 100) {
-                mode = AUTO_SLEEP_DEFAULT;
-            } else {
-                mode = dynamicValue <= 30 ? AUTO_SLEEP_LIGHT :
-                        dynamicValue <= 70 ? AUTO_SLEEP_MEDIUM : AUTO_SLEEP_DEEP;
-            }
-
-            int actualLimit = maxTick * dynamicValue / 100;
-            actualLimit = Math.max(1, actualLimit);
-
-            String timeStr = LazyTickTooltipHelper.formatTime(actualLimit);
-            String extraInfo = String.format("(动态上限: %d%% | %s)", dynamicValue, timeStr);
-            return mode.getComponentsWithExtra(extraInfo);
+            if (dynamicValue == 100) return AUTO_SLEEP_DEFAULT;
+            return getTierMode(dynamicValue, false); // false 代表自动系列
         }
-        return List.of(Component.literal(" [未知模式]").withStyle(ChatFormatting.DARK_RED));
+
+        return null; // 未知情况
+    }
+
+    //根据数值判断档位 (Light/Medium/Deep)
+    private static LazyTickMode getTierMode(int value, boolean isForced) {
+        if (value <= 30) return isForced ? FORCED_SLEEP_LIGHT : AUTO_SLEEP_LIGHT;
+        if (value <= 70) return isForced ? FORCED_SLEEP_MEDIUM : AUTO_SLEEP_MEDIUM;
+        return isForced ? FORCED_SLEEP_DEEP : AUTO_SLEEP_DEEP;
+    }
+
+    private static MutableComponent generateExtraInfo(int dynamicValue, int forcedValue, int maxTick) {
+        boolean isForced = (forcedValue != -1);
+        int percentage = isForced ? forcedValue : dynamicValue;
+
+        // 1. 计算实际间隔时间
+        int actualInterval = Math.max(1, maxTick * percentage / 100);
+
+        // 2. 获取时间格式化字符串 (例如 "2.0s" 或 "1t")
+        String timeStr = LazyTickTooltipTool.formatTime(actualInterval);
+
+        // 3. 生成文本
+        String text;
+        if (isForced) {
+            // [翻译键写法]:
+            // return Component.translatable("tooltip.clt.extra.fixed", percentage, timeStr).withStyle(ChatFormatting.GRAY);
+
+            // [中文写法]: (固定休眠: 0% | 1t)
+            text = String.format("(固定休眠: %d%% | %s)", percentage, timeStr);
+        } else {
+            // return Component.translatable("tooltip.clt.extra.dynamic", percentage, timeStr).withStyle(ChatFormatting.GRAY);
+
+            // (动态上限: 50% | 20t)
+            text = String.format("(动态上限: %d%% | %s)", percentage, timeStr);
+        }
+
+        return Component.literal(text).withStyle(ChatFormatting.GRAY); // 统一设置为灰色
     }
 
     private MutableComponent getBaseComponent() {
@@ -77,12 +102,29 @@ public enum LazyTickMode {
         return base;
     }
 
-    private List<Component> getComponentsWithExtra(String extra) {
+    private static List<Component> renderByConfig(LazyTickMode mode, MutableComponent extraInfo) {
         List<Component> list = new ArrayList<>();
-        list.add(getBaseComponent());
-        if (extra != null) {
-            list.add(Component.literal("  " + extra).withStyle(ChatFormatting.GRAY));
+
+        // 获取配置
+        ClientConfig.ModeFormat format = ClientConfig.getModeFormat();
+
+        // 如果是 TEXT 或 BOTH，就添加第一行
+        if (format == ClientConfig.ModeFormat.TEXT || format == ClientConfig.ModeFormat.BOTH) {
+            list.add(mode.getBaseComponent());
         }
+
+        // 如果是 NUMBER 或 BOTH，就添加第二行
+        if (format == ClientConfig.ModeFormat.NUMBER || format == ClientConfig.ModeFormat.BOTH) {
+            if (extraInfo != null) {
+                list.add(Component.literal(" ").append(extraInfo));
+            }
+        }
+
+        // 反空列表
+        if (list.isEmpty()) {
+            list.add(mode.getBaseComponent());
+        }
+
         return list;
     }
 

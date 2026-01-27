@@ -5,7 +5,8 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipHelper;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,19 +22,19 @@ public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         Minecraft mc = Minecraft.getInstance();
-        if (!LazyTickTooltipHelper.shouldRender(mc)) return false;
+        if (!LazyTickTooltipTool.shouldRender(mc)) return false;
 
         LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
         if (whiteItem == null || !whiteItem.isSmart()) return false;
 
         if (whiteItem == LazyTickWhiteList.PIPE) {
-            LazyTickTooltipHelper.appendSimpleConfigInfo(this, tooltip);
+            LazyTickTooltipRenderer.appendSimpleConfigInfo(this, tooltip);
             return true;
         }
 
         if (this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
-            this.createLazyTick$tick = LazyTickTooltipHelper.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
+            this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             return true;
         }
         return false;

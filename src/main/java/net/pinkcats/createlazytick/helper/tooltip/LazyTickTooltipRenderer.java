@@ -7,11 +7,10 @@ import net.pinkcats.createlazytick.Channel.CLTChannel;
 import net.pinkcats.createlazytick.Channel.ClockSyncPacket;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.config.ClientConfig;
-import net.pinkcats.createlazytick.item.LazyTickClockItem;
 
 import java.util.List;
 //需要翻译文本
-public class LazyTickTooltipHelper {
+public class LazyTickTooltipRenderer {
     // 记录上一次发送的时间，防止同一 tick 内发多次
     private static long lastQueryTick = -1;
 
@@ -44,12 +43,12 @@ public class LazyTickTooltipHelper {
             tooltip.add(Component.literal("LazyTick Status:").withStyle(ChatFormatting.GRAY));
         }
 
-        if (control.createLazyTick$shouldRenderMode()) {
+        if (control.createLazyTick$shouldRenderMode() && ClientConfig.showModeTooltip()) {
             // 渲染目前懒加载模式
             tooltip.addAll(LazyTickMode.getDisplayComponents(dynamicValue, forcedValue, maxDelayTick));
         }
 
-        if (control.createLazyTick$shouldRenderTier()) {
+        if (control.createLazyTick$shouldRenderTier() && ClientConfig.showTierTooltip()) {
             // 渲染目前懒加载状态
             int currentInterval = control.createLazyTick$getLazyTickInterval();
 
@@ -60,7 +59,7 @@ public class LazyTickTooltipHelper {
 
             // 3. 渲染高级进度条
             tooltip.addAll(control.lazytick$getSyncedTier()
-                    .getAdvancedProgressBar(currentInterval, maxDelayTick, limitPercent));
+                    .getDisplayComponents(currentInterval, maxDelayTick, limitPercent));
         }
 
         String op = control.createLazyTick$getUserName();
@@ -69,7 +68,7 @@ public class LazyTickTooltipHelper {
             tooltip.add(Component.literal(" 操作者: " + op).withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        if (control.createLazyTick$shouldRenderMode()) {
+        if (control.createLazyTick$shouldRenderMode() && ClientConfig.showDescriptionTooltip()) {
             tooltip.add(LazyTickMode.getModeDescription(dynamicValue, forcedValue));
         }
 
@@ -99,20 +98,5 @@ public class LazyTickTooltipHelper {
             tooltip.add(Component.literal("* 此为全局配置，不可单独调整")
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
-    }
-
-
-    public static boolean shouldRender(Minecraft mc) {
-        return mc.player != null && mc.player.getMainHandItem().getItem() instanceof LazyTickClockItem;
-    }
-
-    public static String formatTime(int ticks) {
-        if (ticks < 0) ticks = 0;
-
-        return switch (ClientConfig.getTimeFormat()) {
-            case SECONDS -> String.format("%.1fs", ticks / 20.0f); // 除以 20.0f 得到秒数，保留1位小数
-            case BOTH -> String.format("%dt | %.1fs", ticks, ticks / 20.0f); // 60t | 3.0s
-            default -> ticks + "t";  // 默认仅显示 tick
-        };
     }
 }
