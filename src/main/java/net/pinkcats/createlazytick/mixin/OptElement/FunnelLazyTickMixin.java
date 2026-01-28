@@ -141,7 +141,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!ServerConfig.enable_lazy_tick || ServerConfig.enable_belt_delay) {
+        if (!ServerConfig.getEnableLazyTick() || ServerConfig.getEnableLazyFunnel()) {
             return;
         }
         flap.tickChaser();
@@ -247,7 +247,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
     private void activateExtractingBeltFunnel(CallbackInfo ci) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_funnel) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyFunnel()) {
             return;
         }
 
@@ -299,7 +299,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         if (stack.isEmpty()) {
 
             //System.out.println("stack is empty");
-            if (ActualMultiCount < ServerConfig.funnel_delay_max) {
+            if (ActualMultiCount < ServerConfig.getFunnelDelayMax()) {
                 ActualMultiCount = ActualMultiCount + 10;
             }
             createlazytick$startCooldown();

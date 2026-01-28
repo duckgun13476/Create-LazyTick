@@ -120,7 +120,7 @@ public abstract class DeployerRecipeMixin {
     @Inject(method = "getRecipe", at = @At("HEAD"), cancellable = true, remap = false)
     private void lazytick$checkCache(ItemStack stack, CallbackInfoReturnable<Recipe<? extends Container>> cir) {
         // 配置检查
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_deployer) return;
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheDeployer()) return;
 
         // 服务器重载时清空缓存
         if (IsServerReload) {
@@ -172,7 +172,7 @@ public abstract class DeployerRecipeMixin {
      */
     @Inject(method = "getRecipe", at = @At("RETURN"), remap = false)
     private void lazytick$saveCache(ItemStack stack, CallbackInfoReturnable<Recipe<? extends Container>> cir) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_deployer) return;
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheDeployer()) return;
 
         DeployerFakePlayer player = this.getPlayer();
         if (player == null) return;

@@ -16,20 +16,20 @@ import java.util.function.Supplier;
 
 public enum LazyTickWhiteList {
     // Kinetic
-    ARM(ArmBlockEntity.class, () -> ServerConfig.arm_delay_max, Type.KINETIC),
-    BELT(BeltBlockEntity.class, () -> ServerConfig.belt_delay_max, Type.KINETIC),
-    CRAFTER(MechanicalCrafterBlockEntity.class, () -> ServerConfig.crafter_redstone_delay_max, Type.KINETIC),
-    PUMP(PumpBlockEntity.class, () -> ServerConfig.fluid_delay_max, Type.KINETIC),
-    SAW(SawBlockEntity.class, () -> ServerConfig.saw_delay_max, Type.KINETIC),
+    ARM(ArmBlockEntity.class, ServerConfig::getArmDelayMax, Type.KINETIC),
+    BELT(BeltBlockEntity.class, ServerConfig::getBeltDelayMax, Type.KINETIC),
+    CRAFTER(MechanicalCrafterBlockEntity.class, ServerConfig::getCrafterRedstoneDelayMax, Type.KINETIC),
+    PUMP(PumpBlockEntity.class, ServerConfig::getFluidDelayMax, Type.KINETIC),
+    SAW(SawBlockEntity.class, ServerConfig::getSawDelayMax, Type.KINETIC),
 
     // Smart
-    FUNNEL(FunnelBlockEntity.class, () -> ServerConfig.funnel_delay_max, Type.SMART),
-    DEPOT(DepotBlockEntity.class, () -> ServerConfig.depot_delay_max, Type.SMART),
-    PIPE(FluidPipeBlockEntity.class, () -> ServerConfig.fluid_delay_max, Type.SMART),
+    FUNNEL(FunnelBlockEntity.class, ServerConfig::getFunnelDelayMax, Type.SMART),
+    DEPOT(DepotBlockEntity.class, ServerConfig::getDepotDelayMax, Type.SMART),
+    PIPE(FluidPipeBlockEntity.class, ServerConfig::getFluidDelayMax, Type.SMART),
 
     // Special(have override)
-    DRAIN(ItemDrainBlockEntity.class, () -> ServerConfig.item_drain_delay_max, Type.SPECIAL),
-    CHUTE(ChuteBlockEntity.class, () -> ServerConfig.chute_delay_max, Type.SMART);
+    DRAIN(ItemDrainBlockEntity.class, ServerConfig::getItemDrainDelayMax, Type.SPECIAL),
+    CHUTE(ChuteBlockEntity.class, ServerConfig::getChuteDelayMax, Type.SMART);
 
     private final Class<?> targetClass;
     private final Supplier<Integer> maxTickSupplier;

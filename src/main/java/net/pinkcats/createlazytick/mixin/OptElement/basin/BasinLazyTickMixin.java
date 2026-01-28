@@ -62,7 +62,7 @@ public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBa
         this.lazytick$cachedHeatLevel = null;
 
         // 如果 Create 认为内容变了,让版本号 +1,否则维持原态(如果在没变化的情况下再次查询直接返回原状态值)
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_basin) return;
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBasin()) return;
         if (this.contentsChanged) {
             optimization$inventoryVersion++;
         }

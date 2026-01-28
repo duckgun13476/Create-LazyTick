@@ -26,7 +26,7 @@ public class ChuteGoggleMixin {
         if (!LazyTickTooltipTool.shouldRender(mc)) return;
 
         if ((Object) this instanceof ISmartBlockEntityControl control) {
-            int maxDelayTick = ServerConfig.chute_delay_max;
+            int maxDelayTick = ServerConfig.getChuteDelayMax();
             this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             cir.setReturnValue(true);
         }

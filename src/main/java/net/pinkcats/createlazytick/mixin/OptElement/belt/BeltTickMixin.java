@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.simibubi.create.content.kinetics.belt.transport.BeltTunnelInteractionHandler.flapTunnel;
-import static net.pinkcats.createlazytick.config.ServerConfig.belt_delay_max;
 
 @Mixin(value = BeltInventory.class,remap = false)
 public class BeltTickMixin {
@@ -63,7 +62,7 @@ public class BeltTickMixin {
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_belt_delay) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBelt()) {
             return;
         }
 
@@ -317,7 +316,7 @@ public class BeltTickMixin {
         if (stop_count == count){
             animal_delay++;
             if (animal_delay>100) {
-                if (BeltDelayTick < belt_delay_max) {
+                if (BeltDelayTick < ServerConfig.getBeltDelayMax()) {
                     BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
 
                 }

@@ -17,7 +17,7 @@ public class RecipeCacheTool {
     public static final Map<Item, Boolean> CAN_FILL_CACHE = Collections.synchronizedMap(new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Item, Boolean> eldest) {
-            return size() > ServerConfig.spout_cache_max;
+            return size() > ServerConfig.getSpoutCacheMax();
         }
     });
 
@@ -25,7 +25,7 @@ public class RecipeCacheTool {
     public static final Map<SpoutCacheKey, Integer> AMOUNT_CACHE = Collections.synchronizedMap(new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<SpoutCacheKey, Integer> eldest) {
-            return size() > ServerConfig.spout_cache_max;
+            return size() > ServerConfig.getSpoutCacheMax();
         }
     });
 
@@ -38,10 +38,10 @@ public class RecipeCacheTool {
         @Override
         protected boolean removeEldestEntry(Map.Entry<CrafterGridSignature, ItemStack> eldest) {
             // 使用配置项 crafter_global_cache_max
-            int maxCacheSize = ServerConfig.crafter_global_cache_max;
+            int maxCacheSize = ServerConfig.getCrafterGlobalCacheMax();
             if (size() > maxCacheSize) {
                 // 日志需要检查 Debug 开关
-                if (!IsCrafterCacheFull && ServerConfig.enable_cache_crafter_debugger) {
+                if (!IsCrafterCacheFull && ServerConfig.getEnableCacheCrafterDebugger()) {
                     CreateLazyTick.LOGGER.info("[CreateLazyTick] Crafter Cache hit max capacity ({}). Eviction started.", maxCacheSize);
                     IsCrafterCacheFull = true;
                 }

@@ -65,7 +65,7 @@ public class LazyTickClockItem extends Item {
             List<Integer> sequence = getSafeSequence();
 
             // 3. 读取配置倾向 (决定是调节 动态上限 还是 强制间隔)
-            boolean targetIsDynamic = ServerConfig.clock_mode_default_dynamic;
+            boolean targetIsDynamic = ServerConfig.getClockModeDefaultDynamic();
 
             // 4. 获取机器当前百分比 & 检查模式是否错位
             //    错位定义：想调动态但机器是强制，或想调强制但机器是动态
@@ -125,7 +125,7 @@ public class LazyTickClockItem extends Item {
     }
     private List<Integer> getSafeSequence() {
         // 直接从 ConfigValue 获取原始列表 (带通配符)
-        List<? extends Integer> rawList = ServerConfig.clock_mode_sequence;
+        List<? extends Integer> rawList = ServerConfig.getClockModeSequence();
         List<Integer> safeList = new ArrayList<>();
 
         // 过滤合法值 (0-100)

@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,8 +23,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Supplier;
-
-import static net.pinkcats.createlazytick.config.ServerConfig.fluid_delay_max;
 
 @Mixin(value = FluidNetwork.class,remap = false)
 public class FluidNetworkMixin {
@@ -81,7 +80,7 @@ public class FluidNetworkMixin {
                 PipeConnection pipeConnection = get(blockFace);
                 if (pipeConnection != null) {
                     if (blockFace.equals(start))
-                        transferSpeed = (int) Math.max(1, pipeConnection.getPressure().get(true) / 2f * fluid_delay_max);
+                        transferSpeed = (int) Math.max(1, pipeConnection.getPressure().get(true) / 2f * ServerConfig.getFluidDelayMax());
                     frontier.add(Pair.of(blockFace, pipeConnection));
                 }
                 iterator.remove();
