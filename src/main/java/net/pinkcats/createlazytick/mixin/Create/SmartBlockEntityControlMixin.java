@@ -31,11 +31,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Unique private int lazyTick$dynamicValue = 100;
     @Unique private int lazyTick$forcedValue = -1;
 
-    @Unique
-    private boolean lazytick$isDefaultState() {
-        return this.lazyTick$dynamicValue == 100 && this.lazyTick$forcedValue == -1;
-    }
-
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -50,6 +45,10 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
                 " | Frc: " + this.lazyTick$forcedValue);*/
         if (this.level != null && !this.level.isClientSide()) {
             LazyTickLogic.updateState(this);
+
+            if (!this.lazytick$isDefaultState()) {
+                ForcedActiveManager.register(this.level, this.worldPosition);
+            }
         }
     }
 
@@ -147,6 +146,11 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         }
     }
 
+
+    @Override
+    public boolean lazytick$isDefaultState() {
+        return this.lazyTick$dynamicValue == 100 && this.lazyTick$forcedValue == -1;
+    }
 
     @Override
     public LazyTickTier lazytick$getSyncedTier() { return this.lazytick$syncedTier; }
@@ -249,9 +253,19 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$setDynamicValue(int value) {
         if (this.lazyTick$dynamicValue != value) {
             this.lazyTick$dynamicValue = value;
-            if (lazytick$isDefaultState()) {
+
+            if (this.level != null && !this.level.isClientSide) {
+                if (!this.lazytick$isDefaultState()) {
+                    ForcedActiveManager.register(this.level, this.worldPosition);
+                } else {
+                    ForcedActiveManager.unregister(this.level, this.worldPosition);
+                }
+            }
+
+            if (this.lazytick$isDefaultState()) {
                 this.lazytick$operatorName = "";
             }
+
             if (this.level != null) this.level.blockEntityChanged(this.worldPosition); // save
             LazyTickLogic.updateState(this);
             this.createLazyTick$sendBlockUpdated(); // sync to client (UI render)
@@ -267,7 +281,16 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$setForcedValue(int value) {
         if (this.lazyTick$forcedValue != value) {
             this.lazyTick$forcedValue = value;
-            if (lazytick$isDefaultState()) {
+
+            if (this.level != null && !this.level.isClientSide) {
+                if (!this.lazytick$isDefaultState()) {
+                    ForcedActiveManager.register(this.level, this.worldPosition);
+                } else {
+                    ForcedActiveManager.unregister(this.level, this.worldPosition);
+                }
+            }
+
+            if (this.lazytick$isDefaultState()) {
                 this.lazytick$operatorName = "";
             }
             if (this.level != null) this.level.blockEntityChanged(this.worldPosition);
