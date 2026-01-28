@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 
@@ -84,7 +85,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
             behaviour.onlyActiveWhen(() -> {
                 net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
                 Player player = mc.player;
-                return player != null && player.getMainHandItem().getItem() == CreateLazyTick.CLOCK.get();
+                return player != null && player.getMainHandItem().getItem() == LazyTickItem.CLOCK.get();
             });
         }
     }
