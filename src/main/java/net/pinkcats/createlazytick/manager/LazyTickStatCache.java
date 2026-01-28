@@ -10,18 +10,21 @@ public class LazyTickStatCache {
     private final String blockName;     // 机器名称 ("创造马达")
     private final String ownerName;     // 调整玩家 ("Steve")
     private final long registeredTime;  // 调整时间 (timestamp)
-    private final int scrollValue;      // 滚轮数值 (推算模式与显示)
+    private final int scrollValue;      // 滚轮数值 (0~100)
+    private final boolean isForced;     // 模式标记 (强制/动态)
 
-    public LazyTickStatCache(String blockName, String ownerName, long registeredTime, int scrollValue) {
+    public LazyTickStatCache(String blockName, String ownerName, long registeredTime, int scrollValue, boolean isForced) {
         this.blockName = blockName;
         this.ownerName = ownerName;
         this.registeredTime = registeredTime;
         this.scrollValue = scrollValue;
+        this.isForced = isForced;
     }
 
     public String getBlockName() { return blockName; }
     public String getOwnerName() { return ownerName; }
     public int getScrollValue() { return scrollValue; }
+    public boolean isForced() { return isForced; }
 
     public String getFormattedTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -36,6 +39,7 @@ public class LazyTickStatCache {
         LazyTickStatCache that = (LazyTickStatCache) o;
         return registeredTime == that.registeredTime &&
                 scrollValue == that.scrollValue &&
+                isForced == that.isForced &&
                 Objects.equals(blockName, that.blockName) &&
                 Objects.equals(ownerName, that.ownerName);
     }
@@ -52,6 +56,7 @@ public class LazyTickStatCache {
         tag.putString("Owner", ownerName);
         tag.putLong("Time", registeredTime);
         tag.putInt("Scroll", scrollValue);
+        tag.putBoolean("IsForced", isForced);
         return tag;
     }
 
@@ -61,7 +66,8 @@ public class LazyTickStatCache {
         String owner = tag.contains("Owner") ? tag.getString("Owner") : "未知";
         long time = tag.contains("Time") ? tag.getLong("Time") : 0L;
         int scroll = tag.contains("Scroll") ? tag.getInt("Scroll") : 0;
+        boolean forced = tag.contains("IsForced") && tag.getBoolean("IsForced");
 
-        return new LazyTickStatCache(name, owner, time, scroll);
+        return new LazyTickStatCache(name, owner, time, scroll, forced);
     }
 }
