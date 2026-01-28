@@ -24,6 +24,9 @@ public interface ISmartBlockEntityControl {
     // 获取当前档位 (客户端渲染用)
     LazyTickTier lazytick$getSyncedTier();
 
+    // 是否为默认状态
+    boolean lazytick$isDefaultState();
+
     // 动态控制百分比 (Dynamic)
     // 默认为 100(完全开启优化)
     default int createLazyTick$getDynamicValue() { return 100; }
