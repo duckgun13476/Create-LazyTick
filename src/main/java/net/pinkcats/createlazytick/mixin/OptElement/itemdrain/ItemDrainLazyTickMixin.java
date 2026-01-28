@@ -88,35 +88,44 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
             return;
         }
 
+        // 如果需要处理倒水(>0)
         if (processingTicks > 0) {
             heldItem.prevBeltPosition = .5f;
             boolean wasAtBeginning = processingTicks == ItemDrainBlockEntity.FILLING_TIME;
-            if (!onClient || processingTicks < ItemDrainBlockEntity.FILLING_TIME) {
-                processingTicks--;
-                accessor.setProcessingTicks(processingTicks);
+            if (!onClient) {
+
+                int interval = control.createLazyTick$getLazyTickInterval();
+                boolean success = createLazyTick$performLazyDrain(accessor, interval);
+
+                // 1. 如果处理中断 (返回 false)，直接退出
+                if (!success) {
+                    accessor.setProcessingTicks(0);
+                    notifyUpdate();
+                    ci.cancel();
+                    return;
+                }
+
+                // 2. 处理虽然成功，但储量满了 (Ticks 回到 20)
+                if (accessor.getProcessingTicks() == ItemDrainBlockEntity.FILLING_TIME) {
+                    createLazyTick$applyBackoff(); // 应用退避
+                    ci.cancel();
+                    return;
+                }
+
+                // 检查是否还没倒完 (Ticks > 0)
+                // 如果 == 0,则倒完了,直接向下进入位移逻辑
+                if (accessor.getProcessingTicks() > 0) {
+                    createLazyTick$resetDelayTick();
+                    if (wasAtBeginning != (accessor.getProcessingTicks() == ItemDrainBlockEntity.FILLING_TIME))
+                        this.sendData();
+                    ci.cancel();
+                    return;
+                }
             }
 
-            // 执行原版处理逻辑
-            boolean continueResult = accessor.invokeContinueProcessing();
+            createLazyTick$resetDelayTick();
 
-            if (!continueResult) {
-                accessor.setProcessingTicks(0);
-                notifyUpdate();
-                ci.cancel();
-                return;
-            }
-
-            // 如果 ticks 被重置回 20,说明内部流体满了,懒加载
-            if (accessor.getProcessingTicks() == ItemDrainBlockEntity.FILLING_TIME) {
-                createLazyTick$applyBackoff();
-                ci.cancel();
-                return;
-            } else {
-                // 否则说明正在倒液,重置等待时间
-                createLazyTick$resetDelayTick();
-            }
-
-            if (wasAtBeginning != (processingTicks == ItemDrainBlockEntity.FILLING_TIME))
+            if (wasAtBeginning != (accessor.getProcessingTicks() == ItemDrainBlockEntity.FILLING_TIME))
                 this.sendData();
 
             ci.cancel();
@@ -128,7 +137,20 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         heldItem.prevBeltPosition = heldItem.beltPosition;
         heldItem.prevSideOffset = heldItem.sideOffset;
 
-        heldItem.beltPosition += 1 / 8f;
+        int currentInterval = control.createLazyTick$getLazyTickInterval();
+        float movementSpeed = 1 / 8f;
+        float proposedDist = movementSpeed * currentInterval;
+        float targetPos = heldItem.beltPosition + proposedDist;
+
+        boolean crossingCenter = heldItem.beltPosition < 0.5f && targetPos >= 0.5f;
+
+        if (crossingCenter && GenericItemEmptying.canItemBeEmptied(level, heldItem.stack)) {
+            // 流体桶且正要经过中间 -> 设置为0.5,处理倒液体
+            heldItem.beltPosition = 0.5f;
+        } else {
+            // 废料/已处理 -> 完全位移补偿
+            heldItem.beltPosition = targetPos;
+        }
 
         if (heldItem.beltPosition > 1) {
             heldItem.beltPosition = 1;
@@ -276,5 +298,49 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         createLazyTick$itemDrainTick = 0;
 
         LazyTickLogic.setIntervalSafe(control, 1);
+    }
+
+
+    /**
+     * 封装了跨越关键帧(5 ticks)时的模拟与执行逻辑(修复关于倒液和物品延迟过长的问题)
+     * @return true=流程正常结束(需进一步检查是否装满); false=流程中断(物品消失/空了)
+     */
+    @Unique
+    private static boolean createLazyTick$performLazyDrain(ItemDrainAccessor accessor, int interval) {
+        int currentTicks = accessor.getProcessingTicks();
+        int targetTicks = Math.max(0, currentTicks - interval);
+
+        // 是否跨越了倒水阈值 (5 tick) 原版:>5 (检查), ==5 (e执行), <5 (动画)
+        boolean crossingThreshold = currentTicks > 5 && targetTicks <= 5;
+
+        // 如果需要倒...(跨越阈值)
+        if (crossingThreshold) {
+            // 1. 强制触发模拟检查
+            accessor.setProcessingTicks(6);
+            if (!accessor.invokeContinueProcessing()) {
+                return false; // 物品被移除了，中断
+            }
+
+            // 容量满了Ticks 会被重置回 20 (FILLING_TIME)
+            // 停止，不倒水
+            if (accessor.getProcessingTicks() == ItemDrainBlockEntity.FILLING_TIME) {
+                return true; // 返回 true,由调用者处理"满了"的情况
+            }
+
+            // 2. 容量未满且物品正常,强制触发倒水
+            accessor.setProcessingTicks(5);
+            if (!accessor.invokeContinueProcessing()) {
+                return false; // 倒水后如果物品意外消失
+            }
+
+            // 检查通过且成功倒水后,应用计时器
+        }
+
+        // 3. 应用剩余时间
+        // 无论是跨越了阈值，还是普通倒计时，最后都定位到目标时间
+        accessor.setProcessingTicks(targetTicks);
+
+        // 执行动画逻辑
+        return accessor.invokeContinueProcessing();
     }
 }
