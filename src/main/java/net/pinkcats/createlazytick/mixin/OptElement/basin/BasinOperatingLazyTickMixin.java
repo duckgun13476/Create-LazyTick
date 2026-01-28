@@ -32,7 +32,7 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("HEAD"), cancellable = true, remap = false)
     private void onGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_basin) return;
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBasin()) return;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
 
@@ -63,7 +63,7 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("RETURN"), remap = false)
     private void captureMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_basin) return;
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBasin()) return;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
         if (basinOpt.isPresent()) {

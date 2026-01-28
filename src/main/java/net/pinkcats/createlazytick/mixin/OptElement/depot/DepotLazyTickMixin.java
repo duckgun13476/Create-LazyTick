@@ -85,7 +85,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
         int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
 
-        int newLazyTickInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.depot_delay_max);
+        int newLazyTickInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.getDepotDelayMax());
 
         if (newLazyTickInterval != currentLazyTickInterval) {
             LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
@@ -102,7 +102,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "tick*",at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_depot) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {
             return;
         }
 
@@ -111,7 +111,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         super.tick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control, this.blockEntity.getLevel(),
-                this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), ServerConfig.depot_delay_max);
+                this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), ServerConfig.getDepotDelayMax());
 
         Level world = blockEntity.getLevel();
         for (Iterator<TransportedItemStack> iterator = incoming.iterator(); iterator.hasNext();) {
@@ -224,7 +224,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "handleBeltFunnelOutput",at=@At("HEAD" ),remap = false,cancellable = true)
     private void handleBeltFunnelOutput(CallbackInfoReturnable<Boolean> cir) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_depot) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {
             return;
         }
 

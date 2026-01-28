@@ -48,14 +48,14 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/foundation/blockEntity/SmartBlockEntity;tick()V", shift = At.Shift.AFTER), cancellable = true, remap = false)
     public void optimizedTick(CallbackInfo ci) {
 
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_item_drain) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyItemDrain()) {
             return;
         }
 
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.item_drain_delay_max);
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.getItemDrainDelayMax());
 
         /*if(!level.isClientSide()) {
             System.out.println("ItemDrain:" + createLazyTick$itemDrainTick + "|" + control.createLazyTick$getLazyTickInterval());
@@ -286,7 +286,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         createLazyTick$itemDrainTick = 0;
 
         int currentInterval = control.createLazyTick$getLazyTickInterval();
-        int newInterval = LazyTickLogic.computeNextInterval(control, currentInterval, ServerConfig.item_drain_delay_max);
+        int newInterval = LazyTickLogic.computeNextInterval(control, currentInterval, ServerConfig.getItemDrainDelayMax());
         if (newInterval != currentInterval) {
             LazyTickLogic.setIntervalSafe(control, newInterval);
         }

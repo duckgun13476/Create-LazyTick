@@ -1,76 +1,66 @@
 package net.pinkcats.createlazytick.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.pinkcats.createlazytick.CreateLazyTick;
-
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = CreateLazyTick.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class ServerConfig
-{
+public class ServerConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-
-    // 声明 public static final 并在 static 块中赋值,以获得更好的分割效果
-
-    // ==========================================
-    // ServerConfig Spec Objects
-    // ==========================================
-
-    // General
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_TICK;
-    public static final ForgeConfigSpec.IntValue GLOBAL_CACHE_RECORD_DELAY;
-
-    // Fluids
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FLUID;
-    public static final ForgeConfigSpec.IntValue FLUID_DELAY_MAX;
-
-    // Logistics (Funnel, Chute, Belt)
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FUNNEL;
-    public static final ForgeConfigSpec.IntValue FUNNEL_DELAY_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CHUTE;
-    public static final ForgeConfigSpec.IntValue CHUTE_DELAY_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT;
-    public static final ForgeConfigSpec.IntValue BELT_DELAY_MAX;
-
-    // Processing (Depot, Saw, Basin, Item Drain, Deployer, Spout)
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
-    public static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_SAW;
-    public static final ForgeConfigSpec.IntValue SAW_DELAY_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
-    public static final ForgeConfigSpec.IntValue SAW_CACHE_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
-    public static final ForgeConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SPOUT;
-    public static final ForgeConfigSpec.IntValue SPOUT_CACHE_MAX;
-
-    // Crafter
-    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER_DEBUGGER;
-    public static final ForgeConfigSpec.IntValue CRAFTER_GLOBAL_CACHE_MAX;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
-    public static final ForgeConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
-
-    // Mechanical Arm
-    public static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ARM;
-    public static final ForgeConfigSpec.IntValue ARM_DELAY_MAX;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_IGNORE_LAZYTICK_LIST;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_WEAK_LAZYTICK_LIST;
-    public static final ForgeConfigSpec.IntValue ARM_WEAK_DELAY_MAX;
-
-    // LazyTick-Clock
-    public static final ForgeConfigSpec.ConfigValue<List<? extends Integer>> CLOCK_MODE_SEQUENCE;
-    public static final ForgeConfigSpec.BooleanValue CLOCK_MODE_DEFAULT_DYNAMIC;
-
     public static final ForgeConfigSpec SPEC;
 
     // ==========================================
-    // Initialization Block (Organizing Categories)
+    // ServerConfig Spec Objects (Private)
+    // ==========================================
+
+    // General
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_TICK;
+    private static final ForgeConfigSpec.IntValue GLOBAL_CACHE_RECORD_DELAY;
+
+    // Fluids
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FLUID;
+    private static final ForgeConfigSpec.IntValue FLUID_DELAY_MAX;
+
+    // Logistics (Funnel, Chute, Belt)
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FUNNEL;
+    private static final ForgeConfigSpec.IntValue FUNNEL_DELAY_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CHUTE;
+    private static final ForgeConfigSpec.IntValue CHUTE_DELAY_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT;
+    private static final ForgeConfigSpec.IntValue BELT_DELAY_MAX;
+
+    // Processing (Depot, Saw, Basin, Item Drain, Deployer, Spout)
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
+    private static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_SAW;
+    private static final ForgeConfigSpec.IntValue SAW_DELAY_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
+    private static final ForgeConfigSpec.IntValue SAW_CACHE_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
+    private static final ForgeConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SPOUT;
+    private static final ForgeConfigSpec.IntValue SPOUT_CACHE_MAX;
+
+    // Crafter
+    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER_DEBUGGER;
+    private static final ForgeConfigSpec.IntValue CRAFTER_GLOBAL_CACHE_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
+    private static final ForgeConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
+
+    // Mechanical Arm
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ARM;
+    private static final ForgeConfigSpec.IntValue ARM_DELAY_MAX;
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_IGNORE_LAZYTICK_LIST;
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_WEAK_LAZYTICK_LIST;
+    private static final ForgeConfigSpec.IntValue ARM_WEAK_DELAY_MAX;
+
+    // LazyTick-Clock
+    private static final ForgeConfigSpec.ConfigValue<List<? extends Integer>> CLOCK_MODE_SEQUENCE;
+    private static final ForgeConfigSpec.BooleanValue CLOCK_MODE_DEFAULT_DYNAMIC;
+
+    // ==========================================
+    // Initialization Block
     // ==========================================
     static {
         // --- General Settings ---
@@ -333,99 +323,143 @@ public class ServerConfig
         SPEC = BUILDER.build();
     }
 
-
     // ==========================================
-    // Public Access Fields
+    // Public Access Methods
     // ==========================================
 
-    public static boolean enable_lazy_tick;
-    public static int global_cache_record_delay;
-
-    public static boolean enable_lazy_fluid;
-    public static boolean enable_lazy_funnel;
-    public static boolean enable_lazy_chute;
-    public static boolean enable_lazy_depot;
-    public static boolean enable_lazy_saw;
-    public static boolean enable_cache_saw;
-    public static boolean enable_belt_delay;
-    public static boolean enable_lazy_basin;
-    public static boolean enable_lazy_item_drain;
-    public static boolean enable_cache_crafter;
-    public static boolean enable_cache_crafter_debugger;
-    public static boolean enable_lazy_crafter_redstone;
-    public static boolean enable_lazy_arm;
-    public static boolean enable_cache_deployer;
-    public static boolean enable_cache_spout;
-
-    public static List<? extends String> arm_ignore_lazytick_list;
-    public static List<? extends String> arm_weak_lazytick_list;
-
-    public static int fluid_delay_max;
-    public static int funnel_delay_max;
-    public static int chute_delay_max;
-    public static int depot_delay_max;
-    public static int saw_delay_max;
-    public static int saw_cache_max;
-    public static int belt_delay_max;
-    public static int item_drain_delay_max;
-    public static int crafter_global_cache_max;
-    public static int crafter_redstone_delay_max;
-    public static int arm_weak_delay_max;
-    public static int arm_delay_max;
-    public static int spout_cache_max;
-
-    public static List<? extends Integer> clock_mode_sequence;
-    public static boolean clock_mode_default_dynamic;
-
-    public static void configSync() {
-        enable_lazy_tick = ENABLE_LAZY_TICK.get();
-
-        enable_lazy_fluid = ENABLE_LAZY_FLUID.get();
-        enable_lazy_funnel = ENABLE_LAZY_FUNNEL.get();
-        enable_lazy_chute = ENABLE_LAZY_CHUTE.get();
-        enable_lazy_depot = ENABLE_LAZY_DEPOT.get();
-        enable_lazy_saw = ENABLE_LAZY_SAW.get();
-        enable_cache_saw = ENABLE_CACHE_SAW.get();
-        enable_belt_delay = ENABLE_LAZY_BELT.get();
-        enable_lazy_basin = ENABLE_LAZY_BASIN.get();
-        enable_lazy_item_drain = ENABLE_LAZY_ITEM_DRAIN.get();
-        enable_cache_crafter = ENABLE_CACHE_CRAFTER.get();
-        enable_cache_crafter_debugger = ENABLE_CACHE_CRAFTER_DEBUGGER.get();
-        enable_lazy_crafter_redstone = ENABLE_LAZY_CRAFTER_REDSTONE.get();
-        enable_lazy_arm = ENABLE_LAZY_ARM.get();
-        enable_cache_deployer = ENABLE_CACHE_DEPLOYER.get();
-        enable_cache_spout = ENABLE_CACHE_SPOUT.get();
-
-        arm_ignore_lazytick_list = ARM_IGNORE_LAZYTICK_LIST.get();
-        arm_weak_lazytick_list = ARM_WEAK_LAZYTICK_LIST.get();
-
-        fluid_delay_max = FLUID_DELAY_MAX.get();
-        funnel_delay_max = FUNNEL_DELAY_MAX.get();
-        chute_delay_max = CHUTE_DELAY_MAX.get();
-        depot_delay_max = DEPOT_DELAY_MAX.get();
-        saw_delay_max = SAW_DELAY_MAX.get();
-        saw_cache_max = SAW_CACHE_MAX.get();
-        belt_delay_max = BELT_DELAY_MAX.get();
-        item_drain_delay_max = ITEM_DRAIN_DELAY_MAX.get();
-        crafter_global_cache_max = CRAFTER_GLOBAL_CACHE_MAX.get();
-        global_cache_record_delay = GLOBAL_CACHE_RECORD_DELAY.get();
-        crafter_redstone_delay_max = CRAFTER_REDSTONE_DELAY_MAX.get();
-        arm_weak_delay_max = ARM_WEAK_DELAY_MAX.get();
-        arm_delay_max = ARM_DELAY_MAX.get();
-        spout_cache_max = SPOUT_CACHE_MAX.get();
-
-        clock_mode_default_dynamic = CLOCK_MODE_DEFAULT_DYNAMIC.get();
-        clock_mode_sequence = CLOCK_MODE_SEQUENCE.get();
+    public static boolean getEnableLazyTick() {
+        return ENABLE_LAZY_TICK.get();
     }
 
-    @SubscribeEvent
-    public static void onLoad(final ModConfigEvent.Loading event)
-    {
-        configSync();
+    public static int getGlobalCacheRecordDelay() {
+        return GLOBAL_CACHE_RECORD_DELAY.get();
     }
 
-    @SubscribeEvent
-    public static void onReload(final ModConfigEvent.Reloading event) {
-        configSync();
+    public static boolean getEnableLazyFluid() {
+        return ENABLE_LAZY_FLUID.get();
+    }
+
+    public static int getFluidDelayMax() {
+        return FLUID_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyFunnel() {
+        return ENABLE_LAZY_FUNNEL.get();
+    }
+
+    public static int getFunnelDelayMax() {
+        return FUNNEL_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyChute() {
+        return ENABLE_LAZY_CHUTE.get();
+    }
+
+    public static int getChuteDelayMax() {
+        return CHUTE_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyBelt() {
+        return ENABLE_LAZY_BELT.get();
+    }
+
+    public static int getBeltDelayMax() {
+        return BELT_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyDepot() {
+        return ENABLE_LAZY_DEPOT.get();
+    }
+
+    public static int getDepotDelayMax() {
+        return DEPOT_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazySaw() {
+        return ENABLE_LAZY_SAW.get();
+    }
+
+    public static int getSawDelayMax() {
+        return SAW_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableCacheSaw() {
+        return ENABLE_CACHE_SAW.get();
+    }
+
+    public static int getSawCacheMax() {
+        return SAW_CACHE_MAX.get();
+    }
+
+    public static boolean getEnableLazyBasin() {
+        return ENABLE_LAZY_BASIN.get();
+    }
+
+    public static boolean getEnableLazyItemDrain() {
+        return ENABLE_LAZY_ITEM_DRAIN.get();
+    }
+
+    public static int getItemDrainDelayMax() {
+        return ITEM_DRAIN_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableCacheDeployer() {
+        return ENABLE_CACHE_DEPLOYER.get();
+    }
+
+    public static boolean getEnableCacheSpout() {
+        return ENABLE_CACHE_SPOUT.get();
+    }
+
+    public static int getSpoutCacheMax() {
+        return SPOUT_CACHE_MAX.get();
+    }
+
+    public static boolean getEnableCacheCrafter() {
+        return ENABLE_CACHE_CRAFTER.get();
+    }
+
+    public static boolean getEnableCacheCrafterDebugger() {
+        return ENABLE_CACHE_CRAFTER_DEBUGGER.get();
+    }
+
+    public static int getCrafterGlobalCacheMax() {
+        return CRAFTER_GLOBAL_CACHE_MAX.get();
+    }
+
+    public static boolean getEnableLazyCrafterRedstone() {
+        return ENABLE_LAZY_CRAFTER_REDSTONE.get();
+    }
+
+    public static int getCrafterRedstoneDelayMax() {
+        return CRAFTER_REDSTONE_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyArm() {
+        return ENABLE_LAZY_ARM.get();
+    }
+
+    public static int getArmDelayMax() {
+        return ARM_DELAY_MAX.get();
+    }
+
+    public static List<? extends String> getArmIgnoreLazytickList() {
+        return ARM_IGNORE_LAZYTICK_LIST.get();
+    }
+
+    public static List<? extends String> getArmWeakLazytickList() {
+        return ARM_WEAK_LAZYTICK_LIST.get();
+    }
+
+    public static int getArmWeakDelayMax() {
+        return ARM_WEAK_DELAY_MAX.get();
+    }
+
+    public static List<? extends Integer> getClockModeSequence() {
+        return CLOCK_MODE_SEQUENCE.get();
+    }
+
+    public static boolean getClockModeDefaultDynamic() {
+        return CLOCK_MODE_DEFAULT_DYNAMIC.get();
     }
 }

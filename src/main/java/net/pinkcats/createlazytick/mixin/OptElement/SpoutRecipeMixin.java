@@ -86,6 +86,6 @@ public abstract class SpoutRecipeMixin {
 
     @Unique
     private static boolean createLazyTick$NotEnable() {
-        return !ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_spout || IsServerReload;
+        return !ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheSpout() || IsServerReload;
     }
 }
