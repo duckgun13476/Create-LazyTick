@@ -3,7 +3,6 @@ package net.pinkcats.createlazytick;
 import com.mojang.logging.LogUtils;
 import net.createmod.catnip.config.ui.BaseConfigScreen;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,12 +16,10 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.pinkcats.createlazytick.Register.LazyTickCreativeTabs;
+import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
-import net.pinkcats.createlazytick.item.LazyTickClockItem;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
@@ -51,13 +48,6 @@ public class CreateLazyTick {
     }
 
 
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS,MODID);
-
-    public static final RegistryObject<Item> CLOCK = ITEMS.register("clock",
-            () -> new LazyTickClockItem(new Item.Properties().stacksTo(1)));
-
-
-
     public CreateLazyTick() {
 
         // Only for 1.20.1 forge
@@ -65,8 +55,9 @@ public class CreateLazyTick {
         FMLJavaModLoadingContext modContext = modLoadingContext.extension();
         IEventBus modEventBus = modContext.getModEventBus();
 
+        LazyTickItem.register(modEventBus);
+        LazyTickCreativeTabs.register(modEventBus);
 
-        ITEMS.register(modEventBus);
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
 
