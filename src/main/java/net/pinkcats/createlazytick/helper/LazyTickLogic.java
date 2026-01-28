@@ -60,12 +60,14 @@ public class LazyTickLogic {
 
         Level level = be.getLevel();
         BlockPos pos = be.getBlockPos();
+        String blockName = be.getBlockState().getBlock().getName().getString();
+        String playerName = control.createLazyTick$getUserName();
 
         int dyn = control.createLazyTick$getDynamicValue();
         int frc = control.createLazyTick$getForcedValue();
 
         if (frc != -1) {
-            ForcedActiveManager.register(level, pos);
+            ForcedActiveManager.register(level, pos, blockName, playerName, frc, true);
             control.createLazyTick$setDelayForced(true);
             if (frc == 0) {
                 // 强制全速 -> 间隔锁定为 1
@@ -84,7 +86,7 @@ public class LazyTickLogic {
                 control.createLazyTick$setLazyTickInterval(1);
             } else {
                 // 动态限制模式 (1% ~ 99%)
-                ForcedActiveManager.register(level, pos);
+                ForcedActiveManager.register(level, pos, blockName, playerName, dyn, false);
 
                 // 兜底：如果 dyn <= 0，通常应走 Forced 0，但这里设为 1 防止出问题
                 if (dyn <= 0) {
