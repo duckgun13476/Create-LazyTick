@@ -1,14 +1,12 @@
 package net.pinkcats.createlazytick.manager;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Author : *Fugit-5414*
@@ -18,38 +16,34 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ForcedActiveManager {
 
-
-    // Key: Dimension ResourceLocation
-    // Value: BlockPos<>
-    private static final Map<ResourceKey<Level>, Set<BlockPos>> forcedMachines = new ConcurrentHashMap<>();
+    private static final AtomicLong dataVersion = new AtomicLong(0);
 
     public static void register(Level level, BlockPos pos) {
         if (level == null || pos == null) return;
-        // Sync safe
-        forcedMachines.computeIfAbsent(level.dimension(), k -> Collections.synchronizedSet(new HashSet<>()))
-                .add(pos);
+        if (level instanceof ServerLevel serverLevel) {
+            if(LazyTickSavedData.get(serverLevel).add(pos)) {
+                dataVersion.incrementAndGet();
+            }
+        }
     }
 
     public static void unregister(Level level, BlockPos pos) {
         if (level == null || pos == null) return;
-        ResourceKey<Level> dim = level.dimension();
-        if (forcedMachines.containsKey(dim)) {
-            forcedMachines.get(dim).remove(pos);
+        if (level instanceof ServerLevel serverLevel) {
+            if(LazyTickSavedData.get(serverLevel).remove(pos)) {
+                dataVersion.incrementAndGet();
+            }
         }
     }
 
     public static Set<BlockPos> getForcedPositions(Level level) {
-        if (level == null) return Collections.emptySet();
-        Set<BlockPos> set = forcedMachines.get(level.dimension());
-        if (set == null) return Collections.emptySet();
-
-        // return back for thread issue
-        synchronized (set) {
-            return new HashSet<>(set);
+        if (level instanceof ServerLevel serverLevel) {
+            return LazyTickSavedData.get(serverLevel).getPositions();
         }
+        return Collections.emptySet();
     }
 
-    public static void clear() {
-        forcedMachines.clear();
+    public static long getVersion() {
+        return dataVersion.get();
     }
 }
