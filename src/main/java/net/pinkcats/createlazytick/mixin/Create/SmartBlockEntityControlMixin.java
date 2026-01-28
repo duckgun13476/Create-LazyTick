@@ -12,7 +12,6 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
-import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,18 +44,12 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
                 " | Frc: " + this.lazyTick$forcedValue);*/
         if (this.level != null && !this.level.isClientSide()) {
             LazyTickLogic.updateState(this);
-
-            if (!this.lazytick$isDefaultState()) {
-                ForcedActiveManager.register(this.level, this.worldPosition);
-            }
         }
     }
 
     @Inject(method = "invalidate", at = @At("HEAD"), remap = false)
     private void lazytick$onInvalidate(CallbackInfo ci) {
-        if (this.level != null) {
-            ForcedActiveManager.unregister(this.level, this.worldPosition);
-        }
+
     }
 
     // Server -> disk
@@ -254,14 +247,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         if (this.lazyTick$dynamicValue != value) {
             this.lazyTick$dynamicValue = value;
 
-            if (this.level != null && !this.level.isClientSide) {
-                if (!this.lazytick$isDefaultState()) {
-                    ForcedActiveManager.register(this.level, this.worldPosition);
-                } else {
-                    ForcedActiveManager.unregister(this.level, this.worldPosition);
-                }
-            }
-
             if (this.lazytick$isDefaultState()) {
                 this.lazytick$operatorName = "";
             }
@@ -281,14 +266,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$setForcedValue(int value) {
         if (this.lazyTick$forcedValue != value) {
             this.lazyTick$forcedValue = value;
-
-            if (this.level != null && !this.level.isClientSide) {
-                if (!this.lazytick$isDefaultState()) {
-                    ForcedActiveManager.register(this.level, this.worldPosition);
-                } else {
-                    ForcedActiveManager.unregister(this.level, this.worldPosition);
-                }
-            }
 
             if (this.lazytick$isDefaultState()) {
                 this.lazytick$operatorName = "";
