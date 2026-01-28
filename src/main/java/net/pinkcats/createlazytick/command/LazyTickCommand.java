@@ -12,7 +12,9 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
@@ -26,6 +28,10 @@ import java.util.Set;
 public class LazyTickCommand {
 
     private static final int PAGE_SIZE = 15;
+
+    private static List<BlockPos> cachedSortedList = null;
+    private static long cachedVersion = -1;
+    private static ResourceKey<Level> cachedDimension = null;
 
     public static void RegisterCLTCommand(RegisterCommandsEvent event){
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -44,21 +50,42 @@ public class LazyTickCommand {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
 
-        Set<BlockPos> forcedPositions = ForcedActiveManager.getForcedPositions(level);
+        ResourceKey<Level> currentDimension = level.dimension();
+        long currentVersion = ForcedActiveManager.getVersion();
+        List<BlockPos> sortedPos;
 
-        if (forcedPositions.isEmpty()) {
-            source.sendSystemMessage(Component.literal("当前已加载区块中没有被强制活跃的机器。").withStyle(ChatFormatting.GREEN));
-            return 2;
+        if (cachedSortedList != null && cachedVersion == currentVersion && currentDimension.equals(cachedDimension)) {
+            sortedPos = cachedSortedList;
+        } else {
+            Set<BlockPos> forcedPositions = ForcedActiveManager.getForcedPositions(level);
+
+            if (forcedPositions.isEmpty()) {
+                source.sendSystemMessage(Component.literal("当前名单中没有非默认配置的机器").withStyle(ChatFormatting.GREEN));
+                cachedSortedList = new ArrayList<>();
+                cachedVersion = currentVersion;
+                cachedDimension = currentDimension;
+                return 2;
+            }
+
+            sortedPos = new ArrayList<>(forcedPositions);
+
+            // [修复] 使用 Lambda 替代方法引用，解决解析问题
+            sortedPos.sort(Comparator.comparingInt((BlockPos p) -> p.getX())
+                    .thenComparingInt(Vec3i::getY)
+                    .thenComparingInt(Vec3i::getZ));
+
+            cachedSortedList = sortedPos;
+            cachedVersion = currentVersion;
+            cachedDimension = currentDimension;
         }
 
-        List<BlockPos> sortedPos = new ArrayList<>(forcedPositions);
-
-        // [修复] 使用 Lambda 替代方法引用，解决解析问题
-        sortedPos.sort(Comparator.comparingInt((BlockPos p) -> p.getX())
-                .thenComparingInt(Vec3i::getY)
-                .thenComparingInt(Vec3i::getZ));
-
         int totalMachines = sortedPos.size();
+
+        if (totalMachines == 0) {
+            source.sendSystemMessage(Component.literal("当前名单中没有非默认配置的机器").withStyle(ChatFormatting.GREEN));
+            return 1;
+        }
+
         int totalPages = (int) Math.ceil((double) totalMachines / PAGE_SIZE);
 
         // 变量 page 在这里被修改了，所以它不再是 effective final
@@ -74,50 +101,79 @@ public class LazyTickCommand {
 
         for (int i = startIndex; i < endIndex; i++) {
             BlockPos pos = sortedPos.get(i);
-            BlockEntity be = level.getBlockEntity(pos);
+            if (level.isLoaded(pos)) {
+                BlockEntity be = level.getBlockEntity(pos);
 
-            String blockName;
+                // BE不存在(null)/不是mixin的SmartBE/处于默认状态
+                if (!(be instanceof ISmartBlockEntityControl control) || control.lazytick$isDefaultState()) {
 
-            String operator = "未知";
+                    // 清理失效数据
+                    ForcedActiveManager.unregister(level, pos);
 
-            if (be != null) {
-                blockName = be.getBlockState().getBlock().getName().getString();
-                if (be instanceof ISmartBlockEntityControl control) {
-                    operator = control.createLazyTick$getUserName();
-                    if (operator.isEmpty()) operator = "未知";
+                    //source.sendSystemMessage(Component.literal("已自动清理失效记录: " + pos.toShortString()).withStyle(ChatFormatting.RED));
+                    continue;
                 }
+
+                String blockName = be.getBlockState().getBlock().getName().getString();
+                String operator = control.createLazyTick$getUserName();
+                if (operator.isEmpty()) operator = "未知";
+
+                String tpCommand = "/tp @s " + pos.getX() + " " + pos.getY() + " " + pos.getZ();
+
+                MutableComponent entry = Component.literal(" " + (i + 1) + ". ")
+                        .withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(blockName).withStyle(ChatFormatting.AQUA))
+                        .append(Component.literal(" [" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
+                                .withStyle(ChatFormatting.GREEN)
+                                .withStyle(style -> style
+                                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
+                                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击传送到此位置")))
+                                )
+                        )
+                        .append(Component.literal(" (操作者: " + operator + ")").withStyle(ChatFormatting.DARK_GRAY));
+
+                source.sendSystemMessage(entry);
             } else {
-                blockName = "已失效/未加载";
+                // 区块未加载
+                source.sendSystemMessage(Component.literal(" " + (i + 1) + ". [未加载区块] " + pos.toShortString())
+                        .withStyle(ChatFormatting.GRAY));
             }
-
-            String tpCommand = "/tp @s " + pos.getX() + " " + pos.getY() + " " + pos.getZ();
-
-            MutableComponent entry = Component.literal(" " + (i + 1) + ". ")
-                    .withStyle(ChatFormatting.GRAY)
-                    .append(Component.literal(blockName).withStyle(ChatFormatting.AQUA))
-                    .append(Component.literal(" [" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
-                            .withStyle(ChatFormatting.GREEN)
-                            .withStyle(style -> style
-                                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
-                                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击传送到此位置")))
-                            )
-                    )
-                    .append(Component.literal(" (操作者: " + operator + ")").withStyle(ChatFormatting.DARK_GRAY));
-
-            source.sendSystemMessage(entry);
         }
 
-        if (page < totalPages) {
-            // [修复] 创建一个新的 final 变量供 lambda 使用
-            final int nextPage = page + 1;
+        source.sendSystemMessage(Component.literal("")); // 空行分隔
 
-            MutableComponent nextPageBtn = Component.literal(">>> 点击查看下一页 >>>")
-                    .withStyle(ChatFormatting.YELLOW)
+        MutableComponent navBar = Component.literal("      "); // 缩进
+
+        // 1. 上一页按钮
+        if (page > 1) {
+            final int prevPage = page - 1;
+            navBar.append(Component.literal("<<< 上一页")
+                    .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+                    .withStyle(style -> style
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/createlazytick list " + prevPage))
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击前往第 " + prevPage + " 页")))
+                    ));
+        } else {
+            navBar.append(Component.literal("<<< 上一页").withStyle(ChatFormatting.DARK_GRAY)); // 禁用状态
+        }
+
+        // 2. 分隔符
+        navBar.append(Component.literal("   |   ").withStyle(ChatFormatting.GRAY));
+
+        // 3. 下一页按钮
+        if (page < totalPages) {
+            final int nextPage = page + 1;
+            navBar.append(Component.literal("下一页 >>>")
+                    .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
                     .withStyle(style -> style
                             .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/createlazytick list " + nextPage))
-                    );
-            source.sendSystemMessage(nextPageBtn);
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击前往第 " + nextPage + " 页")))
+                    ));
+        } else {
+            navBar.append(Component.literal("下一页 >>>").withStyle(ChatFormatting.DARK_GRAY)); // 禁用状态
         }
+
+        source.sendSystemMessage(navBar);
 
         return 1;
     }
