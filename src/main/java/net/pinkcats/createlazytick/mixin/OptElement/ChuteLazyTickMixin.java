@@ -88,8 +88,8 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
             if (CanDownload) {
                 LazyTickLogic.setIntervalSafe(control,1);
             } else {
-                if (currentLazyTickInterval < ServerConfig.chute_delay_max) {
-                    int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.chute_delay_max);
+                if (currentLazyTickInterval < ServerConfig.getChuteDelayMax()) {
+                    int newInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.getChuteDelayMax());
                     LazyTickLogic.setIntervalSafe(control, newInterval);
                 }
             }
@@ -99,7 +99,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
 
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_chute) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyChute()) {
             return;
         }
 
@@ -108,7 +108,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.chute_delay_max);
+                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.getChuteDelayMax());
 
 
         if (level != null && !level.isClientSide) canPickUpItems = canDirectlyInsert();

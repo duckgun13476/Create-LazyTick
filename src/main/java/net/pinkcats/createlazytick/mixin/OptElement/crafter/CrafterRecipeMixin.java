@@ -60,7 +60,7 @@ public abstract class CrafterRecipeMixin {
 
     @Unique
     private static boolean createLazyTick$NotEnable() {
-        return !ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_crafter || IsServerReload;
+        return !ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheCrafter() || IsServerReload;
     }
 
 }

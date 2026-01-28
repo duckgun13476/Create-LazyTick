@@ -30,7 +30,7 @@ public class BeltFunnelInteractionLazyTickMixin {
 
     @Inject(method ="checkForFunnels" ,at=@At("HEAD" ),cancellable = true,remap = false)
     private static void checkForFunnels(BeltInventory beltInventory, TransportedItemStack currentItem, float nextOffset, CallbackInfoReturnable<Boolean> cir) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_belt_delay) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBelt()) {
             return;
         }
         BeltInventoryAccessor accessor = (BeltInventoryAccessor) beltInventory;

@@ -83,7 +83,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
 
     @Unique
     private void lazytick$updateInterval(boolean signalChanged, boolean isPowered, long gameTime) {
-        int maxDelay = ServerConfig.crafter_redstone_delay_max;
+        int maxDelay = ServerConfig.getCrafterRedstoneDelayMax();
 
         // 信号发生改变,变回活跃状态 (刷新活跃时间)
         if (signalChanged) {
@@ -121,7 +121,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         LowFreq_Schedule.RandomTick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.crafter_redstone_delay_max);
+                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.getCrafterRedstoneDelayMax());
 
         /*if (!level.isClientSide()) {
             System.out.println("Crafter:" + lazytick$redstoneTick + "/" + this.createLazyTick$getLazyTickInterval());
@@ -139,7 +139,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
             remap = true
     )
     private boolean lazytick$dynamicRedstoneCheck(Level level, BlockPos pos) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_crafter_redstone || level.isClientSide) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyCrafterRedstone() || level.isClientSide) {
             // 如果是客户端/优化未开，直接返回原版逻辑（Level.hasNeighborSignal）
             // 不要碰 redstoneTick/updateInterval
             return level.hasNeighborSignal(pos);

@@ -34,7 +34,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static net.pinkcats.createlazytick.config.ServerConfig.saw_cache_max;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 
 @ParametersAreNonnullByDefault
@@ -66,7 +65,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
     @Inject(method = "getRecipes",at=@At("HEAD" ),cancellable = true,remap = false)
     private void getRecipes(CallbackInfoReturnable<List<? extends Recipe<?>>> cir) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_cache_saw) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheSaw()) {
             return;
         }
         if (IsServerReload)
@@ -149,7 +148,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     private Map<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> createLazyTick$assemblyRecipeCache = new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Item, ImmutableList<com.simibubi.create.content.kinetics.saw.CuttingRecipe>> eldest) {
-            return size() > saw_cache_max; // max cache count
+            return size() > ServerConfig.getSawCacheMax(); // max cache count
         }
     };
 
@@ -209,7 +208,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
     private Map<Item, List<? extends Recipe<?>>> createLazyTick$recipeCache = new LinkedHashMap<>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Item, List<? extends Recipe<?>>> eldest) {
-            return size() > saw_cache_max; // max cache count
+            return size() > ServerConfig.getSawCacheMax(); // max cache count
         }
     };
 

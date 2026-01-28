@@ -27,7 +27,7 @@ public class ItemDrainGoggleMixin {
         if (!LazyTickTooltipTool.shouldRender(mc)) return;
 
         if ((Object) this instanceof ISmartBlockEntityControl control) {
-            int maxDelayTick = ServerConfig.item_drain_delay_max;
+            int maxDelayTick = ServerConfig.getItemDrainDelayMax();
             this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             // 强制渲染
             cir.setReturnValue(true);

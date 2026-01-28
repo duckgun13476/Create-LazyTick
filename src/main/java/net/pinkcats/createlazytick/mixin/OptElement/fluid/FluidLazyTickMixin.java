@@ -25,8 +25,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static net.pinkcats.createlazytick.config.ServerConfig.fluid_delay_max;
-
 //记得补偿流体(目前速度有异常)
 @Mixin(value = FluidTransportBehaviour.class, remap = false)
 public class FluidLazyTickMixin extends BlockEntityBehaviour {
@@ -55,12 +53,12 @@ public class FluidLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!ServerConfig.enable_lazy_tick || !ServerConfig.enable_lazy_fluid) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyFluid()) {
             return;
         }
 
         pipeTick++;
-        if (pipeTick< fluid_delay_max)
+        if (pipeTick< ServerConfig.getFluidDelayMax())
         {
             ci.cancel();
             return;

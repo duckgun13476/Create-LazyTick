@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.mixin.Minecraft;
 
 import net.minecraft.server.MinecraftServer;
 import net.pinkcats.createlazytick.bridge.Crafter.CrafterCacheStats;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,7 +14,6 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
-import static net.pinkcats.createlazytick.config.ServerConfig.global_cache_record_delay;
 import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 import static net.pinkcats.createlazytick.helper.RecipeCacheTool.*;
@@ -54,7 +54,7 @@ public class CacheLabel {
     @Inject(method = "tickServer", at = @At("HEAD"))
     private void tickServer(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         createLazyTick$tick++;
-        if (createLazyTick$tick > global_cache_record_delay){
+        if (createLazyTick$tick > ServerConfig.getGlobalCacheRecordDelay()){
             createLazyTick$tick = 0;
             IsServerReload = false;
         }
