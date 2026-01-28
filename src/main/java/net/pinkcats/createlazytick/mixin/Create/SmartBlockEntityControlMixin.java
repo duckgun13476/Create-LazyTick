@@ -12,7 +12,6 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
-import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,11 +29,6 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Unique private int lazytick$extraData = 0;
     @Unique private int lazyTick$dynamicValue = 100;
     @Unique private int lazyTick$forcedValue = -1;
-
-    @Unique
-    private boolean lazytick$isDefaultState() {
-        return this.lazyTick$dynamicValue == 100 && this.lazyTick$forcedValue == -1;
-    }
 
     public SmartBlockEntityControlMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -55,9 +49,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "invalidate", at = @At("HEAD"), remap = false)
     private void lazytick$onInvalidate(CallbackInfo ci) {
-        if (this.level != null) {
-            ForcedActiveManager.unregister(this.level, this.worldPosition);
-        }
+
     }
 
     // Server -> disk
@@ -147,6 +139,11 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         }
     }
 
+
+    @Override
+    public boolean lazytick$isDefaultState() {
+        return this.lazyTick$dynamicValue == 100 && this.lazyTick$forcedValue == -1;
+    }
 
     @Override
     public LazyTickTier lazytick$getSyncedTier() { return this.lazytick$syncedTier; }
@@ -249,9 +246,11 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$setDynamicValue(int value) {
         if (this.lazyTick$dynamicValue != value) {
             this.lazyTick$dynamicValue = value;
-            if (lazytick$isDefaultState()) {
+
+            if (this.lazytick$isDefaultState()) {
                 this.lazytick$operatorName = "";
             }
+
             if (this.level != null) this.level.blockEntityChanged(this.worldPosition); // save
             LazyTickLogic.updateState(this);
             this.createLazyTick$sendBlockUpdated(); // sync to client (UI render)
@@ -267,7 +266,8 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$setForcedValue(int value) {
         if (this.lazyTick$forcedValue != value) {
             this.lazyTick$forcedValue = value;
-            if (lazytick$isDefaultState()) {
+
+            if (this.lazytick$isDefaultState()) {
                 this.lazytick$operatorName = "";
             }
             if (this.level != null) this.level.blockEntityChanged(this.worldPosition);
