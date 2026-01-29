@@ -15,6 +15,7 @@ import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 
 import java.util.List;
 //需要翻译文本

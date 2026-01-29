@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.command;
+package net.pinkcats.createlazytick.Register;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;

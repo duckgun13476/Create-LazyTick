@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper;
+package net.pinkcats.createlazytick.helper.util;
 
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
