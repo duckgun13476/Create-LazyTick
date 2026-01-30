@@ -31,6 +31,10 @@ public class LazyTickStatCache {
         return sdf.format(new Date(registeredTime));
     }
 
+    public long getRegisteredTime() {
+        return registeredTime;
+    }
+
     // 用于 SavedData 判断数据是否变化
     @Override
     public boolean equals(Object o) {
