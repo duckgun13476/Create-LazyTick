@@ -25,7 +25,7 @@ public class LazyTickListRenderer {
             case VALUE -> "数值";
         };
 
-        MutableComponent header = Component.literal("=== 非默认懒加载机器名单 (第 " + page + "/" + totalPages + " 页 | 共 " + total + " 个 | 排序: " + sortName + ") ===")
+        MutableComponent header = Component.literal("== 非默认懒加载元件名单 (第 " + page + "/" + totalPages + " 页 | 共 " + total + " 个 | 排序: " + sortName + ") ==")
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
         source.sendSystemMessage(header);
     }
@@ -47,7 +47,7 @@ public class LazyTickListRenderer {
                 .append(Component.literal("模式状态: ").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal(modeStr + "\n").withStyle(modeColor))
                 .append(Component.literal("机器名称: " + info.getBlockName() + "\n").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal("拥有者: " + info.getOwnerName() + "\n").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal("最后操作者: " + info.getOwnerName() + "\n").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal("注册时间: " + info.getFormattedTime() + "\n").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal("设定数值: " + info.getScrollValue() + "%\n").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal("点击传送").withStyle(ChatFormatting.GREEN));
@@ -81,7 +81,7 @@ public class LazyTickListRenderer {
         if (page > 1) {
             appendNavButton(navBar, "<<< 上一页", page - 1, sortMode, isReverse);
         } else {
-            navBar.append(Component.literal("<<< 上一页").withStyle(ChatFormatting.DARK_GRAY));
+            navBar.append(Component.literal("<<< 上一页").withStyle(ChatFormatting.DARK_GRAY)); // 不可用状态
         }
 
         navBar.append(Component.literal("   |   ").withStyle(ChatFormatting.GRAY));
