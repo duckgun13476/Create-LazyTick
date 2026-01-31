@@ -1,16 +1,16 @@
 package net.pinkcats.createlazytick.helper.command;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
 public enum LazyTickSortMode {
 
@@ -97,34 +97,40 @@ public enum LazyTickSortMode {
     }
 
     /**
-     * 获取比较器
-     * 逻辑/优先度：全局已加载在最前 > 指定逻辑排列 > 反序处理
-     * @param source 命令源（获取玩家位置或Level）
-     * @param reverse 反序
-     * @return 构造比较器
-     * @throws CommandSyntaxException 控制台使用 NEAREST 模式
+     * (主逻辑与原有的getComparator基本一致,实现细节有变化)
+     * @param loadedPositions 当前已加载的方块坐标集合(静态快照)
+     * @param playerPos 玩家坐标(静态快照),控制台则为null
+     * @param reverse 是否反序
      */
-    public Comparator<Map.Entry<BlockPos, LazyTickStatCache>> getComparator(CommandSourceStack source, boolean reverse) throws CommandSyntaxException {
-        // 特殊检查: 如果是 NEAREST 且执行者不是实体(比如控制台),直接抛错
-        if (this == NEAREST && source.getEntity() == null) {
-            throw ERROR_NOT_PLAYER.create();
-        }
-
+    public Comparator<Map.Entry<BlockPos, LazyTickStatCache>> getThreadSafeComparator(
+            Set<BlockPos> loadedPositions, Vec3 playerPos, boolean reverse) {
         return (e1, e2) -> {
-            ServerLevel level = source.getLevel();
-            boolean isLoaded1 = level.isLoaded(e1.getKey());
-            boolean isLoaded2 = level.isLoaded(e2.getKey());
+            // 1. 使用传入的(已加载方块位置集合的静态快照) Set 处理区块加载逻辑
+            boolean isLoaded1 = loadedPositions.contains(e1.getKey());
+            boolean isLoaded2 = loadedPositions.contains(e2.getKey());
 
-            // 1. 已加载区块优先,不受 reverse 参数影响
-            // 如果 e1 加载了(true)而 e2 没加载(false)，返回 -1 (e1 排前)
             if (isLoaded1 != isLoaded2) {
                 return isLoaded1 ? -1 : 1;
             }
 
-            // 2. 排序
-            int result = logic.compare(e1, e2, source);
+            int result;
 
-            // 3. 反序,将结果取反
+            // 对NEAREST模式进行特殊处理,source可能非线程安全
+            if (this == NEAREST) {
+                if (playerPos == null) {
+                    result = 0; // 没有玩家坐标则视为相等
+                } else {
+                    // 否则使用传入的静态坐标计算距离
+                    double d1 = e1.getKey().distToCenterSqr(playerPos.x, playerPos.y, playerPos.z);
+                    double d2 = e2.getKey().distToCenterSqr(playerPos.x, playerPos.y, playerPos.z);
+                    result = Double.compare(d1, d2);
+                }
+            } else {
+                // 其他模式的source传null是安全的(没用到source)
+                result = this.logic.compare(e1, e2, null);
+            }
+
+            // 反序处理
             return reverse ? -result : result;
         };
     }
