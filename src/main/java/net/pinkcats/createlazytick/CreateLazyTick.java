@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
 
-import static net.pinkcats.createlazytick.command.LazyTickCommand.RegisterCLTCommand;
+import static net.pinkcats.createlazytick.Register.LazyTickCommand.RegisterCLTCommand;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(CreateLazyTick.MODID)

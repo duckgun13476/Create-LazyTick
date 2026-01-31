@@ -21,11 +21,32 @@ public class ForcedActiveManager {
     public static void register(Level level, BlockPos pos, String blockName, String ownerName, int scrollValue, boolean isForced) {
         if (level == null || pos == null) return;
         if (level instanceof ServerLevel serverLevel) {
+            // 1. 获取存档管理器
+            LazyTickSavedData savedData = LazyTickSavedData.get(serverLevel);
+
+            // 2. 检查该位置是否已经有记录
+            LazyTickStatCache existingInfo = savedData.getMachinesMap().get(pos);
+
+            long timeToRecord = System.currentTimeMillis();
+
+            // 3. 判断已有信息的时间是否需要更新
+            if (existingInfo != null) {
+                // 如果拥有者,数值,模式都没有变化,则不更新
+                boolean isSameOwner = existingInfo.getOwnerName().equals(ownerName);
+                boolean isSameValue = existingInfo.getScrollValue() == scrollValue;
+                boolean isSameMode = existingInfo.isForced() == isForced;
+
+                if (isSameOwner && isSameValue && isSameMode) {
+                    // 复用旧时间戳
+                    timeToRecord = existingInfo.getRegisteredTime();
+                }
+            }
+
             // 1. 构建详细信息缓存Obj
             LazyTickStatCache info = new LazyTickStatCache(
                     blockName,
                     ownerName,
-                    System.currentTimeMillis(), // 记录更改时的时间戟
+                    timeToRecord, // 记录真正更改时的时间戟(由重启导致的重新注册不算在内)
                     scrollValue,
                     isForced
             );
