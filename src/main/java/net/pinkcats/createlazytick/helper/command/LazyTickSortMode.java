@@ -1,11 +1,9 @@
 package net.pinkcats.createlazytick.helper.command;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
@@ -99,40 +97,7 @@ public enum LazyTickSortMode {
     }
 
     /**
-     * 获取比较器(非异步比较,接入异步池后可以抛弃)
-     * 逻辑/优先度：全局已加载在最前 > 指定逻辑排列 > 反序处理
-     * @param source 命令源（获取玩家位置或Level）
-     * @param reverse 反序
-     * @return 构造比较器
-     * @throws CommandSyntaxException 控制台使用 NEAREST 模式
-     */
-    public Comparator<Map.Entry<BlockPos, LazyTickStatCache>> getComparator(CommandSourceStack source, boolean reverse) throws CommandSyntaxException {
-        // 特殊检查: 如果是 NEAREST 且执行者不是实体(比如控制台),直接抛错
-        if (this == NEAREST && source.getEntity() == null) {
-            throw ERROR_NOT_PLAYER.create();
-        }
-
-        return (e1, e2) -> {
-            ServerLevel level = source.getLevel();
-            boolean isLoaded1 = level.isLoaded(e1.getKey());
-            boolean isLoaded2 = level.isLoaded(e2.getKey());
-
-            // 1. 已加载区块优先,不受 reverse 参数影响
-            // 如果 e1 加载了(true)而 e2 没加载(false)，返回 -1 (e1 排前)
-            if (isLoaded1 != isLoaded2) {
-                return isLoaded1 ? -1 : 1;
-            }
-
-            // 2. 排序
-            int result = logic.compare(e1, e2, source);
-
-            // 3. 反序,将结果取反
-            return reverse ? -result : result;
-        };
-    }
-
-    /**
-     * (主逻辑与getComparator基本一致,实现细节有变化)
+     * (主逻辑与原有的getComparator基本一致,实现细节有变化)
      * @param loadedPositions 当前已加载的方块坐标集合(静态快照)
      * @param playerPos 玩家坐标(静态快照),控制台则为null
      * @param reverse 是否反序

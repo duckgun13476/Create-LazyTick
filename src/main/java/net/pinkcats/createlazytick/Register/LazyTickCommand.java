@@ -5,7 +5,6 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -18,6 +17,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.command.CommandHelper;
 import net.pinkcats.createlazytick.helper.command.LazyTickListRenderer;
 import net.pinkcats.createlazytick.helper.command.LazyTickSortMode;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
@@ -69,29 +69,42 @@ public class LazyTickCommand {
         Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
         if (forcedMachines.isEmpty()) {
             source.sendSystemMessage(Component.literal("当前名单中没有非默认配置的机器").withStyle(ChatFormatting.GREEN));
-            return 1;
+            return 0;
         }
+
+        // 创建快照(必须主线程)
+        CommandHelper.SortContext snapshot = CommandHelper.createSnapshot(source, forcedMachines.keySet());
 
         // 2. 转为List准备排序
         List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries = new ArrayList<>(forcedMachines.entrySet());
 
-        // 3. 使用LazyTickSortMode进行排序
+        // 3. 使用LazyTickSortMode进行排序(异步主要针对此处代码块)
         try {
-            sortedEntries.sort(sortMode.getComparator(source, isReverse));
-        } catch (CommandSyntaxException e) {
-            // 捕获特定异常(比如控制台用了nearest)并反馈
-            source.sendFailure(ComponentUtils.fromMessage(e.getRawMessage()));
-            return 0;
-        } catch (Exception e) {
+            Comparator<Map.Entry<BlockPos, LazyTickStatCache>> comparator =
+                    sortMode.getThreadSafeComparator(snapshot.getLoadedPositions(), snapshot.getPlayerPos(), isReverse);
+            sortedEntries.sort(comparator);
+        } catch (Exception e1) {
             source.sendFailure(Component.literal("执行排序时发生内部错误,请联系管理员查看控制台"));
-            CreateLazyTick.LOGGER.error(e.getMessage());
+            CreateLazyTick.LOGGER.error(e1.getMessage());
             // 排序失败则降级为默认排序再次尝试
             try {
-                sortedEntries.sort(LazyTickSortMode.DEFAULT.getComparator(source, false));
-            } catch (CommandSyntaxException ignored) {
-                CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e.getMessage());
+                sortedEntries.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(snapshot.getLoadedPositions(),
+                        snapshot.getPlayerPos(), false));
+            } catch (Exception e2) {
+                CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e2.getMessage());
             }
         }
+
+        // 必须返回主线程执行
+        renderAllAndCleanData(source, level, sortedEntries, page, sortMode, isReverse);
+        // 结束
+        return 1;
+    }
+
+    private static void renderAllAndCleanData(
+            CommandSourceStack source, ServerLevel level, List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries,
+            int page, LazyTickSortMode sortMode, boolean isReverse
+    ) {
 
         // 4. 分页计算
         int totalMachines = sortedEntries.size();
@@ -126,15 +139,10 @@ public class LazyTickCommand {
                     continue;
                 }
             }
-
             // 制作单行信息条目
             LazyTickListRenderer.renderItem(source, i + 1, entry, level.isLoaded(pos));
         }
-
         // 7. 制作翻页按钮
         LazyTickListRenderer.renderNavBar(source, page, totalPages, sortMode, isReverse);
-
-        // 结束
-        return 1;
     }
 }
