@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.helper;
+package net.pinkcats.createlazytick.helper.util;
 
 import java.util.Random;
 
