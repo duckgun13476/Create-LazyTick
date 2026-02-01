@@ -13,55 +13,108 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.pinkcats.createlazytick.CreateLazyTick;
-import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.command.CommandHelper;
-import net.pinkcats.createlazytick.helper.command.LazyTickListRenderer;
 import net.pinkcats.createlazytick.helper.command.LazyTickSortMode;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class LazyTickCommand {
-
-    private static final int PAGE_SIZE = 15;
-
+    // 自动补全
     private static final SuggestionProvider<CommandSourceStack> SORT_SUGGESTIONS = (context, builder) ->
             SharedSuggestionProvider.suggest(Arrays.stream(LazyTickSortMode.values())
                     .map(LazyTickSortMode::getId).collect(Collectors.toList()), builder);
 
-    public static void RegisterCLTCommand(RegisterCommandsEvent event){
+    private static final SuggestionProvider<CommandSourceStack> RESET_NAME_SUGGESTIONS = (context, builder) -> {
+        ServerLevel level = context.getSource().getLevel();
+        Set<String> names = ForcedActiveManager.getForcedMachines(level).values().stream()
+                .map(LazyTickStatCache::getBlockName)
+                .collect(Collectors.toSet());
+        return SharedSuggestionProvider.suggest(names, builder);
+    };
+
+    private static final SuggestionProvider<CommandSourceStack> RESET_OWNER_SUGGESTIONS = (context, builder) -> {
+        ServerLevel level = context.getSource().getLevel();
+        Set<String> owners = ForcedActiveManager.getForcedMachines(level).values().stream()
+                .map(LazyTickStatCache::getOwnerName)
+                .filter(name -> !name.isEmpty())
+                .collect(Collectors.toSet());
+        return SharedSuggestionProvider.suggest(owners, builder);
+    };
+
+    private static final SuggestionProvider<CommandSourceStack> MODE_SUGGESTIONS = (context, builder) ->
+            SharedSuggestionProvider.suggest(List.of("forced", "dynamic"), builder);
+
+    public static void RegisterCLTCommand(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        dispatcher.register(Commands.literal("createlazytick")
+
+        dispatcher.register(Commands.literal("createlazytick") // [1] 开始 createlazytick
                 .requires(source -> source.hasPermission(2))
-                .then(Commands.literal("list")
-                        .executes(ctx -> executeList(ctx, 1, LazyTickSortMode.DEFAULT, false))
-                        .then(Commands.argument("page", IntegerArgumentType.integer(1))
-                                .executes(ctx -> executeList(ctx, IntegerArgumentType.getInteger(ctx, "page"),
+
+                // List
+                .then(Commands.literal("list") // [2] 开始 list
+                        .executes(ctx -> CommandHelper.onList(ctx, 1, LazyTickSortMode.DEFAULT, false))
+                        .then(Commands.argument("page", IntegerArgumentType.integer(1)) // [3] 开始 page
+                                .executes(ctx -> CommandHelper.onList(ctx, IntegerArgumentType.getInteger(ctx, "page"),
                                         LazyTickSortMode.DEFAULT, false))
-                                .then(Commands.argument("sort", StringArgumentType.word()).suggests(SORT_SUGGESTIONS)
-                                        .executes(ctx -> executeList(ctx,
+                                .then(Commands.argument("sort", StringArgumentType.word()).suggests(SORT_SUGGESTIONS) // [4] 开始 sort
+                                        .executes(ctx -> CommandHelper.onList(ctx,
                                                 IntegerArgumentType.getInteger(ctx, "page"),
                                                 LazyTickSortMode.byName(StringArgumentType.getString(ctx, "sort")),
                                                 false))
-                                        .then(Commands.argument("reverse", BoolArgumentType.bool())
-                                                .executes(ctx -> executeList(ctx,
+                                        .then(Commands.argument("reverse", BoolArgumentType.bool()) // [5] 开始 reverse
+                                                .executes(ctx -> CommandHelper.onList(ctx,
                                                         IntegerArgumentType.getInteger(ctx, "page"),
                                                         LazyTickSortMode.byName(StringArgumentType.getString(ctx, "sort")),
                                                         BoolArgumentType.getBool(ctx, "reverse")
                                                 ))
+                                        ) // 结束 reverse
+                                ) // 结束 sort
+                        ) // 结束 page
+                ) // 结束 list
+
+                // Reset
+                .then(Commands.literal("reset") // [6] 开始 reset
+                        .then(Commands.literal("name")
+                                .then(Commands.argument("block_name", StringArgumentType.string())
+                                        .suggests(RESET_NAME_SUGGESTIONS)
+                                        .executes(CommandHelper::onResetByName)
                                 )
                         )
-                )
-        ));
+                        .then(Commands.literal("player")
+                                .then(Commands.argument("player_name", StringArgumentType.string())
+                                        .suggests(RESET_OWNER_SUGGESTIONS)
+                                        .executes(CommandHelper::onResetByPlayer)
+                                )
+                        )
+                        .then(Commands.literal("mode")
+                                .then(Commands.argument("mode_type", StringArgumentType.word())
+                                        .suggests(MODE_SUGGESTIONS)
+                                        .executes(CommandHelper::onResetByMode)
+                                )
+                        )
+                        .then(Commands.literal("value")
+                                .then(Commands.argument("value", IntegerArgumentType.integer(-100, 100))
+                                        .executes(CommandHelper::onResetByValue)
+                                )
+                        )
+                        .then(Commands.literal("radius")
+                                .then(Commands.argument("range", IntegerArgumentType.integer(1))
+                                        .executes(CommandHelper::onResetByRadius)
+                                )
+                        )
+                ) // 结束 reset
+        );
     }
 
+
     // 不用缓存了,异步线程池交给你了()
-    private static int executeList(CommandContext<CommandSourceStack> context, int page, LazyTickSortMode sortMode, boolean isReverse) {
+    public static int executeList(CommandContext<CommandSourceStack> context, int page, LazyTickSortMode sortMode, boolean isReverse) {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
 
@@ -96,53 +149,47 @@ public class LazyTickCommand {
         }
 
         // 必须返回主线程执行
-        renderAllAndCleanData(source, level, sortedEntries, page, sortMode, isReverse);
+        CommandHelper.renderAllAndCleanData(source, level, sortedEntries, page, sortMode, isReverse);
         // 结束
         return 1;
     }
 
-    private static void renderAllAndCleanData(
-            CommandSourceStack source, ServerLevel level, List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries,
-            int page, LazyTickSortMode sortMode, boolean isReverse
-    ) {
 
-        // 4. 分页计算
-        int totalMachines = sortedEntries.size();
-        int totalPages = (int) Math.ceil((double) totalMachines / PAGE_SIZE);
+    public static int executeReset(CommandContext<CommandSourceStack> context, String desc, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter) {
+        CommandSourceStack source = context.getSource();
+        ServerLevel level = source.getLevel();
 
-        if (page > totalPages) page = totalPages;
-        if (page < 1) page = 1;
+        Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
+        if (forcedMachines.isEmpty()) {
+            source.sendFailure(Component.literal("没有任何记录可供重置"));
+            return 0;
+        }
 
-        int startIndex = (page - 1) * PAGE_SIZE;
-        int endIndex = Math.min(startIndex + PAGE_SIZE, totalMachines);
+        // 创建快照(主线程)
+        CommandHelper.SortContext snapshot = CommandHelper.createSnapshot(source, forcedMachines.keySet());
 
-        // 5. 制作聊天栏标题
-        LazyTickListRenderer.renderHeader(source, page, totalPages, totalMachines, sortMode);
-
-        // 6. 循环逐行渲染条目 + 清理无效数据
-        for (int i = startIndex; i < endIndex; i++) {
-            Map.Entry<BlockPos, LazyTickStatCache> entry = sortedEntries.get(i);
-            BlockPos pos = entry.getKey();
-
-            // 只有区块已加载时, 才去检查元件是否还在
-            if (level.isLoaded(pos)) {
-                BlockEntity be = level.getBlockEntity(pos);
-
-                // BE不存在/不是ISBEControl指定的元件/处于默认状态则清理
-                if (!(be instanceof ISmartBlockEntityControl control) || control.lazytick$isDefaultState()) {
-                    ForcedActiveManager.unregister(level, pos);
-
-                    // (调试用,暂不确定是否正式加入)
-                    source.sendSystemMessage(Component.literal("已自动清理失效记录: " + pos.toShortString()).withStyle(ChatFormatting.RED));
-                    // 跳过本次渲染，不显示在列表里
-                    // (注意:会导致当前页显示少一行,但无伤大雅(能跑就行))
-                    continue;
+        // 进行筛选(异步主要针对此处代码块)
+        List<BlockPos> candidates = new ArrayList<>();
+        for (Map.Entry<BlockPos, LazyTickStatCache> entry : forcedMachines.entrySet()) {
+            // 满足谓词(由 Handler 提供)
+            if (filter.test(entry)) {
+                // 且必须在已加载区块内(快照判断)
+                if (snapshot.getLoadedPositions().contains(entry.getKey())) {
+                    candidates.add(entry.getKey());
                 }
             }
-            // 制作单行信息条目
-            LazyTickListRenderer.renderItem(source, i + 1, entry, level.isLoaded(pos));
         }
-        // 7. 制作翻页按钮
-        LazyTickListRenderer.renderNavBar(source, page, totalPages, sortMode, isReverse);
+
+        // 执行逻辑(必须回主线程)
+        int count = ForcedActiveManager.executeBatchReset(level, candidates);
+
+        if (count > 0) {
+            source.sendSuccess(() -> Component.literal("已在加载区域内重置 " + count + " 个匹配 " + desc + " 的机器。")
+                    .append("\n")
+                    .append(Component.literal("(未加载区域保持不变)").withStyle(ChatFormatting.GRAY)), true);
+        } else {
+            source.sendFailure(Component.literal("在当前已加载区域未找到匹配 " + desc + " 的记录"));
+        }
+        return 1;
     }
 }
