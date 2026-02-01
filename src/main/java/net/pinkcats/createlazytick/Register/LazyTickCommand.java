@@ -56,6 +56,9 @@ public class LazyTickCommand {
     private static final SuggestionProvider<CommandSourceStack> VALUE_OPERATOR_SUGGESTIONS = (context, builder) ->
             SharedSuggestionProvider.suggest(List.of("equals", "biggerthan", "smallerthan"), builder);
 
+    private static final SuggestionProvider<CommandSourceStack> TIME_OPERATOR_SUGGESTIONS = (context, builder) ->
+            SharedSuggestionProvider.suggest(List.of("olderthan", "newerthan"), builder);
+
     public static void RegisterCLTCommand(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
@@ -115,6 +118,14 @@ public class LazyTickCommand {
                         .then(Commands.literal("radius")
                                 .then(Commands.argument("range", IntegerArgumentType.integer(1))
                                         .executes(CommandHelper::onResetByRadius)
+                                )
+                        )
+                        .then(Commands.literal("time")
+                                .then(Commands.argument("operator", StringArgumentType.word())
+                                        .suggests(TIME_OPERATOR_SUGGESTIONS)
+                                        .then(Commands.argument("duration", StringArgumentType.string()) // 接收"3d","12h"等
+                                                .executes(CommandHelper::onResetByTime)
+                                        )
                                 )
                         )
                 ) // 结束 reset

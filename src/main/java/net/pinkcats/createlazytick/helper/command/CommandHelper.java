@@ -138,6 +138,25 @@ public class CommandHelper {
         LazyTickListRenderer.renderNavBar(source, page, totalPages, sortMode, isReverse);
     }
 
+
+    private static long parseDuration(String input) throws NumberFormatException {
+        if (input.length() < 2) throw new NumberFormatException("格式过短");
+
+        // 获取最后一位作为单位 (d/h/m/s)
+        char unit = input.charAt(input.length() - 1);
+        // 获取前面的数字部分
+        String numberStr = input.substring(0, input.length() - 1);
+        long number = Long.parseLong(numberStr);
+
+        return switch (Character.toLowerCase(unit)) {
+            case 'd' -> number * 24 * 60 * 60 * 1000L; // 天 -> 毫秒
+            case 'h' -> number * 60 * 60 * 1000L;      // 时 -> 毫秒(下面以此类推)
+            case 'm' -> number * 60 * 1000L;
+            case 's' -> number * 1000L;
+            default -> throw new NumberFormatException("未知单位");
+        };
+    }
+
     public static int onResetByName(CommandContext<CommandSourceStack> ctx) {
         ResourceLocation rl = ctx.getArgument("block_name", ResourceLocation.class);
         String id = rl.toString();
@@ -215,6 +234,54 @@ public class CommandHelper {
         Component desc = Component.literal("半径 [" + range + "格]");
         return LazyTickCommand.executeReset(ctx, desc,
                 entry -> entry.getKey().distToCenterSqr(center.getX(), center.getY(), center.getZ()) <= rangeSqr);
+    }
+
+    public static int onResetByTime(CommandContext<CommandSourceStack> ctx) {
+        String operator = StringArgumentType.getString(ctx, "operator");
+        String durationStr = StringArgumentType.getString(ctx, "duration");
+
+        long targetDuration;
+        try {
+            targetDuration = parseDuration(durationStr);
+        } catch (NumberFormatException e) {
+            ctx.getSource().sendFailure(Component.literal("时间格式错误: " + durationStr + " (示例: 3d; 12h; 30m; 6s)"));
+            return 0;
+        }
+
+        // 准备显示符号和逻辑
+        String displaySymbol;
+        java.util.function.BiPredicate<Long, Long> logic;
+
+        switch (operator.toLowerCase()) {
+            case "olderthan" -> {
+                displaySymbol = ">";
+                // "存在时长(Age)" 大于 "目标时长" => 比对应目标时间戟更早/更旧
+                logic = (age, target) -> age > target;
+            }
+            case "newerthan" -> {
+                displaySymbol = "<";
+                // "存在时长(Age)" 小于 "目标时长" => 比对应目标时间戟更晚/更新
+                logic = (age, target) -> age < target;
+            }
+            default -> {
+                ctx.getSource().sendFailure(Component.literal("时间筛选仅支持 olderthan (早于) 或 newerthan (晚于)"));
+                return 0;
+            }
+        }
+        Component desc = Component.literal("注册时长 [" + displaySymbol + " " + durationStr + "]");
+
+        long now = System.currentTimeMillis();
+
+        return LazyTickCommand.executeReset(ctx, desc, entry -> {
+            long registeredTime = entry.getValue().getRegisteredTime();
+
+            if (registeredTime <= 0) return false;  // 非法数据
+
+            // 计算由注册至今经过的时长 (Age)
+            long age = now - registeredTime;
+
+            return logic.test(age, targetDuration);
+        });
     }
 
     public static int onList(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode sort, boolean reverse) {
