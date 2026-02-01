@@ -27,10 +27,12 @@ import java.util.stream.Collectors;
 
 public class LazyTickCommand {
     // 自动补全
+    // list
     private static final SuggestionProvider<CommandSourceStack> SORT_SUGGESTIONS = (context, builder) ->
             SharedSuggestionProvider.suggest(Arrays.stream(LazyTickSortMode.values())
                     .map(LazyTickSortMode::getId).collect(Collectors.toList()), builder);
 
+    // reset
     private static final SuggestionProvider<CommandSourceStack> RESET_NAME_SUGGESTIONS = (context, builder) -> {
         ServerLevel level = context.getSource().getLevel();
         Set<String> names = ForcedActiveManager.getForcedMachines(level).values().stream()
@@ -50,6 +52,9 @@ public class LazyTickCommand {
 
     private static final SuggestionProvider<CommandSourceStack> MODE_SUGGESTIONS = (context, builder) ->
             SharedSuggestionProvider.suggest(List.of("forced", "dynamic"), builder);
+
+    private static final SuggestionProvider<CommandSourceStack> VALUE_OPERATOR_SUGGESTIONS = (context, builder) ->
+            SharedSuggestionProvider.suggest(List.of("equals", "biggerthan", "smallerthan"), builder);
 
     public static void RegisterCLTCommand(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -100,8 +105,11 @@ public class LazyTickCommand {
                                 )
                         )
                         .then(Commands.literal("value")
-                                .then(Commands.argument("value", IntegerArgumentType.integer(-100, 100))
-                                        .executes(CommandHelper::onResetByValue)
+                                .then(Commands.argument("operator", StringArgumentType.word())
+                                        .suggests(VALUE_OPERATOR_SUGGESTIONS)
+                                        .then(Commands.argument("target_value", IntegerArgumentType.integer(0, 100))
+                                                .executes(CommandHelper::onResetByValue)
+                                        )
                                 )
                         )
                         .then(Commands.literal("radius")
