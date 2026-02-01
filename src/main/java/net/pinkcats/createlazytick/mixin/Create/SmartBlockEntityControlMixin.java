@@ -49,7 +49,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "invalidate", at = @At("HEAD"), remap = false)
     private void lazytick$onInvalidate(CallbackInfo ci) {
-
+        // 这里移除注册会导致服务器关闭时直接给存储的持久化列表数据一键清空
     }
 
     // Server -> disk
@@ -62,7 +62,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
             tag.putString("LazyTickOperator", this.lazytick$operatorName);
         }
 
-        tag.putInt("LazyTickCurrentInterval", this.createLazyTick$CurrentDelayTick); // [关键新增]
+        tag.putInt("LazyTickCurrentInterval", this.createLazyTick$CurrentDelayTick);
         //System.out.println("interval write");
 
         if (this.lazytick$syncedTier != LazyTickTier.ACTIVE) {
@@ -218,6 +218,10 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         return this.createLazyTick$CurrentDelayTick;
     }
 
+    /**
+     * <p><strong>Warning：</strong> use this method directly may cause unexpected logic error.<p>
+     * You can use this method to update lazytick state:{@link LazyTickLogic#updateState(ISmartBlockEntityControl)}</p>
+     */
     @Override
     public void createLazyTick$setDelayForced(boolean isForced) {
         if (!isForced) {
@@ -242,6 +246,10 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         return this.lazyTick$dynamicValue;
     }
 
+    /**
+     * <p><strong>Warning：</strong> use this method directly may cause unexpected logic error.<p>
+     * You can use this method to switch lazytick mode:{@link LazyTickLogic#switchMode(ISmartBlockEntityControl, boolean, int)}</p>
+     */
     @Override
     public void createLazyTick$setDynamicValue(int value) {
         if (this.lazyTick$dynamicValue != value) {
@@ -262,6 +270,10 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         return this.lazyTick$forcedValue;
     }
 
+    /**
+     * <p><strong>Warning：</strong> use this method directly may cause unexpected logic error.<p>
+     * You can use this method to switch lazytick mode:{@link LazyTickLogic#switchMode(ISmartBlockEntityControl, boolean, int)}</p>
+     */
     @Override
     public void createLazyTick$setForcedValue(int value) {
         if (this.lazyTick$forcedValue != value) {
