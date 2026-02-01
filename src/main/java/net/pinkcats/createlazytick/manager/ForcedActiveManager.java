@@ -1,10 +1,17 @@
 package net.pinkcats.createlazytick.manager;
 
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
+import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -66,6 +73,51 @@ public class ForcedActiveManager {
                 dataVersion.incrementAndGet();
             }
         }
+    }
+
+    public static int executeBatchReset(ServerLevel level, List<BlockPos> targets) {
+        if (targets.isEmpty()) return 0;
+
+        int validResetCount = 0;
+        int dirtyDataCount = 0;
+        boolean dataChanged = false; // 标记是否改动了存档(包含清理脏数据)
+        LazyTickSavedData data = LazyTickSavedData.get(level);
+
+        for (BlockPos pos : targets) {
+            // 确保区块已加载(避免异步过程中区块被卸载导致状态过时/非法)
+            if (level.isLoaded(pos)) {
+
+                // 1. 尝试获取并重置机器 (如果存在)
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof ISmartBlockEntityControl control && !control.lazytick$isDefaultState()) {
+                    dataChanged = true;
+                    // 工具方法,内部处理模式转换
+                    LazyTickLogic.switchMode(control, false, 100);
+                    validResetCount++;
+                    // 重置UI
+                    if (control instanceof SmartBlockEntity sbe) {
+                        LazyTickScrollBehaviour behaviour = LazyTickLogic.getBehaviour(sbe, LazyTickScrollBehaviour.class);
+                        if (behaviour != null) {
+                            behaviour.setValue(100);
+                        }
+                    }
+                }
+
+                // 2. 移除脏数据记录
+                if (data.remove(pos)) {
+                    dataChanged = true;
+                    dirtyDataCount++;
+                }
+
+            }
+        }
+
+        if (dataChanged) {
+            dataVersion.incrementAndGet();
+        }
+        CreateLazyTick.LOGGER.info("Cleared {} invalid lazytick data entries", dirtyDataCount);
+
+        return validResetCount;
     }
 
     //return : from Set<BlockPos> to Map<BlockPos, LazyTickStatCache>(可以获取位置和具体信息)
