@@ -11,8 +11,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Register.LazyTickCommand;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
@@ -137,27 +140,44 @@ public class CommandHelper {
 
     public static int onResetByName(CommandContext<CommandSourceStack> ctx) {
         ResourceLocation rl = ctx.getArgument("block_name", ResourceLocation.class);
-        String name = rl.toString();
-        return LazyTickCommand.executeReset(ctx, "名称 [" + name + "]",
-                entry -> entry.getValue().getBlockName().equals(name));
+        String id = rl.toString();
+
+        Block block = ForgeRegistries.BLOCKS.getValue(rl);
+
+        Component nameComponent;
+        if (block != null && block != Blocks.AIR) {
+            nameComponent = block.getName(); // 获取翻译组件
+        } else {
+            nameComponent = Component.literal(id); // 降级为 ID
+        }
+
+        Component desc = Component.literal("名称 [")
+                .append(nameComponent.copy().withStyle(ChatFormatting.AQUA))
+                .append("]");
+
+        return LazyTickCommand.executeReset(ctx, desc,
+                entry -> entry.getValue().getBlockName().equals(id));
     }
 
     public static int onResetByPlayer(CommandContext<CommandSourceStack> ctx) {
         String owner = StringArgumentType.getString(ctx, "player_name");
-        return LazyTickCommand.executeReset(ctx, "所有者 [" + owner + "]",
+        Component desc = Component.literal("所有者 [" + owner + "]");
+        return LazyTickCommand.executeReset(ctx,  desc,
                 entry -> entry.getValue().getOwnerName().equals(owner));
     }
 
     public static int onResetByMode(CommandContext<CommandSourceStack> ctx) {
         String modeStr = StringArgumentType.getString(ctx, "mode_type");
         boolean isForced = modeStr.equalsIgnoreCase("forced");
-        return LazyTickCommand.executeReset(ctx, "模式 [" + (isForced ? "强制" : "动态") + "]",
+        Component desc = Component.literal("模式 [" + (isForced ? "强制" : "动态") + "]");
+        return LazyTickCommand.executeReset(ctx, desc,
                 entry -> entry.getValue().isForced() == isForced);
     }
 
     public static int onResetByValue(CommandContext<CommandSourceStack> ctx) {
         int val = IntegerArgumentType.getInteger(ctx, "value");
-        return LazyTickCommand.executeReset(ctx, "数值 [" + val + "]",
+        Component desc = Component.literal("数值 [" + val + "]");
+        return LazyTickCommand.executeReset(ctx, desc,
                 entry -> entry.getValue().getScrollValue() == val);
     }
 
@@ -166,7 +186,8 @@ public class CommandHelper {
         BlockPos center = BlockPos.containing(ctx.getSource().getPosition());
         double rangeSqr = range * range;
 
-        return LazyTickCommand.executeReset(ctx, "半径 [" + range + "格]",
+        Component desc = Component.literal("半径 [" + range + "格]");
+        return LazyTickCommand.executeReset(ctx, desc,
                 entry -> entry.getKey().distToCenterSqr(center.getX(), center.getY(), center.getZ()) <= rangeSqr);
     }
 
