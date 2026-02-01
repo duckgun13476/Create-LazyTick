@@ -156,7 +156,7 @@ public class LazyTickCommand {
     }
 
 
-    public static int executeReset(CommandContext<CommandSourceStack> context, String desc, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter) {
+    public static int executeReset(CommandContext<CommandSourceStack> context, Component description, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter) {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
 
@@ -185,11 +185,11 @@ public class LazyTickCommand {
         int count = ForcedActiveManager.executeBatchReset(level, candidates);
 
         if (count > 0) {
-            source.sendSuccess(() -> Component.literal("已在加载区域内重置 " + count + " 个匹配 " + desc + " 的机器。")
-                    .append("\n")
+            source.sendSuccess(() -> Component.literal("已在加载区域内重置 " + count + " 个匹配 ")
+                    .append(description).append(" 的机器").append("\n")
                     .append(Component.literal("(未加载区域保持不变)").withStyle(ChatFormatting.GRAY)), true);
         } else {
-            source.sendFailure(Component.literal("在当前已加载区域未找到匹配 " + desc + " 的记录"));
+            source.sendFailure(Component.literal("在当前已加载区域未找到匹配 ").append(description).append(" 的记录"));
         }
         return 1;
     }
