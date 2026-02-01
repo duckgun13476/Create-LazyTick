@@ -175,10 +175,36 @@ public class CommandHelper {
     }
 
     public static int onResetByValue(CommandContext<CommandSourceStack> ctx) {
-        int val = IntegerArgumentType.getInteger(ctx, "value");
-        Component desc = Component.literal("数值 [" + val + "]");
-        return LazyTickCommand.executeReset(ctx, desc,
-                entry -> entry.getValue().getScrollValue() == val);
+        String operator = StringArgumentType.getString(ctx, "operator");
+        int targetVal = IntegerArgumentType.getInteger(ctx, "target_value");
+
+        String displaySymbol;
+        java.util.function.BiPredicate<Integer, Integer> logic; //Predicate 逻辑
+
+        switch (operator.toLowerCase()) {
+            case "biggerthan" -> {
+                displaySymbol = ">";
+                logic = (current, target) -> current > target;
+            }
+            case "smallerthan" -> {
+                displaySymbol = "<";
+                logic = (current, target) -> current < target;
+            }
+            case "equals" -> {
+                displaySymbol = "=";
+                logic = Integer::equals;
+            }
+            default -> {
+                ctx.getSource().sendFailure(Component.literal("未知的操作符: " + operator));
+                return 0;
+            }
+        }
+        Component desc = Component.literal("数值 [" + displaySymbol + " " + targetVal + "]");
+        return LazyTickCommand.executeReset(ctx, desc, entry -> {
+            // Never negative (-)
+            int currentVal = entry.getValue().getScrollValue();
+            return logic.test(currentVal, targetVal);
+        });
     }
 
     public static int onResetByRadius(CommandContext<CommandSourceStack> ctx) {
