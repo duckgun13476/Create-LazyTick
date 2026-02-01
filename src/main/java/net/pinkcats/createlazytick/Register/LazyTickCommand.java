@@ -10,6 +10,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerLevel;
@@ -81,7 +82,7 @@ public class LazyTickCommand {
                 // Reset
                 .then(Commands.literal("reset") // [6] 开始 reset
                         .then(Commands.literal("name")
-                                .then(Commands.argument("block_name", StringArgumentType.string())
+                                .then(Commands.argument("block_name", ResourceLocationArgument.id())
                                         .suggests(RESET_NAME_SUGGESTIONS)
                                         .executes(CommandHelper::onResetByName)
                                 )

@@ -8,6 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -135,7 +136,8 @@ public class CommandHelper {
     }
 
     public static int onResetByName(CommandContext<CommandSourceStack> ctx) {
-        String name = StringArgumentType.getString(ctx, "block_name");
+        ResourceLocation rl = ctx.getArgument("block_name", ResourceLocation.class);
+        String name = rl.toString();
         return LazyTickCommand.executeReset(ctx, "名称 [" + name + "]",
                 entry -> entry.getValue().getBlockName().equals(name));
     }
