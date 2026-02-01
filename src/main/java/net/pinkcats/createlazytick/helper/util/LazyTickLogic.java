@@ -5,11 +5,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 public class LazyTickLogic {
     @Nullable
@@ -60,7 +62,7 @@ public class LazyTickLogic {
 
         Level level = be.getLevel();
         BlockPos pos = be.getBlockPos();
-        String blockName = be.getBlockState().getBlock().getName().getString();
+        String blockName = Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(be.getBlockState().getBlock())).toString();
         String playerName = control.createLazyTick$getUserName();
 
         int dyn = control.createLazyTick$getDynamicValue();

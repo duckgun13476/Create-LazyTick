@@ -38,6 +38,9 @@ public class LazyTickListRenderer {
         String statusPrefix = isLoaded ? "" : "[未加载] ";
         ChatFormatting nameColor = isLoaded ? ChatFormatting.AQUA : ChatFormatting.DARK_AQUA;
 
+        // 获取本地方块名称
+        Component localizedName = info.getDisplayName();
+
         // 构建悬停文本 (HoverText)
         String modeStr = info.isForced() ? "强制锁定" : "动态控制";
         ChatFormatting modeColor = info.isForced() ? ChatFormatting.RED : ChatFormatting.AQUA;
@@ -46,7 +49,8 @@ public class LazyTickListRenderer {
                 .withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal("模式状态: ").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal(modeStr + "\n").withStyle(modeColor))
-                .append(Component.literal("机器名称: " + info.getBlockName() + "\n").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal("机器名称: ").withStyle(ChatFormatting.GRAY))
+                .append(localizedName.copy().withStyle(ChatFormatting.GRAY)).append("\n")
                 .append(Component.literal("最后操作者: " + info.getOwnerName() + "\n").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal("注册时间: " + info.getFormattedTime() + "\n").withStyle(ChatFormatting.GRAY))
                 .append(Component.literal("设定数值: " + info.getScrollValue() + "%\n").withStyle(ChatFormatting.GRAY))
@@ -57,8 +61,8 @@ public class LazyTickListRenderer {
         // 构建列表行(1行)
         MutableComponent listEntry = Component.literal(" " + index + ". ")
                 .withStyle(ChatFormatting.GRAY)
-                .append(Component.literal(statusPrefix + info.getBlockName())
-                        .withStyle(nameColor))
+                .append(Component.literal(statusPrefix).withStyle(nameColor))
+                .append(localizedName.copy().withStyle(nameColor))
                 .append(Component.literal(" [" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
                         .withStyle(ChatFormatting.GREEN)
                         .withStyle(style -> style
