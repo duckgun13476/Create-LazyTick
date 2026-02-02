@@ -339,7 +339,7 @@ public class CommandHelper {
             ctx.getSource().sendSuccess(() -> Component.literal("玩家 ")
                     .append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD))
                     .append(" 状态统计:\n")
-                    .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append("|")
+                    .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append(" ")
                     .append(" - 最大配额: ").append(limitDisplay), false);
         }
         return profiles.size();
