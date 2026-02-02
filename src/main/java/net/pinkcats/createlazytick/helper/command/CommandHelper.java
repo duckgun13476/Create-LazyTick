@@ -1,5 +1,6 @@
 package net.pinkcats.createlazytick.helper.command;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -286,54 +287,62 @@ public class CommandHelper {
         });
     }
 
-    public static int onLimitSet(CommandContext<CommandSourceStack> ctx, String playerName, int limit) {
+    public static int onLimitSet(CommandContext<CommandSourceStack> ctx,
+                                 Collection<GameProfile> profiles, int limit) {
         ServerLevel level = ctx.getSource().getLevel();
         LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
 
-        data.setLimit(playerName, limit);
-
-        ctx.getSource().sendSuccess(() -> Component.literal("已设置玩家 ")
-                .append(Component.literal(playerName).withStyle(ChatFormatting.GOLD))
-                .append(" 的 LazyTick 配额为: ")
-                .append(Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA)), true);
-        return 1;
+        // 选择器可能返回@a(多个人的玩家档案,需要遍历)
+        MutableComponent successMessage = Component.literal("已设置玩家 ");
+        for (GameProfile profile : profiles) {
+            data.setLimit(profile.getId(), limit);
+            successMessage.append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD)).append(" ");
+        }
+        successMessage.append("共" + profiles.size() + "人的懒惰刻调节配额为: ")
+                .append(Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA));
+        ctx.getSource().sendSuccess(() -> successMessage, true);
+        return profiles.size();
     }
 
-    public static int onLimitRemove(CommandContext<CommandSourceStack> ctx, String playerName) {
+    public static int onLimitRemove(CommandContext<CommandSourceStack> ctx, Collection<GameProfile> profiles) {
         ServerLevel level = ctx.getSource().getLevel();
         LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
 
-        data.removeLimit(playerName);
+        MutableComponent successMessage = Component.literal("已移除玩家 ");
+        for (GameProfile profile : profiles) {
+            data.removeLimit(profile.getId());
+            successMessage.append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD)).append(" ");
+        }
+        successMessage.append("共" + profiles.size() + "人的限制 (现在配额为无限)");
 
-        ctx.getSource().sendSuccess(() -> Component.literal("已移除玩家 ")
-                .append(Component.literal(playerName).withStyle(ChatFormatting.GOLD))
-                .append(" 的限制 (现在为无限)"), true);
-        return 1;
+        ctx.getSource().sendSuccess(() -> successMessage, true);
+        return profiles.size();
     }
 
-    public static int onLimitCheck(CommandContext<CommandSourceStack> ctx, String playerName) {
+    public static int onLimitCheck(CommandContext<CommandSourceStack> ctx, Collection<GameProfile> profiles) {
         ServerLevel level = ctx.getSource().getLevel();
-
-        // 1. 获取额度
         LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
-        int limit = limitData.getLimit(playerName);
 
-        // 2. 获取当前用量
-        int used = ForcedActiveManager.getPlayerUsageCount(level, playerName);
+        for (GameProfile profile : profiles) {
+            // 1. 使用 UUID 获取限额
+            int limit = limitData.getLimit(profile.getId());
 
-        MutableComponent limitDisplay = (limit == -1)
-                ? Component.literal("无限").withStyle(ChatFormatting.GREEN)
-                : Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
+            // 2. 获取当前用量 (注意: 目前还是用 Name 统计机器, (机器记录的是name,而不是uuid,后期需要重写get/setName为get/setOperatorUUID))
+            int used = ForcedActiveManager.getPlayerUsageCount(level, profile.getName());
 
-        ChatFormatting statusColor = (limit != -1 && used >= limit) ? ChatFormatting.RED : ChatFormatting.GREEN;
+            MutableComponent limitDisplay = (limit == -1)
+                    ? Component.literal("无限").withStyle(ChatFormatting.GREEN)
+                    : Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
 
-        ctx.getSource().sendSuccess(() -> Component.literal("玩家 ")
-                .append(Component.literal(playerName).withStyle(ChatFormatting.GOLD))
-                .append(" 状态统计:\n")
-                .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append("\n")
-                .append(" - 最大配额: ").append(limitDisplay), false);
+            ChatFormatting statusColor = (limit != -1 && used >= limit) ? ChatFormatting.RED : ChatFormatting.GREEN;
 
-        return 1;
+            ctx.getSource().sendSuccess(() -> Component.literal("玩家 ")
+                    .append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD))
+                    .append(" 状态统计:\n")
+                    .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append("|")
+                    .append(" - 最大配额: ").append(limitDisplay), false);
+        }
+        return profiles.size();
     }
 
     public static int onList(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode sort, boolean reverse) {

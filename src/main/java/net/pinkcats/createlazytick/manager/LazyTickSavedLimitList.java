@@ -9,13 +9,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class LazyTickSavedLimitList extends SavedData {
 
     private static final String DATA_FILE_NAME = "createlazytick_limits";
 
     // 存储玩家限制: 0 = 封禁, >0 = 限制个数, 不存在 = 无限制
-    private final Map<String, Integer> playerLimits = new HashMap<>();
+    private final Map<UUID, Integer> playerLimits = new HashMap<>();
 
     public static LazyTickSavedLimitList load(CompoundTag nbt) {
         LazyTickSavedLimitList data = new LazyTickSavedLimitList();
@@ -24,8 +25,8 @@ public class LazyTickSavedLimitList extends SavedData {
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag entry = list.getCompound(i);
                 int limit = entry.getInt("Limit");
-                if (limit >= 0) {
-                    data.playerLimits.put(entry.getString("Name"), limit);
+                if (limit >= 0 && entry.hasUUID("UUID")) {
+                    data.playerLimits.put(entry.getUUID("UUID"), limit);
                 }
             }
         }
@@ -35,10 +36,10 @@ public class LazyTickSavedLimitList extends SavedData {
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag nbt) {
         ListTag list = new ListTag();
-        playerLimits.forEach((name, limit) -> {
+        playerLimits.forEach((uuid, limit) -> {
             if (limit >= 0) {
                 CompoundTag entry = new CompoundTag();
-                entry.putString("Name", name);
+                entry.putUUID("UUID", uuid);
                 entry.putInt("Limit", limit);
                 list.add(entry);
             }
@@ -47,21 +48,21 @@ public class LazyTickSavedLimitList extends SavedData {
         return nbt;
     }
 
-    public void setLimit(String name, int limit) {
+    public void setLimit(UUID uuid, int limit) {
         if (limit >= 0) {
-            playerLimits.put(name, limit);
+            playerLimits.put(uuid, limit);
             setDirty();
         }
     }
 
-    public void removeLimit(String name) {
-        if (playerLimits.remove(name) != null) {
+    public void removeLimit(UUID uuid) {
+        if (playerLimits.remove(uuid) != null) {
             setDirty();
         }
     }
 
-    public int getLimit(String name) {
-        return playerLimits.getOrDefault(name, -1);
+    public int getLimit(UUID uuid) {
+        return playerLimits.getOrDefault(uuid, -1);
     }
 
     @SuppressWarnings("resource")
