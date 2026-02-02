@@ -8,6 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -19,6 +20,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Register.LazyTickCommand;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
+import net.pinkcats.createlazytick.manager.LazyTickSavedLimitList;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
@@ -282,6 +284,56 @@ public class CommandHelper {
 
             return logic.test(age, targetDuration);
         });
+    }
+
+    public static int onLimitSet(CommandContext<CommandSourceStack> ctx, String playerName, int limit) {
+        ServerLevel level = ctx.getSource().getLevel();
+        LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
+
+        data.setLimit(playerName, limit);
+
+        ctx.getSource().sendSuccess(() -> Component.literal("已设置玩家 ")
+                .append(Component.literal(playerName).withStyle(ChatFormatting.GOLD))
+                .append(" 的 LazyTick 配额为: ")
+                .append(Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA)), true);
+        return 1;
+    }
+
+    public static int onLimitRemove(CommandContext<CommandSourceStack> ctx, String playerName) {
+        ServerLevel level = ctx.getSource().getLevel();
+        LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
+
+        data.removeLimit(playerName);
+
+        ctx.getSource().sendSuccess(() -> Component.literal("已移除玩家 ")
+                .append(Component.literal(playerName).withStyle(ChatFormatting.GOLD))
+                .append(" 的限制 (现在为无限)"), true);
+        return 1;
+    }
+
+    public static int onLimitCheck(CommandContext<CommandSourceStack> ctx, String playerName) {
+        ServerLevel level = ctx.getSource().getLevel();
+
+        // 1. 获取额度
+        LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
+        int limit = limitData.getLimit(playerName);
+
+        // 2. 获取当前用量
+        int used = ForcedActiveManager.getPlayerUsageCount(level, playerName);
+
+        MutableComponent limitDisplay = (limit == -1)
+                ? Component.literal("无限").withStyle(ChatFormatting.GREEN)
+                : Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
+
+        ChatFormatting statusColor = (limit != -1 && used >= limit) ? ChatFormatting.RED : ChatFormatting.GREEN;
+
+        ctx.getSource().sendSuccess(() -> Component.literal("玩家 ")
+                .append(Component.literal(playerName).withStyle(ChatFormatting.GOLD))
+                .append(" 状态统计:\n")
+                .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append("\n")
+                .append(" - 最大配额: ").append(limitDisplay), false);
+
+        return 1;
     }
 
     public static int onList(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode sort, boolean reverse) {
