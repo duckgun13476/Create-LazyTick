@@ -139,7 +139,7 @@ public class ForcedActiveManager {
         ServerLevel level = (ServerLevel) player.level();
         String playerName = player.getName().getString();
         LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
-        int limit = limitData.getLimit(playerName);
+        int limit = limitData.getLimit(player.getUUID());
 
         // 1. 无限制 (-1) 直接放行
         if (limit == -1) return true;
@@ -152,7 +152,7 @@ public class ForcedActiveManager {
         }
 
         // 3. 数量限制 (N)
-        // 允许修改自己名下的机器
+        // 允许修改自己名下的机器(后续需改为uuid校验)
         if (blockEntity instanceof ISmartBlockEntityControl control) {
             if (control.createLazyTick$getUserName().equals(playerName)) {
                 return true;
