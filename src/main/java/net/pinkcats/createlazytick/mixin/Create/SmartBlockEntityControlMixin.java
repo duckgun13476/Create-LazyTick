@@ -12,6 +12,7 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,7 +50,18 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "invalidate", at = @At("HEAD"), remap = false)
     private void lazytick$onInvalidate(CallbackInfo ci) {
-        // 这里移除注册会导致服务器关闭时直接给存储的持久化列表数据一键清空
+        if (level == null || level.isClientSide) return;
+
+        if (!level.isLoaded(this.worldPosition)) return;
+
+        // 准备检查方块一致性(下位世界内的方块id)
+        BlockState stateInLevel = level.getBlockState(this.worldPosition);
+
+        // 如果世界里的方块ID 不等于 方块实体记忆的方块ID(this.getBlockState().getBlock())
+        // 世界方块id变化快于方块实体回收速度
+        if (!stateInLevel.is(this.getBlockState().getBlock())) {
+            ForcedActiveManager.unregister(level, this.worldPosition);
+        }
     }
 
     // Server -> disk
