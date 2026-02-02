@@ -129,6 +129,36 @@ public class LazyTickCommand {
                                 )
                         )
                 ) // 结束 reset
+                // Limit (Permission System)
+                .then(Commands.literal("limit") // [7] 开始 limit
+                        // 1. Set Limit (设置限额)
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("player_name", StringArgumentType.word())
+                                        .suggests(RESET_OWNER_SUGGESTIONS) // 建议已有的，也可以输入新的
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(0)) // 禁止负数
+                                                .executes(ctx -> CommandHelper.onLimitSet(ctx,
+                                                        StringArgumentType.getString(ctx, "player_name"),
+                                                        IntegerArgumentType.getInteger(ctx, "amount")))
+                                        )
+                                )
+                        )
+                        // 2. Remove Limit (恢复无限)
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("player_name", StringArgumentType.word())
+                                        .suggests(RESET_OWNER_SUGGESTIONS)
+                                        .executes(ctx -> CommandHelper.onLimitRemove(ctx,
+                                                StringArgumentType.getString(ctx, "player_name")))
+                                )
+                        )
+                        // 3. Check Limit (查询)
+                        .then(Commands.literal("check")
+                                .then(Commands.argument("player_name", StringArgumentType.word())
+                                        .suggests(RESET_OWNER_SUGGESTIONS)
+                                        .executes(ctx -> CommandHelper.onLimitCheck(ctx,
+                                                StringArgumentType.getString(ctx, "player_name")))
+                                )
+                        )
+                ) // 结束 limit
         );
     }
 
