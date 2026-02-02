@@ -4,6 +4,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -174,12 +175,19 @@ public class ForcedActiveManager {
     public static int getPlayerUsageCount(Level level, String playerName) {
         if (!(level instanceof ServerLevel serverLevel)) return 0;
 
-        Map<BlockPos, LazyTickStatCache> map = LazyTickSavedStat.get(serverLevel).getMachinesMap();
+        MinecraftServer server = serverLevel.getServer();
 
         int count = 0;
-        for (LazyTickStatCache info : map.values()) {
-            if (info.getOwnerName().equals(playerName)) {
-                count++;
+        // 对全部维度均遍历
+        for (ServerLevel currentLevel : server.getAllLevels()) {
+            // 获取本维度的数据存储
+            Map<BlockPos, LazyTickStatCache> map = LazyTickSavedStat.get(currentLevel).getMachinesMap();
+
+            // 遍历累加本维度下的机器数量
+            for (LazyTickStatCache info : map.values()) {
+                if (info.getOwnerName().equals(playerName)) {
+                    count++;
+                }
             }
         }
         return count;
