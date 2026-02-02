@@ -29,7 +29,7 @@ public class ForcedActiveManager {
         if (level == null || pos == null) return;
         if (level instanceof ServerLevel serverLevel) {
             // 1. 获取存档管理器
-            LazyTickSavedData savedData = LazyTickSavedData.get(serverLevel);
+            LazyTickSavedStat savedData = LazyTickSavedStat.get(serverLevel);
 
             // 2. 检查该位置是否已经有记录
             LazyTickStatCache existingInfo = savedData.getMachinesMap().get(pos);
@@ -60,7 +60,7 @@ public class ForcedActiveManager {
 
             // 2. 存入 SavedData
             // 如果数据发生变化,add 会返回 true
-            if(LazyTickSavedData.get(serverLevel).add(pos, info)) {
+            if(LazyTickSavedStat.get(serverLevel).add(pos, info)) {
                 dataVersion.incrementAndGet(); // 更新版本号(缓存)
             }
         }
@@ -69,7 +69,7 @@ public class ForcedActiveManager {
     public static void unregister(Level level, BlockPos pos) {
         if (level == null || pos == null) return;
         if (level instanceof ServerLevel serverLevel) {
-            if(LazyTickSavedData.get(serverLevel).remove(pos)) {
+            if(LazyTickSavedStat.get(serverLevel).remove(pos)) {
                 dataVersion.incrementAndGet();
             }
         }
@@ -81,7 +81,7 @@ public class ForcedActiveManager {
         int validResetCount = 0;
         int dirtyDataCount = 0;
         boolean dataChanged = false; // 标记是否改动了存档(包含清理脏数据)
-        LazyTickSavedData data = LazyTickSavedData.get(level);
+        LazyTickSavedStat data = LazyTickSavedStat.get(level);
 
         for (BlockPos pos : targets) {
             // 确保区块已加载(避免异步过程中区块被卸载导致状态过时/非法)
@@ -123,7 +123,7 @@ public class ForcedActiveManager {
     //return : from Set<BlockPos> to Map<BlockPos, LazyTickStatCache>(可以获取位置和具体信息)
     public static Map<BlockPos, LazyTickStatCache> getForcedMachines(Level level) {
         if (level instanceof ServerLevel serverLevel) {
-            return LazyTickSavedData.get(serverLevel).getMachinesMap();
+            return LazyTickSavedStat.get(serverLevel).getMachinesMap();
         }
         return Collections.emptyMap();
     }
