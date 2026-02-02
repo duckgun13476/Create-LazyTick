@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickMode;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -60,6 +61,10 @@ public class LazyTickClockItem extends Item {
             /*System.out.println("UseOn:ControlState:" + "FAIL" + "ControlState");
             System.out.println("UseOn:clickPos" + context.getClickedPos());
             System.out.println("UseOn:UserName" + control.createLazyTick$getUserName());*/
+
+            if (!ForcedActiveManager.canPlayerActivate(be, player)) {
+                return InteractionResult.FAIL;
+            }
 
             // 2. 获取清洗后的安全序列 (调用内部私有方法，不信任 ServerConfig 直接返回的数据)
             List<Integer> sequence = getSafeSequence();
