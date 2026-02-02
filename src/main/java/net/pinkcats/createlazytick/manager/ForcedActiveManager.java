@@ -1,8 +1,11 @@
 package net.pinkcats.createlazytick.manager;
 
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.pinkcats.createlazytick.CreateLazyTick;
@@ -126,6 +129,58 @@ public class ForcedActiveManager {
             return LazyTickSavedStat.get(serverLevel).getMachinesMap();
         }
         return Collections.emptyMap();
+    }
+
+
+    @SuppressWarnings("resource")
+    public boolean canPlayerActivate(BlockEntity blockEntity, Player player) {
+        if (player.level().isClientSide) return true;
+
+        ServerLevel level = (ServerLevel) player.level();
+        String playerName = player.getName().getString();
+        LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
+        int limit = limitData.getLimit(playerName);
+
+        // 1. 无限制 (-1) 直接放行
+        if (limit == -1) return true;
+
+        // 2. 封禁 (0) 直接拦截
+        if (limit == 0) {
+            player.displayClientMessage(Component.literal("你已被禁止使用 LazyTick 功能！").withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+
+        // 3. 数量限制 (N)
+        // 允许修改自己名下的机器
+        if (blockEntity instanceof ISmartBlockEntityControl control) {
+            if (control.createLazyTick$getUserName().equals(playerName)) {
+                return true;
+            }
+        }
+
+        // 检查是否超标
+        int currentUsage = ForcedActiveManager.getPlayerUsageCount(level, playerName);
+        if (currentUsage >= limit) {
+            player.displayClientMessage(Component.literal("配额已满 (" + currentUsage + "/" + limit + ")").withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+
+        return true;
+    }
+
+    // 统计指定玩家当前已激活的机器总数(被封禁/未被限制都不会调用此耗时方法)
+    public static int getPlayerUsageCount(Level level, String playerName) {
+        if (!(level instanceof ServerLevel serverLevel)) return 0;
+
+        Map<BlockPos, LazyTickStatCache> map = LazyTickSavedStat.get(serverLevel).getMachinesMap();
+
+        int count = 0;
+        for (LazyTickStatCache info : map.values()) {
+            if (info.getOwnerName().equals(playerName)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public static long getVersion() {
