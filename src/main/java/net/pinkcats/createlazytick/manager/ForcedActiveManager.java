@@ -133,7 +133,7 @@ public class ForcedActiveManager {
 
 
     @SuppressWarnings("resource")
-    public boolean canPlayerActivate(BlockEntity blockEntity, Player player) {
+    public static boolean canPlayerActivate(BlockEntity blockEntity, Player player) {
         if (player.level().isClientSide) return true;
 
         ServerLevel level = (ServerLevel) player.level();
@@ -146,7 +146,8 @@ public class ForcedActiveManager {
 
         // 2. 封禁 (0) 直接拦截
         if (limit == 0) {
-            player.displayClientMessage(Component.literal("你已被禁止使用 LazyTick 功能！").withStyle(ChatFormatting.RED), true);
+            player.displayClientMessage(Component.literal("你已被禁止使用懒惰刻调节功能！")
+                    .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
@@ -161,7 +162,8 @@ public class ForcedActiveManager {
         // 检查是否超标
         int currentUsage = ForcedActiveManager.getPlayerUsageCount(level, playerName);
         if (currentUsage >= limit) {
-            player.displayClientMessage(Component.literal("配额已满 (" + currentUsage + "/" + limit + ")").withStyle(ChatFormatting.RED), true);
+            player.displayClientMessage(Component.literal("您可调整的元件数量已达上限,无法调整更多元件! (" + currentUsage + "/" + limit + ")")
+                    .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
