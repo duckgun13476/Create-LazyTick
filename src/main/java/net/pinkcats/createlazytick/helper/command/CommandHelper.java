@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Register.LazyTickCommand;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
@@ -127,8 +128,7 @@ public class CommandHelper {
                 if (!(be instanceof ISmartBlockEntityControl control) || control.lazytick$isDefaultState()) {
                     ForcedActiveManager.unregister(level, pos);
 
-                    // (调试用,暂不确定是否正式加入)
-                    source.sendSystemMessage(Component.literal("已自动清理失效记录: " + pos.toShortString()).withStyle(ChatFormatting.RED));
+                    CreateLazyTick.LOGGER.debug("Cleared invalid lazytick data entries:{}",  pos.toShortString());
                     // 跳过本次渲染，不显示在列表里
                     // (注意:会导致当前页显示少一行,但无伤大雅(能跑就行))
                     continue;

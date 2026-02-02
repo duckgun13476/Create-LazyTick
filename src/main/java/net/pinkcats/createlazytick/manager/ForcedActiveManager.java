@@ -119,7 +119,7 @@ public class ForcedActiveManager {
         if (dataChanged) {
             dataVersion.incrementAndGet();
         }
-        CreateLazyTick.LOGGER.info("Cleared {} invalid lazytick data entries", dirtyDataCount);
+        CreateLazyTick.LOGGER.debug("Cleared {} invalid lazytick data entries", dirtyDataCount);
 
         return validResetCount;
     }
