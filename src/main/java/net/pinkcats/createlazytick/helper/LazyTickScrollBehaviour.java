@@ -14,7 +14,7 @@ import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
@@ -32,7 +32,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
             return;
         }
 
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(be);
         if (whiteItem == null) {
             return;
         }

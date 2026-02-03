@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -38,7 +38,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     @Inject(method = "initialize", at = @At("RETURN"), remap = false)
     private void lazytick$onInit(CallbackInfo ci) {
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(this);
         if (whiteItem == null) return;
         /*System.out.println("[LazyTick Init] Pos: " + this.worldPosition +
                 " | Dyn: " + this.lazyTick$dynamicValue +
@@ -67,7 +67,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     // Server -> disk
     @Inject(method = "write", at = @At("RETURN"))
     private void lazytick$writeNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(this);
         if (whiteItem == null) return;
 
         if (this.lazytick$operatorName != null) {
@@ -144,7 +144,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         // [新增] 客户端收到数值后，自己推算颜色。
         // 这样服务端就不需要主动广播变色了！
         if (this.level != null && this.level.isClientSide) {
-            LazyTickWhiteList white = LazyTickWhiteList.getByEntity(this);
+            LazyTickTooltipWhiteList white = LazyTickTooltipWhiteList.getByEntity(this);
             if (white != null) {
                 this.lazytick$syncedTier = LazyTickTier.fromTicks(this.createLazyTick$CurrentDelayTick, white.getMaxTick());
             }
