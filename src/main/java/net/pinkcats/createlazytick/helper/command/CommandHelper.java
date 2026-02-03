@@ -1,34 +1,105 @@
 package net.pinkcats.createlazytick.helper.command;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.CreateLazyTick;
-import net.pinkcats.createlazytick.Register.LazyTickCommand;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
-import net.pinkcats.createlazytick.manager.LazyTickSavedLimitList;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class CommandHelper {
     private static final int PAGE_SIZE = 15;
+
+    // 不用缓存了,异步线程池交给你了()
+    public static int executeList(CommandContext<CommandSourceStack> context, int page, LazyTickSortMode sortMode, boolean isReverse) {
+        CommandSourceStack source = context.getSource();
+        ServerLevel level = source.getLevel();
+
+        // 1. 从管理器获取原始数据
+        Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
+        if (forcedMachines.isEmpty()) {
+            source.sendSystemMessage(Component.literal("当前名单中没有非默认配置的机器").withStyle(ChatFormatting.GREEN));
+            return 0;
+        }
+
+        // 创建快照(必须主线程)
+        CommandHelper.SortContext snapshot = CommandHelper.createSnapshot(source, forcedMachines.keySet());
+
+        // 2. 转为List准备排序
+        List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries = new ArrayList<>(forcedMachines.entrySet());
+
+        // 3. 使用LazyTickSortMode进行排序(异步主要针对此处代码块)
+        try {
+            Comparator<Map.Entry<BlockPos, LazyTickStatCache>> comparator =
+                    sortMode.getThreadSafeComparator(snapshot.getLoadedPositions(), snapshot.getPlayerPos(), isReverse);
+            sortedEntries.sort(comparator);
+        } catch (Exception e1) {
+            source.sendFailure(Component.literal("执行排序时发生内部错误,请联系管理员查看控制台"));
+            CreateLazyTick.LOGGER.error(e1.getMessage());
+            // 排序失败则降级为默认排序再次尝试
+            try {
+                sortedEntries.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(snapshot.getLoadedPositions(),
+                        snapshot.getPlayerPos(), false));
+            } catch (Exception e2) {
+                CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e2.getMessage());
+            }
+        }
+
+        // 必须返回主线程执行
+        CommandHelper.renderAllAndCleanData(source, level, sortedEntries, page, sortMode, isReverse);
+        // 结束
+        return 1;
+    }
+
+
+    public static int executeReset(CommandContext<CommandSourceStack> context, Component description, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter) {
+        CommandSourceStack source = context.getSource();
+        ServerLevel level = source.getLevel();
+
+        Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
+        if (forcedMachines.isEmpty()) {
+            source.sendFailure(Component.literal("没有任何记录可供重置"));
+            return 0;
+        }
+
+        // 创建快照(主线程)
+        CommandHelper.SortContext snapshot = CommandHelper.createSnapshot(source, forcedMachines.keySet());
+
+        // 进行筛选(异步主要针对此处代码块)
+        List<BlockPos> candidates = new ArrayList<>();
+        for (Map.Entry<BlockPos, LazyTickStatCache> entry : forcedMachines.entrySet()) {
+            // 满足谓词(由 Handler 提供)
+            if (filter.test(entry)) {
+                // 且必须在已加载区块内(快照判断)
+                if (snapshot.getLoadedPositions().contains(entry.getKey())) {
+                    candidates.add(entry.getKey());
+                }
+            }
+        }
+
+        // 执行逻辑(必须回主线程)
+        int count = ForcedActiveManager.executeBatchReset(level, candidates);
+
+        if (count > 0) {
+            source.sendSuccess(() -> Component.literal("已在加载区域内重置 " + count + " 个匹配 ")
+                    .append(description).append(" 的机器").append("\n")
+                    .append(Component.literal("(未加载区域保持不变)").withStyle(ChatFormatting.GRAY)), true);
+        } else {
+            source.sendFailure(Component.literal("在当前已加载区域未找到匹配 ").append(description).append(" 的记录"));
+        }
+        return 1;
+    }
 
     // 静态类(快照)  For NEAREST
     public static class SortContext {
@@ -142,7 +213,7 @@ public class CommandHelper {
     }
 
 
-    private static long parseDuration(String input) throws NumberFormatException {
+    public static long parseDuration(String input) throws NumberFormatException {
         if (input.length() < 2) throw new NumberFormatException("格式过短");
 
         // 获取最后一位作为单位 (d/h/m/s)
@@ -160,192 +231,5 @@ public class CommandHelper {
         };
     }
 
-    public static int onResetByName(CommandContext<CommandSourceStack> ctx) {
-        ResourceLocation rl = ctx.getArgument("block_name", ResourceLocation.class);
-        String id = rl.toString();
 
-        Block block = ForgeRegistries.BLOCKS.getValue(rl);
-
-        Component nameComponent;
-        if (block != null && block != Blocks.AIR) {
-            nameComponent = block.getName(); // 获取翻译组件
-        } else {
-            nameComponent = Component.literal(id); // 降级为 ID
-        }
-
-        Component desc = Component.literal("名称 [")
-                .append(nameComponent.copy().withStyle(ChatFormatting.AQUA))
-                .append("]");
-
-        return LazyTickCommand.executeReset(ctx, desc,
-                entry -> entry.getValue().getBlockName().equals(id));
-    }
-
-    public static int onResetByPlayer(CommandContext<CommandSourceStack> ctx) {
-        String owner = StringArgumentType.getString(ctx, "player_name");
-        Component desc = Component.literal("所有者 [" + owner + "]");
-        return LazyTickCommand.executeReset(ctx,  desc,
-                entry -> entry.getValue().getOwnerName().equals(owner));
-    }
-
-    public static int onResetByMode(CommandContext<CommandSourceStack> ctx) {
-        String modeStr = StringArgumentType.getString(ctx, "mode_type");
-        boolean isForced = modeStr.equalsIgnoreCase("forced");
-        Component desc = Component.literal("模式 [" + (isForced ? "强制" : "动态") + "]");
-        return LazyTickCommand.executeReset(ctx, desc,
-                entry -> entry.getValue().isForced() == isForced);
-    }
-
-    public static int onResetByValue(CommandContext<CommandSourceStack> ctx) {
-        String operator = StringArgumentType.getString(ctx, "operator");
-        int targetVal = IntegerArgumentType.getInteger(ctx, "target_value");
-
-        String displaySymbol;
-        java.util.function.BiPredicate<Integer, Integer> logic; //Predicate 逻辑
-
-        switch (operator.toLowerCase()) {
-            case "biggerthan" -> {
-                displaySymbol = ">";
-                logic = (current, target) -> current > target;
-            }
-            case "smallerthan" -> {
-                displaySymbol = "<";
-                logic = (current, target) -> current < target;
-            }
-            case "equals" -> {
-                displaySymbol = "=";
-                logic = Integer::equals;
-            }
-            default -> {
-                ctx.getSource().sendFailure(Component.literal("未知的操作符: " + operator));
-                return 0;
-            }
-        }
-        Component desc = Component.literal("数值 [" + displaySymbol + " " + targetVal + "]");
-        return LazyTickCommand.executeReset(ctx, desc, entry -> {
-            // Never negative (-)
-            int currentVal = entry.getValue().getScrollValue();
-            return logic.test(currentVal, targetVal);
-        });
-    }
-
-    public static int onResetByRadius(CommandContext<CommandSourceStack> ctx) {
-        int range = IntegerArgumentType.getInteger(ctx, "range");
-        BlockPos center = BlockPos.containing(ctx.getSource().getPosition());
-        double rangeSqr = range * range;
-
-        Component desc = Component.literal("半径 [" + range + "格]");
-        return LazyTickCommand.executeReset(ctx, desc,
-                entry -> entry.getKey().distToCenterSqr(center.getX(), center.getY(), center.getZ()) <= rangeSqr);
-    }
-
-    public static int onResetByTime(CommandContext<CommandSourceStack> ctx) {
-        String operator = StringArgumentType.getString(ctx, "operator");
-        String durationStr = StringArgumentType.getString(ctx, "duration");
-
-        long targetDuration;
-        try {
-            targetDuration = parseDuration(durationStr);
-        } catch (NumberFormatException e) {
-            ctx.getSource().sendFailure(Component.literal("时间格式错误: " + durationStr + " (示例: 3d; 12h; 30m; 6s)"));
-            return 0;
-        }
-
-        // 准备显示符号和逻辑
-        String displaySymbol;
-        java.util.function.BiPredicate<Long, Long> logic;
-
-        switch (operator.toLowerCase()) {
-            case "olderthan" -> {
-                displaySymbol = ">";
-                // "存在时长(Age)" 大于 "目标时长" => 比对应目标时间戟更早/更旧
-                logic = (age, target) -> age > target;
-            }
-            case "newerthan" -> {
-                displaySymbol = "<";
-                // "存在时长(Age)" 小于 "目标时长" => 比对应目标时间戟更晚/更新
-                logic = (age, target) -> age < target;
-            }
-            default -> {
-                ctx.getSource().sendFailure(Component.literal("时间筛选仅支持 olderthan (早于) 或 newerthan (晚于)"));
-                return 0;
-            }
-        }
-        Component desc = Component.literal("注册时长 [" + displaySymbol + " " + durationStr + "]");
-
-        long now = System.currentTimeMillis();
-
-        return LazyTickCommand.executeReset(ctx, desc, entry -> {
-            long registeredTime = entry.getValue().getRegisteredTime();
-
-            if (registeredTime <= 0) return false;  // 非法数据
-
-            // 计算由注册至今经过的时长 (Age)
-            long age = now - registeredTime;
-
-            return logic.test(age, targetDuration);
-        });
-    }
-
-    public static int onLimitSet(CommandContext<CommandSourceStack> ctx,
-                                 Collection<GameProfile> profiles, int limit) {
-        ServerLevel level = ctx.getSource().getLevel();
-        LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
-
-        // 选择器可能返回@a(多个人的玩家档案,需要遍历)
-        MutableComponent successMessage = Component.literal("已设置玩家 ");
-        for (GameProfile profile : profiles) {
-            data.setLimit(profile.getId(), limit);
-            successMessage.append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD)).append(" ");
-        }
-        successMessage.append("共" + profiles.size() + "人的懒惰刻调节配额为: ")
-                .append(Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA));
-        ctx.getSource().sendSuccess(() -> successMessage, true);
-        return profiles.size();
-    }
-
-    public static int onLimitRemove(CommandContext<CommandSourceStack> ctx, Collection<GameProfile> profiles) {
-        ServerLevel level = ctx.getSource().getLevel();
-        LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
-
-        MutableComponent successMessage = Component.literal("已移除玩家 ");
-        for (GameProfile profile : profiles) {
-            data.removeLimit(profile.getId());
-            successMessage.append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD)).append(" ");
-        }
-        successMessage.append("共" + profiles.size() + "人的限制 (现在配额为无限)");
-
-        ctx.getSource().sendSuccess(() -> successMessage, true);
-        return profiles.size();
-    }
-
-    public static int onLimitCheck(CommandContext<CommandSourceStack> ctx, Collection<GameProfile> profiles) {
-        ServerLevel level = ctx.getSource().getLevel();
-        LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
-
-        for (GameProfile profile : profiles) {
-            // 1. 使用 UUID 获取限额
-            int limit = limitData.getLimit(profile.getId());
-
-            // 2. 获取当前用量 (注意: 目前还是用 Name 统计机器, (机器记录的是name,而不是uuid,后期需要重写get/setName为get/setOperatorUUID))
-            int used = ForcedActiveManager.getPlayerUsageCount(level, profile.getName());
-
-            MutableComponent limitDisplay = (limit == -1)
-                    ? Component.literal("无限").withStyle(ChatFormatting.GREEN)
-                    : Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
-
-            ChatFormatting statusColor = (limit != -1 && used >= limit) ? ChatFormatting.RED : ChatFormatting.GREEN;
-
-            ctx.getSource().sendSuccess(() -> Component.literal("玩家 ")
-                    .append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD))
-                    .append(" 状态统计:\n")
-                    .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append(" ")
-                    .append(" - 最大配额: ").append(limitDisplay), false);
-        }
-        return profiles.size();
-    }
-
-    public static int onList(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode sort, boolean reverse) {
-        return LazyTickCommand.executeList(ctx, page, sort, reverse);
-    }
 }
