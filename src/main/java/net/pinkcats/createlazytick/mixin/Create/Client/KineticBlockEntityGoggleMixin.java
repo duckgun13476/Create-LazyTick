@@ -6,7 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,10 +28,10 @@ public class KineticBlockEntityGoggleMixin {
         Minecraft mc = Minecraft.getInstance();
         if (!LazyTickTooltipTool.shouldRender(mc)) return;
 
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(this);
         if (whiteItem == null || !whiteItem.isKinetic()) return;
 
-        if (whiteItem == LazyTickWhiteList.PUMP) {
+        if (whiteItem == LazyTickTooltipWhiteList.PUMP) {
             LazyTickTooltipRenderer.appendSimpleConfigInfo(this, tooltip);
             cir.setReturnValue(true);
             return;

@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -24,10 +24,10 @@ public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
         Minecraft mc = Minecraft.getInstance();
         if (!LazyTickTooltipTool.shouldRender(mc)) return false;
 
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(this);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(this);
         if (whiteItem == null || !whiteItem.isSmart()) return false;
 
-        if (whiteItem == LazyTickWhiteList.PIPE) {
+        if (whiteItem == LazyTickTooltipWhiteList.PIPE) {
             LazyTickTooltipRenderer.appendSimpleConfigInfo(this, tooltip);
             return true;
         }

@@ -84,7 +84,7 @@ public class LazyTickTooltipRenderer {
 
 
     public static void appendSimpleConfigInfo(Object be, List<Component> tooltip) {
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(be);
         if (whiteItem != null) {
             if (tooltip.isEmpty()) {
                 tooltip.add(Component.literal("        LazyTick Status:").withStyle(ChatFormatting.GRAY));

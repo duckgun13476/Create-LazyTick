@@ -14,7 +14,7 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 
 import java.util.function.Supplier;
 
-public enum LazyTickWhiteList {
+public enum LazyTickTooltipWhiteList {
     // Kinetic
     ARM(ArmBlockEntity.class, ServerConfig::getArmDelayMax, Type.KINETIC),
     BELT(BeltBlockEntity.class, ServerConfig::getBeltDelayMax, Type.KINETIC),
@@ -41,14 +41,14 @@ public enum LazyTickWhiteList {
         SPECIAL   // 必须单独处理的方块实体类
     }
 
-    LazyTickWhiteList(Class<?> targetClass, Supplier<Integer> maxTickSupplier, Type type) {
+    LazyTickTooltipWhiteList(Class<?> targetClass, Supplier<Integer> maxTickSupplier, Type type) {
         this.targetClass = targetClass;
         this.maxTickSupplier = maxTickSupplier;
         this.type = type;
     }
 
-    public static LazyTickWhiteList getByEntity(Object be) {
-        for (LazyTickWhiteList entry : values()) {
+    public static LazyTickTooltipWhiteList getByEntity(Object be) {
+        for (LazyTickTooltipWhiteList entry : values()) {
             if (entry.targetClass.isInstance(be)) {
                 return entry;
             }
