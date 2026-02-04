@@ -17,6 +17,8 @@ import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommandHelper {
     private static final int PAGE_SIZE = 15;
@@ -212,24 +214,37 @@ public class CommandHelper {
         LazyTickListRenderer.renderNavBar(source, page, totalPages, sortMode, isReverse);
     }
 
-
+    // 每对圆括号为一组,严格限制一个关键词为两组(数字+单位 "3d")
+    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([dhms])", Pattern.CASE_INSENSITIVE);
     public static long parseDuration(String input) throws NumberFormatException {
-        if (input.length() < 2) throw new NumberFormatException("格式过短");
+        Matcher matcher = DURATION_PATTERN.matcher(input);
+        long totalMs = 0;
+        boolean foundAny = false;
 
-        // 获取最后一位作为单位 (d/h/m/s)
-        char unit = input.charAt(input.length() - 1);
-        // 获取前面的数字部分
-        String numberStr = input.substring(0, input.length() - 1);
-        long number = Long.parseLong(numberStr);
+        // 从头开始,每找到一次符合的就进行一次计算,然后从最近一次找到符合的位置开始继续寻找
+        while (matcher.find()) {
+            foundAny = true;
+            long value = Long.parseLong(matcher.group(1));
+            String unit = matcher.group(2).toLowerCase();
 
-        return switch (Character.toLowerCase(unit)) {
-            case 'd' -> number * 24 * 60 * 60 * 1000L; // 天 -> 毫秒
-            case 'h' -> number * 60 * 60 * 1000L;      // 时 -> 毫秒(下面以此类推)
-            case 'm' -> number * 60 * 1000L;
-            case 's' -> number * 1000L;
-            default -> throw new NumberFormatException("未知单位");
-        };
+            totalMs += switch (unit) {
+                case "d" -> value * 24 * 60 * 60 * 1000L;
+                case "h" -> value * 60 * 60 * 1000L;
+                case "m" -> value * 60 * 1000L;
+                case "s" -> value * 1000L;
+                default -> 0;
+            };
+        }
+
+        if (!foundAny) {
+            throw new NumberFormatException("无效的时间格式: " + input + " (示例: 3d; 12h; 30m; 3d8h6m30s)");
+        }
+
+        String leftOver = matcher.replaceAll("");
+        if (!leftOver.isBlank()) {
+            throw new NumberFormatException("时间包含非法字符: " + leftOver);
+        }
+
+        return totalMs;
     }
-
-
 }
