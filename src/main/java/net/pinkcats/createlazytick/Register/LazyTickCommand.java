@@ -23,7 +23,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LazyTickCommand {
+    // 静态常量定义
+    // =========================================================
+    private static final Pattern COMPLEX_PATTERN = Pattern.compile("^([a-zA-Z]+)(:|>=|<=|>|<|=)(.*)");
+
+    private static final List<String> COMPLEX_KEYS = List.of(
+            "id:", "name:",
+            "operator:", "player:",
+            "mode:",
+            "value>", "value<", "value=", "value>=", "value<=",
+            "time>", "time<"
+    );
+
+
     // 自动补全
+    // =========================================================
     // list
     private static final SuggestionProvider<CommandSourceStack> SORT_SUGGESTIONS = (context, builder) ->
             SharedSuggestionProvider.suggest(Arrays.stream(LazyTickSortMode.values())
@@ -55,6 +69,88 @@ public class LazyTickCommand {
 
     private static final SuggestionProvider<CommandSourceStack> TIME_OPERATOR_SUGGESTIONS = (context, builder) ->
             SharedSuggestionProvider.suggest(List.of("olderthan", "newerthan"), builder);
+
+    public static final SuggestionProvider<CommandSourceStack> COMPLEX_SUGGESTIONS = (context, builder) -> {
+        String fullInput = builder.getRemaining();
+
+        // 1. 定位光标当前所在的“单词” (最后一个空格后的内容)
+        int lastSpaceIndex = fullInput.lastIndexOf(' ');
+        String currentArg = (lastSpaceIndex == -1) ? fullInput : fullInput.substring(lastSpaceIndex + 1);
+
+        // 2. 调整补全偏移量(定位补全位置) (只替换当前正在打的这一截,保留前面已输入的条件)
+        builder = builder.createOffset(builder.getStart() + lastSpaceIndex + 1);
+
+        // 3. 解析当前键值对
+        Matcher matcher = COMPLEX_PATTERN.matcher(currentArg);
+
+        // 4. 根据目前正在输入的部分(键?运算符?值?)提供补全
+        if (matcher.matches()) {
+            String key = matcher.group(1).toLowerCase();
+            String op = matcher.group(2);
+            String val = matcher.group(3).toLowerCase();
+
+            ServerLevel level = context.getSource().getLevel();
+
+            switch (key) {
+                // 根据键提示值
+                // name/id (动态获取当前活跃机器(注册名))
+                case "name", "id" -> {
+                    // 从 ForcedActiveManager 中提取当前存在的机器 ID
+                    Set<String> activeIds = ForcedActiveManager.getForcedMachines(level).values().stream()
+                            .map(LazyTickStatCache::getBlockName)
+                            .filter(s -> s != null && !s.isEmpty())
+                            .collect(Collectors.toSet());
+
+                    for (String id : activeIds) {
+                        if (id.toLowerCase().contains(val)) {
+                            builder.suggest(key + op + id);
+                        }
+                    }
+                }
+
+                // 2. Owner / Player (在ForcedMachines中被记录过的玩家)
+                case "operator", "player" -> {
+                    Set<String> owners = ForcedActiveManager.getForcedMachines(level).values().stream()
+                            .map(LazyTickStatCache::getOwnerName)
+                            .filter(name -> name != null && !name.isEmpty())
+                            .collect(Collectors.toSet());
+
+                    for (String name : owners) {
+                        if (name.toLowerCase().startsWith(val)) {
+                            builder.suggest(key + op + name);
+                        }
+                    }
+                }
+
+                // 3. Mode
+                case "mode" -> {
+                    if ("forced".startsWith(val)) builder.suggest(key + op + "forced");
+                    if ("dynamic".startsWith(val)) builder.suggest(key + op + "dynamic");
+                }
+
+                // 4. Value / Time (在值还没有被填入时显示补全,填入后立刻消失)
+                case "value" -> {
+                    if (val.isEmpty()) builder.suggest(key + op + "50");
+                }
+                case "time" -> {
+                    if (val.isEmpty()) {
+                        builder.suggest(key + op + "3d");
+                        builder.suggest(key + op + "12h");
+                        builder.suggest(key + op + "5d12h8m6s");
+                    }
+                }
+            }
+        } else {
+            // 提示键
+            for (String k : COMPLEX_KEYS) {
+                if (k.startsWith(currentArg.toLowerCase())) {
+                    builder.suggest(k);
+                }
+            }
+        }
+
+        return builder.buildFuture();
+    };
 
     public static void RegisterCLTCommand(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -127,11 +223,12 @@ public class LazyTickCommand {
                         )
                         .then(Commands.literal("complex")
                                 .then(Commands.argument("query", StringArgumentType.greedyString())
-                                        .suggests(LazyTickCommand.COMPLEX_SUGGESTIONS) // 挂载智能补全
-                                        .executes(CommandExecutor::onResetByComplex)   // 挂载执行逻辑
+                                        .suggests(LazyTickCommand.COMPLEX_SUGGESTIONS)
+                                        .executes(CommandExecutor::onResetByComplex)
                                 )
                         )
                 ) // 结束 reset
+
                 // Limit (Permission System)
                 .then(Commands.literal("limit") // [7] 开始 limit
                         .then(Commands.literal("set")
