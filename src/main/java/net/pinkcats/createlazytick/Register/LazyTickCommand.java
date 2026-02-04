@@ -13,9 +13,8 @@ import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.pinkcats.createlazytick.helper.command.CommandExecutor;
+import net.pinkcats.createlazytick.helper.command.CommandHelper;
 import net.pinkcats.createlazytick.helper.command.LazyTickSortMode;
-import net.pinkcats.createlazytick.manager.ForcedActiveManager;
-import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -35,7 +34,6 @@ public class LazyTickCommand {
             "time>", "time<"
     );
 
-
     // 自动补全
     // =========================================================
     // list
@@ -46,19 +44,14 @@ public class LazyTickCommand {
     // reset
     private static final SuggestionProvider<CommandSourceStack> RESET_NAME_SUGGESTIONS = (context, builder) -> {
         ServerLevel level = context.getSource().getLevel();
-        Set<String> names = ForcedActiveManager.getForcedMachines(level).values().stream()
-                .map(LazyTickStatCache::getBlockName)
-                .collect(Collectors.toSet());
-        return SharedSuggestionProvider.suggest(names, builder);
+        CommandHelper.DimensionCache cache = CommandHelper.getDimensionMachineStatCache(level);
+        return SharedSuggestionProvider.suggest(cache.getMachineNames(), builder);
     };
 
     private static final SuggestionProvider<CommandSourceStack> RESET_OWNER_SUGGESTIONS = (context, builder) -> {
         ServerLevel level = context.getSource().getLevel();
-        Set<String> owners = ForcedActiveManager.getForcedMachines(level).values().stream()
-                .map(LazyTickStatCache::getOwnerName)
-                .filter(name -> !name.isEmpty())
-                .collect(Collectors.toSet());
-        return SharedSuggestionProvider.suggest(owners, builder);
+        CommandHelper.DimensionCache cache = CommandHelper.getDimensionMachineStatCache(level);
+        return SharedSuggestionProvider.suggest(cache.getMachineOwners(), builder);
     };
 
     private static final SuggestionProvider<CommandSourceStack> MODE_SUGGESTIONS = (context, builder) ->
@@ -95,13 +88,11 @@ public class LazyTickCommand {
                 // 根据键提示值
                 // name/id (动态获取当前活跃机器(注册名))
                 case "name", "id" -> {
-                    // 从 ForcedActiveManager 中提取当前存在的机器 ID
-                    Set<String> activeIds = ForcedActiveManager.getForcedMachines(level).values().stream()
-                            .map(LazyTickStatCache::getBlockName)
-                            .filter(s -> s != null && !s.isEmpty())
-                            .collect(Collectors.toSet());
+                    // 从定时失效缓存中提取当前存在的机器 ID,缓存负责从ForcedActiveManager中提取id和owner
+                    CommandHelper.DimensionCache cache = CommandHelper.getDimensionMachineStatCache(level);
+                    Set<String> cachedMachineNames = cache.getMachineNames();
 
-                    for (String id : activeIds) {
+                    for (String id : cachedMachineNames) {
                         if (id.toLowerCase().contains(val)) {
                             builder.suggest(key + op + id);
                         }
@@ -110,12 +101,10 @@ public class LazyTickCommand {
 
                 // 2. Owner / Player (在ForcedMachines中被记录过的玩家)
                 case "operator", "player" -> {
-                    Set<String> owners = ForcedActiveManager.getForcedMachines(level).values().stream()
-                            .map(LazyTickStatCache::getOwnerName)
-                            .filter(name -> name != null && !name.isEmpty())
-                            .collect(Collectors.toSet());
+                    CommandHelper.DimensionCache cache = CommandHelper.getDimensionMachineStatCache(level);
+                    Set<String> cachedMachineOwners = cache.getMachineOwners();
 
-                    for (String name : owners) {
+                    for (String name : cachedMachineOwners) {
                         if (name.toLowerCase().startsWith(val)) {
                             builder.suggest(key + op + name);
                         }
