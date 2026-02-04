@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.helper.command;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.CreateLazyTick;
@@ -47,7 +48,11 @@ public class FilterParser {
             // 检查每一段,如果不匹配正则,直接抛出异常
             if (!matcher.matches()) {
                 // 不能直接new CommandSyntaxException(xxx),该异常接收的参数是受限的,需要手动构建后create
-                throw new SimpleCommandExceptionType(Component.literal("无法解析条件: \"" + segment + "\" (格式应为 key:value)")).create();
+                throw new SimpleCommandExceptionType(
+                        Component.literal("无法解析条件: [")
+                                .append(Component.literal(segment).withStyle(ChatFormatting.UNDERLINE))
+                                .append(Component.literal("] (格式应为 key:value)"))
+                ).create();
             }
 
             // 提取数据 (此时已经确保格式正确)
@@ -67,7 +72,7 @@ public class FilterParser {
                 throw e;
             } catch (Exception e) {
                 CreateLazyTick.LOGGER.error("FilterParser 在试图解析条件时发生未预期的内部错误! Key: {}, Val: {}", key, val, e);
-                throw new SimpleCommandExceptionType(Component.literal("发生内部错误，请联系管理员检查后台日志: " + e.getMessage())).create();
+                throw new SimpleCommandExceptionType(Component.literal("发生内部错误，请联系管理员检查后台日志")).create();
             }
         }
 
@@ -93,14 +98,22 @@ public class FilterParser {
                 } else if (val.equalsIgnoreCase("dynamic")) {
                     return entry -> !entry.getValue().isForced();
                 }
-                throw new SimpleCommandExceptionType(Component.literal("模式参数错误: '" + val + "' (仅限 forced 或 dynamic)")).create();
+                throw new SimpleCommandExceptionType(
+                        Component.literal("模式参数错误: [")
+                                .append(Component.literal(val).withStyle(ChatFormatting.UNDERLINE))
+                                .append("] (仅限 forced 或 dynamic)")
+                ).create();
             }
             case "value" -> {
                 int targetVal;
                 try {
                     targetVal = Integer.parseInt(val);
                 } catch (NumberFormatException e) {
-                    throw new SimpleCommandExceptionType(Component.literal("数值格式错误: " + val)).create();
+                    throw new SimpleCommandExceptionType(
+                            Component.literal("数值格式错误: [")
+                                    .append(Component.literal(val).withStyle(ChatFormatting.UNDERLINE))
+                                    .append(Component.literal("]"))
+                    ).create();
                 }
                 return entry -> compareInt(entry.getValue().getScrollValue(), targetVal, op);
             }
@@ -109,7 +122,11 @@ public class FilterParser {
                 try {
                     targetDuration = CommandHelper.parseDuration(val);
                 } catch (NumberFormatException e) {
-                    throw new SimpleCommandExceptionType(Component.literal("时间格式错误: " + val)).create();
+                    throw new SimpleCommandExceptionType(
+                            Component.literal("时间格式错误: [")
+                                    .append(Component.literal(val).withStyle(ChatFormatting.UNDERLINE))
+                                    .append(Component.literal("]"))
+                    ).create();
                 }
                 long now = System.currentTimeMillis();
                 return entry -> {
@@ -120,7 +137,11 @@ public class FilterParser {
                 };
             }
         }
-        throw new SimpleCommandExceptionType(Component.literal("未知的筛选键: " + key)).create();
+        throw new SimpleCommandExceptionType(
+                Component.literal("未知的筛选键: [")
+                        .append(Component.literal(key).withStyle(ChatFormatting.UNDERLINE))
+                        .append(Component.literal("]"))
+        ).create();
     }
 
     private static boolean compareInt(int a, int b, String op) {

@@ -116,7 +116,11 @@ public class CommandExecutor {
         try {
             targetDuration = CommandHelper.parseDuration(durationStr);
         } catch (NumberFormatException e) {
-            ctx.getSource().sendFailure(Component.literal("时间格式错误: " + durationStr + " (示例: 3d; 12h; 30m; 3d8h6m30s)"));
+            ctx.getSource().sendFailure(
+                    Component.literal("时间格式错误: [")
+                            .append(Component.literal(durationStr).withStyle(ChatFormatting.UNDERLINE))
+                            .append("] (示例: 3d; 12h; 30m; 3d8h6m30s)")
+            );
             return 0;
         }
 

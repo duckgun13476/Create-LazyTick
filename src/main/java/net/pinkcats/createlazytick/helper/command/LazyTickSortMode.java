@@ -1,9 +1,7 @@
 package net.pinkcats.createlazytick.helper.command;
 
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
@@ -35,7 +33,7 @@ public enum LazyTickSortMode {
             return 0; // 如果没有实体,不排序
         }
 
-        net.minecraft.world.phys.Vec3 playerVec = player.position();
+        Vec3 playerVec = player.position();
 
         // 3. 计算距离
         // distToCenterSqr : 方块中心(BlockPos + 0.5) 到 指定坐标(playerVec) 的距离平方 (a²+b²+c²)
@@ -81,11 +79,6 @@ public enum LazyTickSortMode {
 
     private final String id;
     private final SortLogic logic;
-
-    // 定义一个异常类型，用于 NEAREST 报错
-    private static final SimpleCommandExceptionType ERROR_NOT_PLAYER = new SimpleCommandExceptionType(
-            Component.literal("错误: 'nearest' (最近) 排序模式只能由玩家执行！")
-    );
 
     LazyTickSortMode(String id, SortLogic logic) {
         this.id = id;
