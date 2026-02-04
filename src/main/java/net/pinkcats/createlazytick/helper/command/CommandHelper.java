@@ -6,8 +6,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.CreateLazyTick;
@@ -16,13 +18,17 @@ import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class CommandHelper {
     private static final int PAGE_SIZE = 15;
 
+    // 不可跨纬度列表
+    // FOR LIST(可异步)
     // 不用缓存了,异步线程池交给你了()
     public static int executeList(CommandContext<CommandSourceStack> context, int page, LazyTickSortMode sortMode, boolean isReverse) {
         CommandSourceStack source = context.getSource();
@@ -64,7 +70,8 @@ public class CommandHelper {
         return 1;
     }
 
-
+    // 不可跨纬度重置
+    // FOR RESET(可异步)
     public static int executeReset(CommandContext<CommandSourceStack> context, Component description, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter) {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
@@ -103,7 +110,42 @@ public class CommandHelper {
         return 1;
     }
 
-    // 静态类(快照)  For NEAREST
+    // For clt list/reset TIME==============================
+    // 每对圆括号为一组,严格限制一个关键词为两组(数字+单位 "3d")
+    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([dhms])", Pattern.CASE_INSENSITIVE);
+    public static long parseDuration(String input) throws NumberFormatException {
+        Matcher matcher = DURATION_PATTERN.matcher(input);
+        long totalMs = 0;
+        boolean foundAny = false;
+
+        // 从头开始,每找到一次符合的就进行一次计算,然后从最近一次找到符合的位置开始继续寻找
+        while (matcher.find()) {
+            foundAny = true;
+            long value = Long.parseLong(matcher.group(1));
+            String unit = matcher.group(2).toLowerCase();
+
+            totalMs += switch (unit) {
+                case "d" -> value * 24 * 60 * 60 * 1000L;
+                case "h" -> value * 60 * 60 * 1000L;
+                case "m" -> value * 60 * 1000L;
+                case "s" -> value * 1000L;
+                default -> 0;
+            };
+        }
+
+        if (!foundAny) {
+            throw new NumberFormatException("无效的时间格式: " + input + " (示例: 3d; 12h; 30m; 3d8h6m30s)");
+        }
+
+        String leftOver = matcher.replaceAll("");
+        if (!leftOver.isBlank()) {
+            throw new NumberFormatException("时间包含非法字符: " + leftOver);
+        }
+
+        return totalMs;
+    }
+
+    // 静态类(快照)  For NEAREST=============================
     public static class SortContext {
         private final Vec3 playerPos;
         private final Set<BlockPos> loadedPositions;
@@ -131,8 +173,7 @@ public class CommandHelper {
         }
     }
 
-    // clt list/reset
-    // For NEAREST(在LazyTickCommand使用,生成相关位置快照)
+    // For clt list/reset NEAREST(生成相关位置快照),与SortContext相关
     public static SortContext createSnapshot(CommandSourceStack source, Set<BlockPos> targets) {
         ServerLevel level = source.getLevel();
 
@@ -169,7 +210,7 @@ public class CommandHelper {
         return new SortContext(playerPos, loadedPositionsSnapshot);
     }
 
-    //clt list
+    //For clt list===================================
     public static void renderAllAndCleanData(
             CommandSourceStack source, ServerLevel level, List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries,
             int page, LazyTickSortMode sortMode, boolean isReverse
@@ -214,37 +255,47 @@ public class CommandHelper {
         LazyTickListRenderer.renderNavBar(source, page, totalPages, sortMode, isReverse);
     }
 
-    // 每对圆括号为一组,严格限制一个关键词为两组(数字+单位 "3d")
-    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([dhms])", Pattern.CASE_INSENSITIVE);
-    public static long parseDuration(String input) throws NumberFormatException {
-        Matcher matcher = DURATION_PATTERN.matcher(input);
-        long totalMs = 0;
-        boolean foundAny = false;
+    // for SuggestionProvider======================================
+    public static class DimensionCache {
+        private Set<String> machineNames = new HashSet<>();
+        private Set<String> machineOwners = new HashSet<>();
+        private long lastUpdateTime = 0;
 
-        // 从头开始,每找到一次符合的就进行一次计算,然后从最近一次找到符合的位置开始继续寻找
-        while (matcher.find()) {
-            foundAny = true;
-            long value = Long.parseLong(matcher.group(1));
-            String unit = matcher.group(2).toLowerCase();
+        public Set<String> getMachineNames() {return machineNames; }
 
-            totalMs += switch (unit) {
-                case "d" -> value * 24 * 60 * 60 * 1000L;
-                case "h" -> value * 60 * 60 * 1000L;
-                case "m" -> value * 60 * 1000L;
-                case "s" -> value * 1000L;
-                default -> 0;
-            };
+        public Set<String> getMachineOwners() { return machineOwners; }
+
+        public long getLastUpdateTime() { return lastUpdateTime; }
+    }
+
+    public static final Map<ResourceKey<Level>, DimensionCache> dimensionCaches = new ConcurrentHashMap<>();
+    public static final long CACHE_TIMEOUT = 60000; //ms
+
+    public static DimensionCache getDimensionMachineStatCache(ServerLevel level) {
+        ResourceKey<Level> dimension = level.dimension();
+        DimensionCache cache = dimensionCaches.get(dimension);
+        long now = System.currentTimeMillis();
+
+        if (cache == null || now - cache.lastUpdateTime > CACHE_TIMEOUT) {
+            cache = new DimensionCache();
+
+            Collection<LazyTickStatCache> machines = ForcedActiveManager.getForcedMachines(level).values();
+
+            // 获取当前维度的机器数据
+            cache.machineNames = machines.stream()
+                    .map(LazyTickStatCache::getBlockName)
+                    .filter(s -> s != null && !s.isEmpty())
+                    .collect(Collectors.toSet());
+
+            cache.machineOwners = machines.stream()
+                    .map(LazyTickStatCache::getOwnerName)
+                    .filter(name -> name != null && !name.isEmpty())
+                    .collect(Collectors.toSet());
+
+            cache.lastUpdateTime = now;
+            dimensionCaches.put(dimension, cache);
         }
 
-        if (!foundAny) {
-            throw new NumberFormatException("无效的时间格式: " + input + " (示例: 3d; 12h; 30m; 3d8h6m30s)");
-        }
-
-        String leftOver = matcher.replaceAll("");
-        if (!leftOver.isBlank()) {
-            throw new NumberFormatException("时间包含非法字符: " + leftOver);
-        }
-
-        return totalMs;
+        return cache;
     }
 }
