@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LazyTickSavedStat extends SavedData {
 
@@ -17,7 +18,7 @@ public class LazyTickSavedStat extends SavedData {
     private static final String DATA_FILE_NAME = "createlazytick_forced_machines";
 
     // 从纯坐标升级为<坐标,详细信息缓存>
-    private final Map<BlockPos, LazyTickStatCache> forcedMachines = new HashMap<>();
+    private final Map<BlockPos, LazyTickStatCache> forcedMachines = new ConcurrentHashMap<>();
 
     // 从NBT读取 (加载用)
     public static LazyTickSavedStat load(CompoundTag nbt) {

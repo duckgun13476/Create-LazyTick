@@ -76,7 +76,7 @@ public class LazyTickStatCache {
 
     @Override
     public int hashCode() {
-        return Objects.hash(blockName, ownerName, registeredTime, scrollValue);
+        return Objects.hash(blockName, ownerName, registeredTime, scrollValue, isForced);
     }
 
     // 序列化存盘(nbt)
