@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -16,8 +17,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickSavedLimitList;
+import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 public class CommandExecutor {
     public static int onList(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode sort, boolean reverse) {
@@ -65,7 +70,7 @@ public class CommandExecutor {
         int targetVal = IntegerArgumentType.getInteger(ctx, "target_value");
 
         String displaySymbol;
-        java.util.function.BiPredicate<Integer, Integer> logic; //Predicate 逻辑
+        BiPredicate<Integer, Integer> logic; //Predicate 逻辑
 
         switch (operator.toLowerCase()) {
             case "biggerthan" -> {
@@ -111,13 +116,13 @@ public class CommandExecutor {
         try {
             targetDuration = CommandHelper.parseDuration(durationStr);
         } catch (NumberFormatException e) {
-            ctx.getSource().sendFailure(Component.literal("时间格式错误: " + durationStr + " (示例: 3d; 12h; 30m; 6s)"));
+            ctx.getSource().sendFailure(Component.literal("时间格式错误: " + durationStr + " (示例: 3d; 12h; 30m; 3d8h6m30s)"));
             return 0;
         }
 
         // 准备显示符号和逻辑
         String displaySymbol;
-        java.util.function.BiPredicate<Long, Long> logic;
+        BiPredicate<Long, Long> logic;
 
         switch (operator.toLowerCase()) {
             case "olderthan" -> {
@@ -149,6 +154,25 @@ public class CommandExecutor {
 
             return logic.test(age, targetDuration);
         });
+    }
+
+    public static int onResetByComplex(CommandContext<CommandSourceStack> ctx) {
+        String query = StringArgumentType.getString(ctx, "query");
+        try {
+            // 1. 调用解析引擎生成逻辑
+            Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter = FilterParser.parse(query);
+
+            // 2. 构造描述文本
+            Component desc = Component.literal("组合条件 [" + query + "]");
+
+            // 3. 执行重置
+            return CommandHelper.executeReset(ctx, desc, filter);
+
+        } catch (CommandSyntaxException e) {
+            // 捕获解析器throw出的语法错误并反馈
+            ctx.getSource().sendFailure(Component.literal(e.getMessage()));
+            return 0;
+        }
     }
 
     public static int onLimitSet(CommandContext<CommandSourceStack> ctx,
@@ -192,6 +216,7 @@ public class CommandExecutor {
             int limit = limitData.getLimit(profile.getId());
 
             // 2. 获取当前用量 (注意: 目前还是用 Name 统计机器, (机器记录的是name,而不是uuid,后期需要重写get/setName为get/setOperatorUUID))
+            // 否则玩家改名后可能无法操作其原来的机器
             int used = ForcedActiveManager.getPlayerUsageCount(level, profile.getName());
 
             MutableComponent limitDisplay = (limit == -1)

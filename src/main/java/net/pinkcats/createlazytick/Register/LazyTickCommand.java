@@ -18,6 +18,8 @@ import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LazyTickCommand {
@@ -121,6 +123,12 @@ public class LazyTickCommand {
                                         .then(Commands.argument("duration", StringArgumentType.string()) // 接收"3d","12h"等
                                                 .executes(CommandExecutor::onResetByTime)
                                         )
+                                )
+                        )
+                        .then(Commands.literal("complex")
+                                .then(Commands.argument("query", StringArgumentType.greedyString())
+                                        .suggests(LazyTickCommand.COMPLEX_SUGGESTIONS) // 挂载智能补全
+                                        .executes(CommandExecutor::onResetByComplex)   // 挂载执行逻辑
                                 )
                         )
                 ) // 结束 reset
