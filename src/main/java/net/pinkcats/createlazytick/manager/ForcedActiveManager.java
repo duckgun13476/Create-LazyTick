@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -29,7 +30,8 @@ public class ForcedActiveManager {
 
     private static final AtomicLong dataVersion = new AtomicLong(0);
 
-    public static void register(Level level, BlockPos pos, String blockName, String ownerName, int scrollValue, boolean isForced) {
+    public static void register(Level level, BlockPos pos, String blockName, UUID ownerUUID,
+                                String ownerName, int scrollValue, boolean isForced) {
         if (level == null || pos == null) return;
         if (level instanceof ServerLevel serverLevel) {
             // 1. 获取存档管理器
@@ -43,7 +45,7 @@ public class ForcedActiveManager {
             // 3. 判断已有信息的时间是否需要更新
             if (existingInfo != null) {
                 // 如果拥有者,数值,模式都没有变化,则不更新
-                boolean isSameOwner = existingInfo.getOwnerName().equals(ownerName);
+                boolean isSameOwner = existingInfo.getOwnerUUID().equals(ownerUUID);
                 boolean isSameValue = existingInfo.getScrollValue() == scrollValue;
                 boolean isSameMode = existingInfo.isForced() == isForced;
 
@@ -56,6 +58,7 @@ public class ForcedActiveManager {
             // 1. 构建详细信息缓存Obj
             LazyTickStatCache info = new LazyTickStatCache(
                     blockName,
+                    ownerUUID,
                     ownerName,
                     timeToRecord, // 记录真正更改时的时间戟(由重启导致的重新注册不算在内)
                     scrollValue,
@@ -138,7 +141,7 @@ public class ForcedActiveManager {
         if (player.level().isClientSide) return true;
 
         ServerLevel level = (ServerLevel) player.level();
-        String playerName = player.getName().getString();
+        UUID playerUUID = player.getUUID();
         LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
         int limit = limitData.getLimit(player.getUUID());
 
@@ -155,13 +158,18 @@ public class ForcedActiveManager {
         // 3. 数量限制 (N)
         // 允许修改自己名下的机器(后续需改为uuid校验)
         if (blockEntity instanceof ISmartBlockEntityControl control) {
-            if (control.createLazyTick$getOwnerName().equals(playerName)) {
+            if (control.createLazyTick$getOwnerUUID().equals(playerUUID)) {
+                String currentName = player.getName().getString();
+                // 玩家改名后修改机器时,显示名自动跟随UUID更新
+                if (!control.createLazyTick$getOwnerName().equals(currentName)) {
+                    control.createLazyTick$setOwnerName(currentName);
+                }
                 return true;
             }
         }
 
         // 检查是否超标
-        int currentUsage = ForcedActiveManager.getPlayerUsageCount(level, playerName);
+        int currentUsage = ForcedActiveManager.getPlayerUsageCount(level, playerUUID);
         if (currentUsage >= limit) {
             player.displayClientMessage(Component.literal("您可调整的元件数量已达上限,无法调整更多元件! (" + currentUsage + "/" + limit + ")")
                     .withStyle(ChatFormatting.RED), true);
@@ -172,7 +180,7 @@ public class ForcedActiveManager {
     }
 
     // 统计指定玩家当前已激活的机器总数(被封禁/未被限制都不会调用此耗时方法)
-    public static int getPlayerUsageCount(Level level, String playerName) {
+    public static int getPlayerUsageCount(Level level, UUID playerUUID) {
         if (!(level instanceof ServerLevel serverLevel)) return 0;
 
         MinecraftServer server = serverLevel.getServer();
@@ -185,7 +193,7 @@ public class ForcedActiveManager {
 
             // 遍历累加本维度下的机器数量
             for (LazyTickStatCache info : map.values()) {
-                if (info.getOwnerName().equals(playerName)) {
+                if (info.getOwnerUUID().equals(playerUUID)) {
                     count++;
                 }
             }

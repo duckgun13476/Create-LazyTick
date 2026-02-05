@@ -220,9 +220,7 @@ public class CommandExecutor {
             int limit = limitData.getLimit(profile.getId());
 
             // 2. 获取当前用量
-            // 玩家改名后,如果有限额,可能无法操作其原来的机器
-            // 重写方法: 机器记录的是name,而不是uuid,需要重写get/setName为get/setOperatorUUID,
-            int used = ForcedActiveManager.getPlayerUsageCount(level, profile.getName());
+            int used = ForcedActiveManager.getPlayerUsageCount(level, profile.getId());
 
             MutableComponent limitDisplay = (limit == -1)
                     ? Component.literal("无限").withStyle(ChatFormatting.GREEN)
