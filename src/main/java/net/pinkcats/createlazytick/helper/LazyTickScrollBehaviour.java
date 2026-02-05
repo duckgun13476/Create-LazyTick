@@ -131,6 +131,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
 
         if (blockEntity instanceof ISmartBlockEntityControl control) {
             control.createLazyTick$setOwnerName(player.getName().getString());
+            control.createLazyTick$setOwnerUUID(player.getUUID());
         }
 
         int newValue = settings.value();

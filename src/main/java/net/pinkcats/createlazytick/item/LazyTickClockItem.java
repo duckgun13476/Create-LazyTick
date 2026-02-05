@@ -94,7 +94,8 @@ public class LazyTickClockItem extends Item {
             }
 
             // 6. 登记操作者
-            SetOperatorName(control, player.getName().getString());
+            control.createLazyTick$setOwnerName(player.getName().getString());
+            control.createLazyTick$setOwnerUUID(player.getUUID());
 
             // 7. 应用新状态 & 触发逻辑更新
             applyPercentage(control, nextPercentage, targetIsDynamic);
@@ -125,9 +126,7 @@ public class LazyTickClockItem extends Item {
     }
 
     //Tool Func
-    private static void SetOperatorName(ISmartBlockEntityControl control, String player) {
-        control.createLazyTick$setOwnerName(player);
-    }
+
     private List<Integer> getSafeSequence() {
         // 直接从 ConfigValue 获取原始列表 (带通配符)
         List<? extends Integer> rawList = ServerConfig.getClockModeSequence();
