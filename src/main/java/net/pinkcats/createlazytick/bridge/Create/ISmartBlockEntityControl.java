@@ -11,8 +11,9 @@ import java.util.List;
 
 public interface ISmartBlockEntityControl {
 
-    String createLazyTick$getUserName();
-    void createLazyTick$setUserName(String value);
+    // 渲染/命令补全系统调用
+    String createLazyTick$getOwnerName();
+    void createLazyTick$setOwnerName(String value);
 
     BlockPos CLT$getPos();
     ResourceKey<Level> CLT$getDimension();

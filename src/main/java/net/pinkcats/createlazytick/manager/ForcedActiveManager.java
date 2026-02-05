@@ -155,7 +155,7 @@ public class ForcedActiveManager {
         // 3. 数量限制 (N)
         // 允许修改自己名下的机器(后续需改为uuid校验)
         if (blockEntity instanceof ISmartBlockEntityControl control) {
-            if (control.createLazyTick$getUserName().equals(playerName)) {
+            if (control.createLazyTick$getOwnerName().equals(playerName)) {
                 return true;
             }
         }

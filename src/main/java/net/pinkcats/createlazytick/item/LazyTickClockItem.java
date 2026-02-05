@@ -126,7 +126,7 @@ public class LazyTickClockItem extends Item {
 
     //Tool Func
     private static void SetOperatorName(ISmartBlockEntityControl control, String player) {
-        control.createLazyTick$setUserName(player);
+        control.createLazyTick$setOwnerName(player);
     }
     private List<Integer> getSafeSequence() {
         // 直接从 ConfigValue 获取原始列表 (带通配符)

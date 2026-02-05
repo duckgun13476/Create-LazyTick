@@ -63,7 +63,7 @@ public class LazyTickLogic {
         Level level = be.getLevel();
         BlockPos pos = be.getBlockPos();
         String blockName = Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(be.getBlockState().getBlock())).toString();
-        String playerName = control.createLazyTick$getUserName();
+        String playerName = control.createLazyTick$getOwnerName();
 
         int dyn = control.createLazyTick$getDynamicValue();
         int frc = control.createLazyTick$getForcedValue();
