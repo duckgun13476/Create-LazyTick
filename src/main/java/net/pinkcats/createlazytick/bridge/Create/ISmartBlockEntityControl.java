@@ -8,12 +8,17 @@ import net.pinkcats.createlazytick.helper.tooltip.LazyTickTier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public interface ISmartBlockEntityControl {
 
     // 渲染/命令补全系统调用
     String createLazyTick$getOwnerName();
     void createLazyTick$setOwnerName(String value);
+
+    // 权限系统调用
+    UUID createLazyTick$getOwnerUUID();
+    void createLazyTick$setOwnerUUID(UUID uuid);
 
     BlockPos CLT$getPos();
     ResourceKey<Level> CLT$getDimension();
