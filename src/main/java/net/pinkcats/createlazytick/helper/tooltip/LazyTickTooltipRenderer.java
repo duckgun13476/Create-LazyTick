@@ -62,7 +62,7 @@ public class LazyTickTooltipRenderer {
                     .getDisplayComponents(currentInterval, maxDelayTick, limitPercent));
         }
 
-        String op = control.createLazyTick$getUserName();
+        String op = control.createLazyTick$getOwnerName();
         if (!op.isEmpty()) {
             // 渲染操作者
             tooltip.add(Component.literal(" 操作者: " + op).withStyle(ChatFormatting.DARK_GRAY));
