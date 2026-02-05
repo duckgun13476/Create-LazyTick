@@ -1,6 +1,7 @@
 package net.pinkcats.createlazytick.mixin.Create;
 
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -20,11 +21,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Mixin(value = SmartBlockEntity.class,remap = false)
 public abstract class SmartBlockEntityControlMixin extends BlockEntity implements ISmartBlockEntityControl {
 
     @Unique private String lazytick$ownerName = "";
+    @Unique private UUID lazytick$ownerUUID = Util.NIL_UUID;
     @Unique private LazyTickTier lazytick$syncedTier = LazyTickTier.ACTIVE;
     @Unique private int createLazyTick$CurrentDelayTick = 1;
     @Unique private int lazytick$extraData = 0;
@@ -70,7 +73,11 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
         LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(this);
         if (whiteItem == null) return;
 
-        if (this.lazytick$ownerName != null) {
+        if (!this.lazytick$ownerUUID.equals(Util.NIL_UUID)) {
+            tag.putUUID("cltUUID", this.lazytick$ownerUUID);
+        }
+
+        if (this.lazytick$ownerName != null && !this.lazytick$ownerName.isEmpty()) {
             tag.putString("cltOwner", this.lazytick$ownerName);
         }
 
@@ -101,6 +108,12 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Inject(method = "read", at = @At("RETURN"))
     private void lazytick$readNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
         //System.out.println("data read");
+
+        if (tag.hasUUID("cltUUID")) {
+            this.lazytick$ownerUUID = tag.getUUID("cltUUID");
+        } else {
+            this.lazytick$ownerUUID = Util.NIL_UUID;
+        }
 
         if (tag.contains("cltOwner")) {
             this.lazytick$ownerName = tag.getString("cltOwner");
@@ -202,6 +215,18 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     public void createLazyTick$setOwnerName(String value) {
         if (!Objects.equals(this.lazytick$ownerName, value)) {
             this.lazytick$ownerName = value;
+            if (this.level != null) this.level.blockEntityChanged(this.worldPosition);
+            this.setChanged();
+        }
+    }
+
+    @Override
+    public UUID createLazyTick$getOwnerUUID() { return this.lazytick$ownerUUID; }
+
+    @Override
+    public void createLazyTick$setOwnerUUID(UUID uuid) {
+        if (!Objects.equals(this.lazytick$ownerUUID, uuid)) {
+            this.lazytick$ownerUUID = uuid;
             if (this.level != null) this.level.blockEntityChanged(this.worldPosition);
             this.setChanged();
         }
