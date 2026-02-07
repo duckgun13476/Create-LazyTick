@@ -148,11 +148,12 @@ public class LazyTickCommand {
                 .requires(source -> source.hasPermission(2))
 
                 // List
-                .then(Commands.literal("list") // [2] 开始 list
+                .then(Commands.literal("list") // 开始 list
                         .executes(ctx -> CommandExecutor.onListSimple(ctx, 1, LazyTickSortMode.DEFAULT, false))
                         .then(Commands.argument("page", IntegerArgumentType.integer(1)) // [3] 开始 page
                                 .executes(ctx -> CommandExecutor.onListSimple(ctx, IntegerArgumentType.getInteger(ctx, "page"),
                                         LazyTickSortMode.DEFAULT, false))
+
                                 .then(Commands.argument("sort", StringArgumentType.word()).suggests(SORT_SUGGESTIONS) // [4] 开始 sort
                                         .executes(ctx -> CommandExecutor.onListSimple(ctx,
                                                 IntegerArgumentType.getInteger(ctx, "page"),
@@ -166,11 +167,40 @@ public class LazyTickCommand {
                                                 ))
                                         ) // 结束 reverse
                                 ) // 结束 sort
+
+                                // 混合排序 /list <page> complex <sort> <reverse> <filter>
+                                .then(Commands.literal("complex")
+                                        .then(Commands.argument("sort_chain", StringArgumentType.string())
+                                                .executes(ctx -> CommandExecutor.onListComplex(ctx,
+                                                        IntegerArgumentType.getInteger(ctx, "page"),
+                                                        StringArgumentType.getString(ctx, "sort_chain"),
+                                                        false, // 默认不反序
+                                                        ""     // 默认无筛选
+                                                ))
+                                                .then(Commands.argument("global_reverse", BoolArgumentType.bool())
+                                                        .executes(ctx -> CommandExecutor.onListComplex(ctx,
+                                                                IntegerArgumentType.getInteger(ctx, "page"),
+                                                                StringArgumentType.getString(ctx, "sort_chain"),
+                                                                BoolArgumentType.getBool(ctx, "global_reverse"),
+                                                                ""
+                                                        ))
+                                                        .then(Commands.argument("filter_chain", StringArgumentType.greedyString())
+                                                                .suggests(COMPLEX_SUGGESTIONS)
+                                                                .executes(ctx -> CommandExecutor.onListComplex(ctx,
+                                                                        IntegerArgumentType.getInteger(ctx, "page"),
+                                                                        StringArgumentType.getString(ctx, "sort_chain"),
+                                                                        BoolArgumentType.getBool(ctx, "global_reverse"),
+                                                                        StringArgumentType.getString(ctx, "filter_chain")
+                                                                ))
+                                                        ) // 结束 filter_chain
+                                                ) // 结束 global_reserve
+                                        ) // 结束 sort_chain
+                                ) // 结束 complex(sort)
                         ) // 结束 page
                 ) // 结束 list
 
                 // Reset
-                .then(Commands.literal("reset") // [6] 开始 reset
+                .then(Commands.literal("reset") // 开始 reset
                         .then(Commands.literal("name")
                                 .then(Commands.argument("block_name", ResourceLocationArgument.id())
                                         .suggests(RESET_NAME_SUGGESTIONS)
@@ -219,7 +249,7 @@ public class LazyTickCommand {
                 ) // 结束 reset
 
                 // Limit (Permission System)
-                .then(Commands.literal("limit") // [7] 开始 limit
+                .then(Commands.literal("limit") // 开始 limit
                         .then(Commands.literal("set")
                                 .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(0)) // 禁止负数
