@@ -115,8 +115,8 @@ public class CommandHelper {
         if (input == null || input.isBlank()) {
             return Collections.singletonList(new CommandHelper.SortCriterion(LazyTickSortMode.DEFAULT, false));
         }
-        // 剥离大括号
-        String trimmed = FilterParser.stripBraces(input);
+        // 剥离大括号和引号
+        String trimmed = FilterParser.stripBracesAndQuotes(input);
 
         String[] parts = trimmed.split("[,\\s]+");
         List<CommandHelper.SortCriterion> list = new ArrayList<>();
