@@ -27,10 +27,23 @@ import java.util.stream.Collectors;
 public class CommandHelper {
     private static final int PAGE_SIZE = 15;
 
+    // 排序封装类 (模式 + 各自的独立反序标记)
+    public static class SortCriterion {
+        public final LazyTickSortMode mode;
+        public final boolean isReverse;
+
+        public SortCriterion(LazyTickSortMode mode, boolean isReverse) {
+            this.mode = mode;
+            this.isReverse = isReverse;
+        }
+    }
+
     // 不可跨纬度列表
     // FOR LIST(可异步)
     // 不用缓存了,异步线程池交给你了()
-    public static int executeList(CommandContext<CommandSourceStack> context, int page, LazyTickSortMode sortMode, boolean isReverse) {
+    public static int executeList(CommandContext<CommandSourceStack> context, int page, List<SortCriterion> criteria,
+                                  boolean globalReverse, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter,
+                                  String rawSortStr, String rawFilterStr) {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
 
@@ -41,33 +54,96 @@ public class CommandHelper {
             return 0;
         }
 
-        // 创建快照(必须主线程)
-        CommandHelper.SortContext snapshot = CommandHelper.createSnapshot(source, forcedMachines.keySet());
+        // 创建区块是否加载以及执行位置上下文(主线程)
+        CommandHelper.SortContext sortContext = CommandHelper.createSortContext(source, forcedMachines.keySet());
 
-        // 2. 转为List准备排序
-        List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries = new ArrayList<>(forcedMachines.entrySet());
+        // 创建机器数据快照(主线程)
+        List<Map.Entry<BlockPos, LazyTickStatCache>> rawDataSnapshot = new ArrayList<>(forcedMachines.entrySet());
 
-        // 3. 使用LazyTickSortMode进行排序(异步主要针对此处代码块)
+        // 2. 先筛选,筛选完成的转为List准备排序,如果没有符合条件的直接return(异步主要针对此处和第三步代码块)
+        List<Map.Entry<BlockPos, LazyTickStatCache>> filteredEntries = new ArrayList<>();
+        for (Map.Entry<BlockPos, LazyTickStatCache> entry : rawDataSnapshot) {
+            if (filter.test(entry)) {
+                filteredEntries.add(entry);
+            }
+        }
+
+        if (filteredEntries.isEmpty()) {
+            source.sendFailure(Component.literal("没有符合筛选条件的记录"));
+            return 0;
+        }
+
+        // 3. 使用SortCriterion进行符合排序
         try {
-            Comparator<Map.Entry<BlockPos, LazyTickStatCache>> comparator =
-                    sortMode.getThreadSafeComparator(snapshot.getLoadedPositions(), snapshot.getPlayerPos(), isReverse);
-            sortedEntries.sort(comparator);
+            Comparator<Map.Entry<BlockPos, LazyTickStatCache>> finalComparator = null;
+            for (SortCriterion criterion : criteria) {
+                // 有效反序 = (单项反序 异或 全局反序)
+                boolean effectiveReverse = (criterion.isReverse != globalReverse);
+
+                Comparator<Map.Entry<BlockPos, LazyTickStatCache>> modeComparator =
+                        criterion.mode.getThreadSafeComparator(sortContext.getLoadedPositions(), sortContext.getPlayerPos(), effectiveReverse);
+
+                if (finalComparator == null) {
+                    finalComparator = modeComparator;
+                } else {
+                    finalComparator = finalComparator.thenComparing(modeComparator); // 链式调用
+                }
+            }
+            if (finalComparator != null) {
+                filteredEntries.sort(finalComparator);
+            }
         } catch (Exception e1) {
             source.sendFailure(Component.literal("执行排序时发生内部错误,请联系管理员查看控制台"));
             CreateLazyTick.LOGGER.error(e1.getMessage());
             // 排序失败则降级为默认排序再次尝试
             try {
-                sortedEntries.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(snapshot.getLoadedPositions(),
-                        snapshot.getPlayerPos(), false));
+                filteredEntries.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(sortContext.getLoadedPositions(),
+                        sortContext.getPlayerPos(), false));
             } catch (Exception e2) {
                 CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e2.getMessage());
             }
         }
 
         // 必须返回主线程执行
-        CommandHelper.renderAllAndCleanData(source, level, sortedEntries, page, sortMode, isReverse);
+        CommandHelper.renderAllAndCleanData(source, level, filteredEntries, page, rawSortStr, globalReverse, rawFilterStr);
         // 结束
         return 1;
+    }
+
+    // for LIST
+    public static List<CommandHelper.SortCriterion> parseSortString(String input) {
+        if (input == null || input.isBlank()) {
+            return Collections.singletonList(new CommandHelper.SortCriterion(LazyTickSortMode.DEFAULT, false));
+        }
+        // 剥离大括号
+        String trimmed = FilterParser.stripBraces(input);
+
+        String[] parts = trimmed.split("[,\\s]+");
+        List<CommandHelper.SortCriterion> list = new ArrayList<>();
+
+        for (String part : parts) {
+            String cleanPart = part.trim();
+            if (cleanPart.isEmpty()) continue;
+
+            boolean isReverse = false;
+
+            // 检测 "!" 前缀 (局部反序)
+            if (cleanPart.startsWith("!")) {
+                isReverse = true;
+                cleanPart = cleanPart.substring(1).trim();
+            }
+
+            // 查找对应模式
+            LazyTickSortMode mode = LazyTickSortMode.byName(cleanPart);
+            list.add(new CommandHelper.SortCriterion(mode, isReverse));
+        }
+
+        // 如果解析结果为空,返回含有一个默认值元素的列表
+        if (list.isEmpty()) {
+            list.add(new CommandHelper.SortCriterion(LazyTickSortMode.DEFAULT, false));
+        }
+
+        return list;
     }
 
     // 不可跨纬度重置
@@ -82,8 +158,8 @@ public class CommandHelper {
             return 0;
         }
 
-        // 创建快照(主线程)
-        CommandHelper.SortContext snapshot = CommandHelper.createSnapshot(source, forcedMachines.keySet());
+        // 创建区块是否加载以及执行位置上下文(主线程)
+        CommandHelper.SortContext sortContext = CommandHelper.createSortContext(source, forcedMachines.keySet());
 
         // 进行筛选(异步主要针对此处代码块)
         List<BlockPos> candidates = new ArrayList<>();
@@ -91,7 +167,7 @@ public class CommandHelper {
             // 满足谓词(由 Handler 提供)
             if (filter.test(entry)) {
                 // 且必须在已加载区块内(快照判断)
-                if (snapshot.getLoadedPositions().contains(entry.getKey())) {
+                if (sortContext.getLoadedPositions().contains(entry.getKey())) {
                     candidates.add(entry.getKey());
                 }
             }
@@ -173,8 +249,8 @@ public class CommandHelper {
         }
     }
 
-    // For clt list/reset NEAREST(生成相关位置快照),与SortContext相关
-    public static SortContext createSnapshot(CommandSourceStack source, Set<BlockPos> targets) {
+    // For clt list/reset NEAREST(生成相关位置和区块状态的上下文快照),与SortContext相关
+    public static SortContext createSortContext(CommandSourceStack source, Set<BlockPos> targets) {
         ServerLevel level = source.getLevel();
 
         // 1. 玩家坐标
@@ -213,7 +289,7 @@ public class CommandHelper {
     //For clt list===================================
     public static void renderAllAndCleanData(
             CommandSourceStack source, ServerLevel level, List<Map.Entry<BlockPos, LazyTickStatCache>> sortedEntries,
-            int page, LazyTickSortMode sortMode, boolean isReverse
+            int page, String sortStr, boolean globalReverse, String filterStr
     ) {
 
         // 4. 分页计算
@@ -227,7 +303,7 @@ public class CommandHelper {
         int endIndex = Math.min(startIndex + PAGE_SIZE, totalMachines);
 
         // 5. 制作聊天栏标题
-        LazyTickListRenderer.renderHeader(source, page, totalPages, totalMachines, sortMode);
+        LazyTickListRenderer.renderHeader(source, page, totalPages, totalMachines, sortStr);
 
         // 6. 循环逐行渲染条目 + 清理无效数据
         for (int i = startIndex; i < endIndex; i++) {
@@ -252,7 +328,7 @@ public class CommandHelper {
             LazyTickListRenderer.renderItem(source, i + 1, entry, level.isLoaded(pos));
         }
         // 7. 制作翻页按钮
-        LazyTickListRenderer.renderNavBar(source, page, totalPages, sortMode, isReverse);
+        LazyTickListRenderer.renderNavBar(source, page, totalPages, sortStr, globalReverse, filterStr);
     }
 
     // for SuggestionProvider======================================

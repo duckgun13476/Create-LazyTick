@@ -23,7 +23,7 @@ public class FilterParser {
     public static final Pattern TOKEN_PATTERN = Pattern.compile("([a-zA-Z]+)(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s,{}]+)");
 
     private static final SimpleCommandExceptionType ERROR_EMPTY = new SimpleCommandExceptionType(
-            Component.literal("未检测到筛选条件，格式示例: {name:mechanical_saw,value>50}"));
+            Component.literal("未检测到筛选条件,格式示例: {name:mechanical_saw,value>50} (若括号内有空格,请在括号外再加一对双引号)"));
 
     public static Predicate<Map.Entry<BlockPos, LazyTickStatCache>> parse(String input) throws CommandSyntaxException {
         return parse(input, false);
@@ -93,7 +93,7 @@ public class FilterParser {
         }
 
         if (!hasAnyValidFilter) {
-            throw new SimpleCommandExceptionType(Component.literal("请输入有效的筛选条件 (示例: {name:saw,value>50}")).create();
+            throw new SimpleCommandExceptionType(Component.literal("请输入有效的筛选条件 (示例: {name:saw,value>50} (若括号内有空格,请在括号外再加一对双引号))")).create();
         }
 
         return finalPredicate;
