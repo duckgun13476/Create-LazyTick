@@ -1,6 +1,8 @@
 package net.pinkcats.createlazytick.helper.command;
 
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -111,7 +113,7 @@ public class CommandHelper {
     }
 
     // for LIST
-    public static List<CommandHelper.SortCriterion> parseSortString(String input) {
+    public static List<CommandHelper.SortCriterion> parseSortString(String input) throws CommandSyntaxException {
         if (input == null || input.isBlank()) {
             return Collections.singletonList(new CommandHelper.SortCriterion(LazyTickSortMode.DEFAULT, false));
         }
@@ -135,6 +137,15 @@ public class CommandHelper {
 
             // 查找对应模式
             LazyTickSortMode mode = LazyTickSortMode.byName(cleanPart);
+
+            if (mode == null) {
+                throw new SimpleCommandExceptionType(
+                        Component.literal("未知的排序模式: [")
+                                .append(Component.literal(cleanPart).withStyle(ChatFormatting.UNDERLINE))
+                                .append("] (可用: default, time, name, player, method, value, nearest, loaded)")
+                ).create();
+            }
+
             list.add(new CommandHelper.SortCriterion(mode, isReverse));
         }
 

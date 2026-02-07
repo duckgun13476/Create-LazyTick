@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -27,10 +28,19 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public class CommandExecutor {
-    public static int onListSimple(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode mode, boolean reverse) {
+    public static int onListSimple(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode mode, boolean reverse) throws CommandSyntaxException {
         List<CommandHelper.SortCriterion> criteria = Collections.singletonList(
                 new CommandHelper.SortCriterion(mode, false)
         );
+
+        if (mode == null) {
+            String wrongArg = StringArgumentType.getString(ctx, "sort");
+            throw new SimpleCommandExceptionType(
+                    Component.literal("未知的排序模式: [")
+                            .append(Component.literal(wrongArg).withStyle(ChatFormatting.UNDERLINE))
+                            .append("] (可用: default, time, name, player, method, value, nearest, loaded)")
+            ).create();
+        }
 
         // 默认筛选过滤器:通过所有 (entry -> true)
         Predicate<Map.Entry<BlockPos, LazyTickStatCache>> matchAll = entry -> true;
