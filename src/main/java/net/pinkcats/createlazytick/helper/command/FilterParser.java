@@ -58,6 +58,13 @@ public class FilterParser {
         // 弃用粗暴分割,改用find
         while (matcher.find()) {
             hasAnyValidFilter = true;
+            String gap = trimmed.substring(lastMatchEnd, matcher.start());
+
+            // 如果间隙里包含除了空格和逗号以外的字符就报错
+            if (!gap.isBlank() && !gap.matches("[,\\s]+")) {
+               throw new SimpleCommandExceptionType(Component.literal("发现意外字符: " + gap + " (如果为开头的括号等,请检查是否完全闭合)")).create();
+            }
+
             lastMatchEnd = matcher.end();
 
             // 提取数据 (此时已经确保格式正确)
