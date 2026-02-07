@@ -18,22 +18,38 @@ public class FilterParser {
     // 正则表达式循环匹配关键字组
     // 组1 (Key): 字母
     // 组2 (Operator): 符号 (注意 >= 要在 > 前面)
-    // 组3 (Value): 引号包裹的内容 或 不含空格连贯字符
+    // 组3 (Value): 引号包裹的内容 或 不含空格连贯字符(且不含{})
     // (Key)(Op)(Val)
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("([a-zA-Z]+)(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s]+)");
+    public static final Pattern TOKEN_PATTERN = Pattern.compile("([a-zA-Z]+)(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s,{}]+)");
 
     private static final SimpleCommandExceptionType ERROR_EMPTY = new SimpleCommandExceptionType(
-            Component.literal("未检测到筛选条件，格式示例: name:mechanical_saw value>50"));
+            Component.literal("未检测到筛选条件，格式示例: {name:mechanical_saw,value>50}"));
 
-    //解析形如 'name:mechanical_saw value>50' 的字符串  //会扔俩exception,需要在上传前重新检查
     public static Predicate<Map.Entry<BlockPos, LazyTickStatCache>> parse(String input) throws CommandSyntaxException {
-        if (input == null || input.isBlank()) {
-            throw ERROR_EMPTY.create();
+        return parse(input, false);
+    }
+
+    //解析形如 'name:mechanical_saw value>50' 的字符串
+    public static Predicate<Map.Entry<BlockPos, LazyTickStatCache>> parse(String input, boolean allowEmpty) throws CommandSyntaxException {
+        if (input == null) input = "";
+
+        // 剥离首尾大括号 (支持 "{name:saw}" 写法)
+        String trimmed = stripBraces(input);
+
+        // 空检查
+        if (trimmed.isBlank()) {
+            if (allowEmpty) {
+                // 允许空条件,意味着"全选/不筛选"(用于list)
+                return entry -> true;
+            } else {
+                // 禁止空条件,防止误操作删库(用于reset等)
+                throw ERROR_EMPTY.create();
+            }
         }
 
-        // 按空格分割成多个片段
-        // "name:saw value>50 aaaaa" -> ["name:saw", "value>50", "aaaaa"]
-        String[] segments = input.split("\\s+");
+        // 按空格或逗号分割成多个片段
+        // "name:saw value>50,aaaaa" -> ["name:saw", "value>50", "aaaaa"]
+        String[] segments = trimmed.split("[,\\s]+");
 
         // 初始逻辑为 true (全通过)
         Predicate<Map.Entry<BlockPos, LazyTickStatCache>> finalPredicate = entry -> true;
@@ -71,13 +87,13 @@ public class FilterParser {
             } catch (CommandSyntaxException e) {
                 throw e;
             } catch (Exception e) {
-                CreateLazyTick.LOGGER.error("FilterParser 在试图解析条件时发生未预期的内部错误! Key: {}, Val: {}", key, val, e);
+                CreateLazyTick.LOGGER.error("An unexpected error occurred while trying to parse conditions!\n Key: {}, Val: {}", key, val, e);
                 throw new SimpleCommandExceptionType(Component.literal("发生内部错误，请联系管理员检查后台日志")).create();
             }
         }
 
         if (!hasAnyValidFilter) {
-            throw new SimpleCommandExceptionType(Component.literal("请输入有效的筛选条件 (示例: name:saw value>50)")).create();
+            throw new SimpleCommandExceptionType(Component.literal("请输入有效的筛选条件 (示例: {name:saw,value>50}")).create();
         }
 
         return finalPredicate;
@@ -165,6 +181,14 @@ public class FilterParser {
             case "=", ":" -> a == b;
             default -> false;
         };
+    }
+
+    public static String stripBraces(String input) {
+        String s = input.trim();
+        if (s.startsWith("{") && s.endsWith("}")) {
+            return s.substring(1, s.length() - 1).trim();
+        }
+        return s;
     }
 
 }
