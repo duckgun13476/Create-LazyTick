@@ -17,11 +17,11 @@ public class FilterParser {
 
     // 正则表达式循环匹配关键字组
     // 组1 (Key): 字母(允许引号包裹)
-    // 组2 (Operator): 符号 (注意 >= 要在 > 前面)
-    // 组3 (Value): 引号包裹的内容 或 不含空格连贯字符(且不含{})
+    // 组2 (Operator): 符号 (注意 >= 要在 > 前面) (允许前后有空格)
+    // 组3 (Value): 引号包裹的内容 或 不被引号包裹的不含空格连贯字符(且不含{})
     // (Key)(Op)(Val)
-    public static final Pattern TOKEN_PATTERN = Pattern.compile("\"?([a-zA-Z]+)\"?(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s,{}]+)");
-    public static final Pattern TOKEN_PATTERN_FOR_SUGGESTION = Pattern.compile("^\"?([a-zA-Z]+)\"?(:|>=|<=|>|<|=)(.*)");
+    public static final Pattern TOKEN_PATTERN = Pattern.compile("\"?([a-zA-Z]+)\"?\\s*(:|>=|<=|>|<|=)\\s*(\"[^\"]*\"|[^\"\\s,{}]+)");
+    public static final Pattern TOKEN_PATTERN_FOR_SUGGESTION = Pattern.compile("^\"?([a-zA-Z]+)\"?\\s*(:|>=|<=|>|<|=)\\s*(.*)");
 
     private static final SimpleCommandExceptionType ERROR_EMPTY = new SimpleCommandExceptionType(
             Component.literal("未检测到筛选条件,格式示例: {name:mechanical_saw,value>50} (若括号内有空格,请在括号外再加一对双引号)"));
@@ -48,40 +48,23 @@ public class FilterParser {
             }
         }
 
-        // 按空格或逗号分割成多个片段
-        // "name:saw value>50, aaaaa" -> ["name:saw", "value>50", "aaaaa"]
-        String[] segments = trimmed.split("[,\\s]+");
+        Matcher matcher = TOKEN_PATTERN.matcher(trimmed);
 
         // 初始逻辑为 true (全通过)
         Predicate<Map.Entry<BlockPos, LazyTickStatCache>> finalPredicate = entry -> true;
         boolean hasAnyValidFilter = false;
+        int lastMatchEnd = 0;
 
-        for (String segment : segments) {
-            // 跳过连续空格产生的空串
-            if (segment.isBlank()) continue;
-
-            // 如果片段本身被引号包裹,先剥引号(应对"val=50"这种整体片段)
-            String cleanSegment = stripQuotes(segment);
-
-            Matcher matcher = TOKEN_PATTERN.matcher(cleanSegment);
-
-            // 检查每一段,如果不匹配正则,直接抛出异常
-            if (!matcher.matches()) {
-                // 不能直接new CommandSyntaxException(xxx),该异常接收的参数是受限的,需要手动构建后create
-                throw new SimpleCommandExceptionType(
-                        Component.literal("无法解析条件: [")
-                                .append(Component.literal(cleanSegment).withStyle(ChatFormatting.UNDERLINE))
-                                .append(Component.literal("] (格式应为 key:value)"))
-                ).create();
-            }
+        // 弃用粗暴分割,改用find
+        while (matcher.find()) {
+            hasAnyValidFilter = true;
+            lastMatchEnd = matcher.end();
 
             // 提取数据 (此时已经确保格式正确)
-            hasAnyValidFilter = true;
             String key = matcher.group(1).toLowerCase();
             String op = matcher.group(2);
             String rawVal = matcher.group(3);
-
-            // 去除双引号
+            // 去双引号
             String val = stripQuotes(rawVal);
 
             try {
@@ -92,6 +75,15 @@ public class FilterParser {
                 CreateLazyTick.LOGGER.error("An unexpected error occurred while trying to parse conditions!\n Key: {}, Val: {}", key, val, e);
                 throw new SimpleCommandExceptionType(Component.literal("发生内部错误，请联系管理员检查后台日志")).create();
             }
+        }
+
+        String remaining = trimmed.substring(lastMatchEnd).trim().replaceAll("[,\\s]+", "");
+        if (!remaining.isEmpty()) {
+            throw new SimpleCommandExceptionType(
+                    Component.literal("无法解析部分条件: [")
+                            .append(Component.literal(remaining).withStyle(ChatFormatting.UNDERLINE))
+                            .append("] (请检查格式)")
+            ).create();
         }
 
         if (!hasAnyValidFilter) {
