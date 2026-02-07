@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -133,11 +134,12 @@ public enum LazyTickSortMode {
     }
 
     // 用于命令参数解析：通过字符串查找枚举
+    @Nullable
     public static LazyTickSortMode byName(String name) {
         for (LazyTickSortMode mode : values()) {
             if (mode.id.equalsIgnoreCase(name)) return mode;
         }
-        return DEFAULT;
+        return null;
     }
 
     @FunctionalInterface
