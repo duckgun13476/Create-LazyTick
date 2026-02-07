@@ -62,8 +62,8 @@ public enum LazyTickSortMode {
             e1.getValue().getOwnerName().compareTo(e2.getValue().getOwnerName())),
 
     // 6. 模式排序
-    // 正常: 强制在前 (True > False)
-    // 反序: 动态在前 (False > True)
+    // 正常: 强制在前 (True -> False)
+    // 反序: 动态在前 (False -> True)
     MODE("method", (e1, e2, source) -> {
         // Boolean.compare(true, false) = 1, 所以 e2 vs e1 是降序 (True 排前面)
         return Boolean.compare(e2.getValue().isForced(), e1.getValue().isForced());
@@ -73,7 +73,13 @@ public enum LazyTickSortMode {
     // 正常: 从低到高 (1% -> 100%)
     // 反序: 从高到低
     VALUE("value", (e1, e2, source) ->
-            Integer.compare(e1.getValue().getScrollValue(), e2.getValue().getScrollValue()));
+            Integer.compare(e1.getValue().getScrollValue(), e2.getValue().getScrollValue())),
+
+    // 8. 加载状态排序
+    // 逻辑: 已加载在前，未加载在后(true -> false)
+    // 效果: 正序优先显示已加载的机器
+    // 具体逻辑在 getThreadSafeComparator 特殊处理,因为此处lambda无法获取到机器状态
+    LOADED("loaded", (e1, e2, source) -> 0);
 
     // --- 结构定义 ---
 
@@ -98,18 +104,16 @@ public enum LazyTickSortMode {
     public Comparator<Map.Entry<BlockPos, LazyTickStatCache>> getThreadSafeComparator(
             Set<BlockPos> loadedPositions, Vec3 playerPos, boolean reverse) {
         return (e1, e2) -> {
-            // 1. 使用传入的(已加载方块位置集合的静态快照) Set 处理区块加载逻辑
-            boolean isLoaded1 = loadedPositions.contains(e1.getKey());
-            boolean isLoaded2 = loadedPositions.contains(e2.getKey());
-
-            if (isLoaded1 != isLoaded2) {
-                return isLoaded1 ? -1 : 1;
-            }
-
             int result;
 
-            // 对NEAREST模式进行特殊处理,source可能非线程安全
-            if (this == NEAREST) {
+            if (this == LOADED) {
+                // 处理加载区域在前还是在后
+                // 1. 使用传入的(已加载方块位置集合的静态快照) Set 处理区块加载逻辑
+                boolean isLoaded1 = loadedPositions.contains(e1.getKey());
+                boolean isLoaded2 = loadedPositions.contains(e2.getKey());
+                result = Boolean.compare(isLoaded2, isLoaded1);
+            } else if (this == NEAREST) {
+                // 对NEAREST模式进行特殊处理,source可能非线程安全
                 if (playerPos == null) {
                     result = 0; // 没有玩家坐标则视为相等
                 } else {
