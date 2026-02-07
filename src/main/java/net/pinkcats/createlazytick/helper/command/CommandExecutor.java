@@ -20,13 +20,32 @@ import net.pinkcats.createlazytick.manager.LazyTickSavedLimitList;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public class CommandExecutor {
-    public static int onList(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode sort, boolean reverse) {
-        return CommandHelper.executeList(ctx, page, sort, reverse);
+    public static int onListSimple(CommandContext<CommandSourceStack> ctx, int page, LazyTickSortMode mode, boolean reverse) {
+        List<CommandHelper.SortCriterion> criteria = Collections.singletonList(
+                new CommandHelper.SortCriterion(mode, false)
+        );
+
+        // 默认筛选过滤器:通过所有 (entry -> true)
+        Predicate<Map.Entry<BlockPos, LazyTickStatCache>> matchAll = entry -> true;
+
+        return CommandHelper.executeList(ctx, page, criteria, reverse, matchAll, mode.getId(), "");
+    }
+
+    public static int onListComplex(CommandContext<CommandSourceStack> context, int page, String sortStr, boolean globalReverse, String filterStr) throws CommandSyntaxException {
+        // 解析排序字符串 "{name, !time}" -> List<SortCriterion>
+        List<CommandHelper.SortCriterion> criteria = CommandHelper.parseSortString(sortStr);
+
+        // 解析筛选字符串 "{val>10}" -> Predicate (允许空,表示全选)
+        Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter = FilterParser.parse(filterStr, true);
+
+        return CommandHelper.executeList(context, page, criteria, globalReverse, filter, sortStr, filterStr);
     }
 
     public static int onResetByName(CommandContext<CommandSourceStack> ctx) {

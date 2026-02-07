@@ -149,17 +149,17 @@ public class LazyTickCommand {
 
                 // List
                 .then(Commands.literal("list") // [2] 开始 list
-                        .executes(ctx -> CommandExecutor.onList(ctx, 1, LazyTickSortMode.DEFAULT, false))
+                        .executes(ctx -> CommandExecutor.onListSimple(ctx, 1, LazyTickSortMode.DEFAULT, false))
                         .then(Commands.argument("page", IntegerArgumentType.integer(1)) // [3] 开始 page
-                                .executes(ctx -> CommandExecutor.onList(ctx, IntegerArgumentType.getInteger(ctx, "page"),
+                                .executes(ctx -> CommandExecutor.onListSimple(ctx, IntegerArgumentType.getInteger(ctx, "page"),
                                         LazyTickSortMode.DEFAULT, false))
                                 .then(Commands.argument("sort", StringArgumentType.word()).suggests(SORT_SUGGESTIONS) // [4] 开始 sort
-                                        .executes(ctx -> CommandExecutor.onList(ctx,
+                                        .executes(ctx -> CommandExecutor.onListSimple(ctx,
                                                 IntegerArgumentType.getInteger(ctx, "page"),
                                                 LazyTickSortMode.byName(StringArgumentType.getString(ctx, "sort")),
                                                 false))
                                         .then(Commands.argument("reverse", BoolArgumentType.bool()) // [5] 开始 reverse
-                                                .executes(ctx -> CommandExecutor.onList(ctx,
+                                                .executes(ctx -> CommandExecutor.onListSimple(ctx,
                                                         IntegerArgumentType.getInteger(ctx, "page"),
                                                         LazyTickSortMode.byName(StringArgumentType.getString(ctx, "sort")),
                                                         BoolArgumentType.getBool(ctx, "reverse")
