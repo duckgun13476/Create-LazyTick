@@ -21,6 +21,7 @@ public class FilterParser {
     // 组3 (Value): 引号包裹的内容 或 不含空格连贯字符(且不含{})
     // (Key)(Op)(Val)
     public static final Pattern TOKEN_PATTERN = Pattern.compile("([a-zA-Z]+)(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s,{}]+)");
+    public static final Pattern TOKEN_PATTERN_FOR_SUGGESTION = Pattern.compile("^([a-zA-Z]+)(:|>=|<=|>|<|=)(.*)");
 
     private static final SimpleCommandExceptionType ERROR_EMPTY = new SimpleCommandExceptionType(
             Component.literal("未检测到筛选条件,格式示例: {name:mechanical_saw,value>50} (若括号内有空格,请在括号外再加一对双引号)"));
@@ -48,7 +49,7 @@ public class FilterParser {
         }
 
         // 按空格或逗号分割成多个片段
-        // "name:saw value>50,aaaaa" -> ["name:saw", "value>50", "aaaaa"]
+        // "name:saw value>50, aaaaa" -> ["name:saw", "value>50", "aaaaa"]
         String[] segments = trimmed.split("[,\\s]+");
 
         // 初始逻辑为 true (全通过)
