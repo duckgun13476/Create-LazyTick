@@ -16,12 +16,12 @@ import java.util.regex.Pattern;
 public class FilterParser {
 
     // 正则表达式循环匹配关键字组
-    // 组1 (Key): 字母
+    // 组1 (Key): 字母(允许引号包裹)
     // 组2 (Operator): 符号 (注意 >= 要在 > 前面)
     // 组3 (Value): 引号包裹的内容 或 不含空格连贯字符(且不含{})
     // (Key)(Op)(Val)
-    public static final Pattern TOKEN_PATTERN = Pattern.compile("([a-zA-Z]+)(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s,{}]+)");
-    public static final Pattern TOKEN_PATTERN_FOR_SUGGESTION = Pattern.compile("^([a-zA-Z]+)(:|>=|<=|>|<|=)(.*)");
+    public static final Pattern TOKEN_PATTERN = Pattern.compile("\"?([a-zA-Z]+)\"?(:|>=|<=|>|<|=)(\"[^\"]*\"|[^\"\\s,{}]+)");
+    public static final Pattern TOKEN_PATTERN_FOR_SUGGESTION = Pattern.compile("^\"?([a-zA-Z]+)\"?(:|>=|<=|>|<|=)(.*)");
 
     private static final SimpleCommandExceptionType ERROR_EMPTY = new SimpleCommandExceptionType(
             Component.literal("未检测到筛选条件,格式示例: {name:mechanical_saw,value>50} (若括号内有空格,请在括号外再加一对双引号)"));
@@ -34,8 +34,8 @@ public class FilterParser {
     public static Predicate<Map.Entry<BlockPos, LazyTickStatCache>> parse(String input, boolean allowEmpty) throws CommandSyntaxException {
         if (input == null) input = "";
 
-        // 剥离首尾大括号 (支持 "{name:saw}" 写法)
-        String trimmed = stripBraces(input);
+        // 剥离首尾大括号和引号 (支持 "{name:saw}" 写法)
+        String trimmed = stripBracesAndQuotes(input);
 
         // 空检查
         if (trimmed.isBlank()) {
@@ -60,14 +60,17 @@ public class FilterParser {
             // 跳过连续空格产生的空串
             if (segment.isBlank()) continue;
 
-            Matcher matcher = TOKEN_PATTERN.matcher(segment);
+            // 如果片段本身被引号包裹,先剥引号(应对"val=50"这种整体片段)
+            String cleanSegment = stripQuotes(segment);
+
+            Matcher matcher = TOKEN_PATTERN.matcher(cleanSegment);
 
             // 检查每一段,如果不匹配正则,直接抛出异常
             if (!matcher.matches()) {
                 // 不能直接new CommandSyntaxException(xxx),该异常接收的参数是受限的,需要手动构建后create
                 throw new SimpleCommandExceptionType(
                         Component.literal("无法解析条件: [")
-                                .append(Component.literal(segment).withStyle(ChatFormatting.UNDERLINE))
+                                .append(Component.literal(cleanSegment).withStyle(ChatFormatting.UNDERLINE))
                                 .append(Component.literal("] (格式应为 key:value)"))
                 ).create();
             }
@@ -79,9 +82,7 @@ public class FilterParser {
             String rawVal = matcher.group(3);
 
             // 去除双引号
-            String val = rawVal.startsWith("\"") && rawVal.endsWith("\"")
-                    ? rawVal.substring(1, rawVal.length() - 1)
-                    : rawVal;
+            String val = stripQuotes(rawVal);
 
             try {
                 finalPredicate = finalPredicate.and(createSingleFilter(key, op, val));
@@ -184,10 +185,28 @@ public class FilterParser {
         };
     }
 
-    public static String stripBraces(String input) {
+    public static String stripBracesAndQuotes(String input) {
         String s = input.trim();
-        if (s.startsWith("{") && s.endsWith("}")) {
-            return s.substring(1, s.length() - 1).trim();
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            // 剥引号
+            if (s.length() >= 2 && s.startsWith("\"") && s.endsWith("\"")) {
+                s = s.substring(1, s.length() - 1).trim();
+                changed = true;
+            }
+            // 剥大括号
+            if (s.length() >= 2 && s.startsWith("{") && s.endsWith("}")) {
+                s = s.substring(1, s.length() - 1).trim();
+                changed = true;
+            }
+        }
+        return s;
+    }
+
+    private static String stripQuotes(String s) {
+        if (s != null && s.length() >= 2 && s.startsWith("\"") && s.endsWith("\"")) {
+            return s.substring(1, s.length() - 1);
         }
         return s;
     }
