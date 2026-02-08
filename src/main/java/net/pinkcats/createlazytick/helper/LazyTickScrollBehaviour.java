@@ -14,8 +14,9 @@ import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import java.util.List;
 //需要翻译文本
@@ -31,7 +32,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
             return;
         }
 
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(be);
         if (whiteItem == null) {
             return;
         }
@@ -124,8 +125,13 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
     // Write
     @Override
     public void setValueSettings(Player player, ValueSettings settings, boolean ctrlDown) {
+        if (!ForcedActiveManager.canPlayerActivate(blockEntity, player)) {
+            return; // 不保存数值,不播放音效
+        }
+
         if (blockEntity instanceof ISmartBlockEntityControl control) {
-            control.createLazyTick$setUserName(player.getName().getString());
+            control.createLazyTick$setOwnerName(player.getName().getString());
+            control.createLazyTick$setOwnerUUID(player.getUUID());
         }
 
         int newValue = settings.value();

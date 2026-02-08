@@ -5,11 +5,14 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickWhiteList;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.UUID;
 
 public class LazyTickLogic {
     @Nullable
@@ -52,7 +55,7 @@ public class LazyTickLogic {
             return;
         }
 
-        LazyTickWhiteList whiteItem = LazyTickWhiteList.getByEntity(be);
+        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(be);
         if (whiteItem == null) {
             return;
         }
@@ -60,14 +63,15 @@ public class LazyTickLogic {
 
         Level level = be.getLevel();
         BlockPos pos = be.getBlockPos();
-        String blockName = be.getBlockState().getBlock().getName().getString();
-        String playerName = control.createLazyTick$getUserName();
+        String blockName = Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(be.getBlockState().getBlock())).toString();
+        String playerName = control.createLazyTick$getOwnerName();
+        UUID playerUUID = control.createLazyTick$getOwnerUUID();
 
         int dyn = control.createLazyTick$getDynamicValue();
         int frc = control.createLazyTick$getForcedValue();
 
         if (frc != -1) {
-            ForcedActiveManager.register(level, pos, blockName, playerName, frc, true);
+            ForcedActiveManager.register(level, pos, blockName, playerUUID, playerName, frc, true);
             control.createLazyTick$setDelayForced(true);
             if (frc == 0) {
                 // 强制全速 -> 间隔锁定为 1
@@ -86,7 +90,7 @@ public class LazyTickLogic {
                 control.createLazyTick$setLazyTickInterval(1);
             } else {
                 // 动态限制模式 (1% ~ 99%)
-                ForcedActiveManager.register(level, pos, blockName, playerName, dyn, false);
+                ForcedActiveManager.register(level, pos, blockName, playerUUID, playerName, dyn, false);
 
                 // 兜底：如果 dyn <= 0，通常应走 Forced 0，但这里设为 1 防止出问题
                 if (dyn <= 0) {
