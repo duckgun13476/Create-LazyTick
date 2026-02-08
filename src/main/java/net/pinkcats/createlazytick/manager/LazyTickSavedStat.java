@@ -10,18 +10,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class LazyTickSavedData extends SavedData {
+public class LazyTickSavedStat extends SavedData {
 
     // 存档文件的名字
     private static final String DATA_FILE_NAME = "createlazytick_forced_machines";
 
     // 从纯坐标升级为<坐标,详细信息缓存>
-    private final Map<BlockPos, LazyTickStatCache> forcedMachines = new HashMap<>();
+    private final Map<BlockPos, LazyTickStatCache> forcedMachines = new ConcurrentHashMap<>();
 
     // 从NBT读取 (加载用)
-    public static LazyTickSavedData load(CompoundTag nbt) {
-        LazyTickSavedData data = new LazyTickSavedData();
+    public static LazyTickSavedStat load(CompoundTag nbt) {
+        LazyTickSavedStat data = new LazyTickSavedStat();
         if (nbt.contains("Machines", Tag.TAG_LIST)) {
             ListTag list = nbt.getList("Machines", Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
@@ -82,11 +83,11 @@ public class LazyTickSavedData extends SavedData {
     }
 
     //获取指定世界的存储实例
-    public static LazyTickSavedData get(ServerLevel level) {
+    public static LazyTickSavedStat get(ServerLevel level) {
         // computeIfAbsent 自动处理加载或新建
         return level.getDataStorage().computeIfAbsent(
-                LazyTickSavedData::load,
-                LazyTickSavedData::new,
+                LazyTickSavedStat::load,
+                LazyTickSavedStat::new,
                 DATA_FILE_NAME
         );
     }

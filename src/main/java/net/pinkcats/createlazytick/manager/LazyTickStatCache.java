@@ -1,20 +1,31 @@
 package net.pinkcats.createlazytick.manager;
 
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.pinkcats.createlazytick.CreateLazyTick;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 
 public class LazyTickStatCache {
-    private final String blockName;     // 机器名称 ("创造马达")
+    private final String blockName;     // 机器名称(id) (create:mechanical_saw")
+    private final UUID ownerUUID;       // 调整玩家的uuid(鉴权)
     private final String ownerName;     // 调整玩家 ("Steve")
     private final long registeredTime;  // 调整时间 (timestamp)
     private final int scrollValue;      // 滚轮数值 (0~100)
     private final boolean isForced;     // 模式标记 (强制/动态)
 
-    public LazyTickStatCache(String blockName, String ownerName, long registeredTime, int scrollValue, boolean isForced) {
+    public LazyTickStatCache(String blockName, UUID ownerUUID, String ownerName, long registeredTime,
+                             int scrollValue, boolean isForced) {
         this.blockName = blockName;
+        this.ownerUUID = ownerUUID;
         this.ownerName = ownerName;
         this.registeredTime = registeredTime;
         this.scrollValue = scrollValue;
@@ -22,6 +33,7 @@ public class LazyTickStatCache {
     }
 
     public String getBlockName() { return blockName; }
+    public UUID getOwnerUUID() { return ownerUUID; }
     public String getOwnerName() { return ownerName; }
     public int getScrollValue() { return scrollValue; }
     public boolean isForced() { return isForced; }
@@ -35,6 +47,26 @@ public class LazyTickStatCache {
         return registeredTime;
     }
 
+    public Component getDisplayName() {
+        try {
+            // 尝试将存储的 blockName(id) 转为资源路径(e.g. "create:creative_motor")
+            ResourceLocation rl = ResourceLocation.tryParse(this.blockName);
+            if (rl != null) {
+                // 从注册表中查找方块
+                Block block = ForgeRegistries.BLOCKS.getValue(rl);
+                // 如果方块存在且不是空气
+                if (block != null && block != Blocks.AIR) {
+                    // 返回名称(可翻译组件)
+                    return block.getName();
+                }
+            }
+        } catch (Exception e) {
+            CreateLazyTick.LOGGER.error("Error occurred when trying to parse the block id:\n{}",e.getMessage());
+        }
+        // 回退,抛出注册id
+        return Component.literal(this.blockName);
+    }
+
     // 用于 SavedData 判断数据是否变化
     @Override
     public boolean equals(Object o) {
@@ -45,18 +77,19 @@ public class LazyTickStatCache {
                 scrollValue == that.scrollValue &&
                 isForced == that.isForced &&
                 Objects.equals(blockName, that.blockName) &&
-                Objects.equals(ownerName, that.ownerName);
+                Objects.equals(ownerUUID, that.ownerUUID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(blockName, ownerName, registeredTime, scrollValue);
+        return Objects.hash(blockName, ownerUUID, registeredTime, scrollValue, isForced);
     }
 
     // 序列化存盘(nbt)
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putString("Name", blockName);
+        tag.putUUID("OwnerUUID", ownerUUID);
         tag.putString("Owner", ownerName);
         tag.putLong("Time", registeredTime);
         tag.putInt("Scroll", scrollValue);
@@ -66,12 +99,13 @@ public class LazyTickStatCache {
 
     // 反序列化(从nbt(盘)读)
     public static LazyTickStatCache deserializeNBT(CompoundTag tag) {
-        String name = tag.contains("Name") ? tag.getString("Name") : "未知机器";
+        String name = tag.contains("Name") ? tag.getString("Name") : "未知元件";
+        UUID ownerUUID = tag.contains("OwnerUUID") ? tag.getUUID("OwnerUUID") : Util.NIL_UUID;
         String owner = tag.contains("Owner") ? tag.getString("Owner") : "未知";
         long time = tag.contains("Time") ? tag.getLong("Time") : 0L;
         int scroll = tag.contains("Scroll") ? tag.getInt("Scroll") : 0;
         boolean forced = tag.contains("IsForced") && tag.getBoolean("IsForced");
 
-        return new LazyTickStatCache(name, owner, time, scroll, forced);
+        return new LazyTickStatCache(name, ownerUUID, owner, time, scroll, forced);
     }
 }
