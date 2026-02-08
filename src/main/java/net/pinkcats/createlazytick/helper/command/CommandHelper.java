@@ -315,7 +315,7 @@ public class CommandHelper {
                     String modeStr = data.isForced() ? "Forced" : "Dynamic";
                     String valStr = String.valueOf(data.getScrollValue());
                     String loadStr = isLoaded ? "YES" : "NO";
-                    String timeStr = String.valueOf(data.getRegisteredTime());
+                    String timeStr = String.valueOf(data.getFormattedTime());
 
                     // 使用 truncate 防止过长的名字破坏表格排版
                     String line = String.format("%-25s | %-30s | %-16s | %-8s | %-6s | %-7s | %s",
