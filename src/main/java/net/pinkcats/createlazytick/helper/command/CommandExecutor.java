@@ -265,4 +265,16 @@ public class CommandExecutor {
         }
         return profiles.size();
     }
+
+    public static int onDump(CommandContext<CommandSourceStack> ctx, String sortStr, boolean globalReverse, String filterStr) throws CommandSyntaxException {
+
+        // 解析排序字符串 "{name, !time}" -> List<SortCriterion>
+        List<CommandHelper.SortCriterion> criteria = CommandHelper.parseSortString(sortStr);
+
+        // 解析筛选字符串 "{val>10}" -> Predicate (允许空,表示全选)
+        Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter = FilterParser.parse(filterStr, true);
+
+        // 导出
+        return CommandHelper.executeDump(ctx, criteria, globalReverse, filter, sortStr, filterStr);
+    }
 }
