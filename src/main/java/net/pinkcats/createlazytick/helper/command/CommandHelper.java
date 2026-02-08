@@ -8,6 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -19,6 +20,14 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -96,7 +105,7 @@ public class CommandHelper {
             }
         } catch (Exception e1) {
             source.sendFailure(Component.literal("执行排序时发生内部错误,请联系管理员查看控制台"));
-            CreateLazyTick.LOGGER.error(e1.getMessage());
+            CreateLazyTick.LOGGER.error("List sort error: {}",e1.getMessage());
             // 排序失败则降级为默认排序再次尝试
             try {
                 filteredEntries.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(sortContext.getLoadedPositions(),
@@ -195,6 +204,154 @@ public class CommandHelper {
             source.sendFailure(Component.literal("在当前已加载区域未找到匹配 ").append(description).append(" 的记录"));
         }
         return 1;
+    }
+
+    // 复用 List Complex,无视分页,导出全量数据
+    public static int executeDump(CommandContext<CommandSourceStack> context, List<SortCriterion> criteria,
+                                  boolean globalReverse, Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter,
+                                  String rawSortStr, String rawFilterStr) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        ServerLevel level = source.getLevel();
+
+        // 1: 在主线程创造数据快照(必须在主线程执行)
+        // 从管理器获取原始数据
+        Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
+        if (forcedMachines.isEmpty()) {
+            source.sendFailure(Component.literal("没有任何数据可供导出"));
+            return 0;
+        }
+
+        // 创建位置和区块加载状态上下文快照
+        CommandHelper.SortContext sortContext = CommandHelper.createSortContext(source, forcedMachines.keySet());
+
+        // 创建数据列表快照
+        List<Map.Entry<BlockPos, LazyTickStatCache>> rawDataSnapshot = new ArrayList<>(forcedMachines.entrySet());
+
+        // 准备文件路径  // 需要确认是放在config里合适还是单开dump文件夹合适,修改此处请同事修改Line 333的输出信息
+        Path serverRoot = source.getServer().getServerDirectory().toPath();
+        Path dumpDir = serverRoot.resolve("dumps").resolve("createlazytick");
+
+        // ----------------------------------------从这里往下到方法末尾都可以异步
+        // 2: 筛选与排序
+        // 以下内容线程安全
+
+        // 执行筛选 (Filter)
+        List<Map.Entry<BlockPos, LazyTickStatCache>> resultList = new ArrayList<>();
+        for (Map.Entry<BlockPos, LazyTickStatCache> entry : rawDataSnapshot) {
+            if (filter.test(entry)) {
+                resultList.add(entry);
+            }
+        }
+
+        if (resultList.isEmpty()) {
+            source.sendFailure(Component.literal("没有符合筛选条件的记录,导出取消"));
+            return 0;
+        }
+
+        // 执行排序 (Sort)
+        try {
+            Comparator<Map.Entry<BlockPos, LazyTickStatCache>> finalComparator = null;
+            for (SortCriterion criterion : criteria) {
+                // 计算实际反序状态 (局部 vs 全局)
+                boolean effectiveReverse = (criterion.isReverse != globalReverse);
+
+                // 使用快照数据获取比较器
+                Comparator<Map.Entry<BlockPos, LazyTickStatCache>> modeComparator =
+                        criterion.mode.getThreadSafeComparator(sortContext.getLoadedPositions(), sortContext.getPlayerPos(), effectiveReverse);
+
+                if (finalComparator == null) {
+                    finalComparator = modeComparator;
+                } else {
+                    finalComparator = finalComparator.thenComparing(modeComparator);
+                }
+            }
+            if (finalComparator != null) {
+                resultList.sort(finalComparator);
+            }
+        } catch (Exception e1) {
+            source.sendFailure(Component.literal("排序时发生错误,将使用默认顺序导出"));
+            CreateLazyTick.LOGGER.error("Dump sort error: ", e1);
+            try {
+                resultList.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(sortContext.getLoadedPositions(),
+                        sortContext.getPlayerPos(), false));
+            } catch (Exception e2) {
+                CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e2.getMessage());
+            }
+        }
+
+        // 3: IO 操作
+        try {
+            if (!Files.exists(dumpDir)) {
+                Files.createDirectories(dumpDir);
+            }
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+            String fileName = "Clt_Data_dump_" + timestamp + ".txt";
+            Path filePath = dumpDir.resolve(fileName);
+
+            try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+                // --- 写入文件头 ---
+                writer.write("=== Create Lazy Tick Data Dump ==="); writer.newLine();
+                writer.write("Time: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)); writer.newLine();
+                writer.write("Filter Chain: " + (rawFilterStr.isBlank() ? "[ALL]" : rawFilterStr)); writer.newLine();
+                writer.write("Sort Chain: " + rawSortStr + " (Global Reverse: " + globalReverse + ")"); writer.newLine();
+                writer.write("Total Records: " + resultList.size()); writer.newLine();
+                writer.write("----------------------------------------------------------------------------------"); writer.newLine();
+
+                // --- 写入列名 ---
+                // 格式对齐: Location(25) | Name(30) | Owner(16) | Mode(8) | Val(6) | Loaded(7) | Time
+                writer.write(String.format("%-25s | %-30s | %-16s | %-8s | %-6s | %-7s | %s",
+                        "Location", "Machine Name", "Owner", "Mode", "Val", "Loaded", "Reg.Time"));
+                writer.newLine();
+                writer.write("----------------------------------------------------------------------------------"); writer.newLine();
+
+                // --- 写入数据行 ---
+                for (Map.Entry<BlockPos, LazyTickStatCache> entry : resultList) {
+                    BlockPos pos = entry.getKey();
+                    LazyTickStatCache data = entry.getValue();
+                    boolean isLoaded = sortContext.getLoadedPositions().contains(pos);
+
+                    String locStr = String.format("[%d, %d, %d]", pos.getX(), pos.getY(), pos.getZ());
+                    String modeStr = data.isForced() ? "Forced" : "Dynamic";
+                    String valStr = String.valueOf(data.getScrollValue());
+                    String loadStr = isLoaded ? "YES" : "NO";
+                    String timeStr = String.valueOf(data.getRegisteredTime());
+
+                    // 使用 truncate 防止过长的名字破坏表格排版
+                    String line = String.format("%-25s | %-30s | %-16s | %-8s | %-6s | %-7s | %s",
+                            locStr,
+                            truncate(data.getBlockName(), 29),
+                            truncate(data.getOwnerName(), 15),
+                            modeStr, valStr, loadStr, timeStr);
+
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+
+            // --- 反馈结果 ---
+            // 生成可点击的文件名组件 (点击复制)
+            MutableComponent fileComp = Component.literal(fileName)
+                    .withStyle(ChatFormatting.UNDERLINE, ChatFormatting.AQUA)
+                    .withStyle(style -> style.withClickEvent(new net.minecraft.network.chat.ClickEvent(
+                            net.minecraft.network.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, fileName)));
+
+            source.sendSuccess(() -> Component.literal("导出成功! 文件已保存至 dumps/createlazytick/ ")
+                    .append(fileComp), true);
+
+            return resultList.size();
+
+        } catch (IOException e) {
+            CreateLazyTick.LOGGER.error("Failed to write dump file", e);
+            throw new SimpleCommandExceptionType(Component.literal("文件写入失败,请检查服务器日志")).create();
+        }
+    }
+
+    // 字符串截断辅助方法
+    private static String truncate(String s, int len) {
+        if (s == null) return "null";
+        if (s.length() <= len) return s;
+        return s.substring(0, len - 3) + "...";
     }
 
     // For clt list/reset TIME==============================
