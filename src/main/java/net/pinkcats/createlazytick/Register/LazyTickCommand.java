@@ -396,6 +396,32 @@ public class LazyTickCommand {
                                 )
                         )
                 ) // 结束 limit
+
+                // Dump
+                .then(Commands.literal("dump")
+                        .executes(ctx -> CommandExecutor.onDump(ctx, "default", false, ""))
+                        .then(Commands.argument("sort_chain", StringArgumentType.string())
+                                .suggests(COMPLEX_SORT_SUGGESTIONS)
+                                .executes(ctx -> CommandExecutor.onDump(ctx,
+                                        StringArgumentType.getString(ctx, "sort_chain"),
+                                        false,
+                                        ""))
+                                .then(Commands.argument("global_reverse", BoolArgumentType.bool())
+                                        .executes(ctx -> CommandExecutor.onDump(ctx,
+                                                StringArgumentType.getString(ctx, "sort_chain"),
+                                                BoolArgumentType.getBool(ctx, "global_reverse"),
+                                                ""))
+                                        .then(Commands.argument("filter_chain", StringArgumentType.greedyString())
+                                                .suggests(COMPLEX_FILTER_SUGGESTIONS)
+                                                .executes(ctx -> CommandExecutor.onDump(ctx,
+                                                        StringArgumentType.getString(ctx, "sort_chain"),
+                                                        BoolArgumentType.getBool(ctx, "global_reverse"),
+                                                        StringArgumentType.getString(ctx, "filter_chain")
+                                                ))
+                                        ) // 结束 filter_chain
+                                ) // 结束 global_reserve
+                        ) // 结束 sort_chain
+                ) //结束 dump
         );
     }
 }
