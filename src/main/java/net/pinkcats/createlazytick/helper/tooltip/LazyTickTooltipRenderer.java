@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.Channel.CLTChannel;
 import net.pinkcats.createlazytick.Channel.ClockSyncPacket;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.config.ClientConfig;
 
@@ -50,7 +51,8 @@ public class LazyTickTooltipRenderer {
 
         if (control.createLazyTick$shouldRenderTier() && ClientConfig.showTierTooltip()) {
             // 渲染目前懒加载状态
-            int currentInterval = control.createLazyTick$getLazyTickInterval();
+            int currentInterval = control.createLazyTick$getCurrentSuperTick();
+            mes.debug(currentInterval);
 
             // 2. 计算百分比上限 (用于绘制紫色游标)
             // 优先取强制值，否则取动态上限。

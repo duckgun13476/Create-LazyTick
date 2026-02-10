@@ -205,7 +205,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         if (level == null || level.isClientSide) return;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.getArmDelayMax());
+                this.level, this.worldPosition, this.createLazyTick$getCurrentSuperTick(), ServerConfig.getArmDelayMax());
 
         ScanBlockType_Schedule.RandomTick();
 
@@ -226,12 +226,12 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyArm()) return;
 
         if (createLazyTick$ignoreLazy) {
-            this.createLazyTick$setLazyTickInterval(1);
+            this.createLazyTick$setCurrentSuperTick(1);
             return;
         }
 
         createLazyTick$armTick++;
-        if (createLazyTick$armTick < this.createLazyTick$getLazyTickInterval()) {
+        if (createLazyTick$armTick < this.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
             createLazyTick$armTick = 0;
@@ -254,7 +254,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
                 maxDelay = Math.min(ServerConfig.getArmWeakDelayMax(), maxDelay);
             }
 
-            int currentInterval = this.createLazyTick$getLazyTickInterval();
+            int currentInterval = this.createLazyTick$getCurrentSuperTick();
 
             if (currentInterval < maxDelay) {
                 int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
@@ -271,12 +271,12 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyArm()) return;
 
         if (createLazyTick$ignoreLazy) {
-            this.createLazyTick$setLazyTickInterval(1);
+            this.createLazyTick$setCurrentSuperTick(1);
             return;
         }
 
         createLazyTick$armTick++;
-        if (createLazyTick$armTick < this.createLazyTick$getLazyTickInterval()) {
+        if (createLazyTick$armTick < this.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
             createLazyTick$armTick = 0;
@@ -299,7 +299,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
                 maxDelay = Math.min(ServerConfig.getArmWeakDelayMax(), maxDelay);
             }
 
-            int currentInterval = this.createLazyTick$getLazyTickInterval();
+            int currentInterval = this.createLazyTick$getCurrentSuperTick();
 
             if (currentInterval < maxDelay) {
                 int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);

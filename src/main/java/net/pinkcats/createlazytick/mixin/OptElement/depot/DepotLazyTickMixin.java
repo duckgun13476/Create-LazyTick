@@ -82,7 +82,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Unique
     private void createLazyTick$applyBackoff(ISmartBlockEntityControl control) {
-        int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
+        int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
         int newLazyTickInterval = LazyTickLogic.computeNextInterval(
                 control, currentLazyTickInterval, ServerConfig.getDepotDelayMax()
         );
@@ -111,11 +111,13 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
+       // mes.error("Run pack synchronization");
+       // mes.debug("server"+control.createLazyTick$getCurrentSuperTick());
         NetworkSyncHelper.createLazyTick$syncPacketData(
                 control,
                 this.blockEntity.getLevel(),
                 this.blockEntity.getBlockPos(),
-                control.createLazyTick$getLazyTickInterval(),
+                control.createLazyTick$getCurrentSuperTick(),
                 ServerConfig.getDepotDelayMax());
 
 
@@ -144,6 +146,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
 
         if (heldItem == null) {
+            createLazyTick$resetDelayTick(control);
             ci.cancel();
             return;
         }
@@ -159,8 +162,13 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
+        //tick emerge
+        //if (!world.isClientSide()) {
+        //    System.out.println("Depot" + createLazyTick$DepotDelayTick + "  " + control.createLazyTick$getCurrentSuperTick());
+        //}
+
         createLazyTick$DepotDelayTick++;
-        if (createLazyTick$DepotDelayTick < control.createLazyTick$getLazyTickInterval()) {
+        if (createLazyTick$DepotDelayTick < control.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
             return;
         }
@@ -175,6 +183,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         BeltProcessingBehaviour processingBehaviour =
                 BlockEntityBehaviour.get(world, pos.above(2), BeltProcessingBehaviour.TYPE);
         if (processingBehaviour == null) {
+            createLazyTick$applyBackoff(control);
             ci.cancel();
             return;
         }
@@ -189,7 +198,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
                 : processingBehaviour.handleReceivedItem(heldItem, transportedHandler);
 
 
-
         if (result == BeltProcessingBehaviour.ProcessingResult.PASS) {
             createLazyTick$applyBackoff(control);
         }
@@ -202,10 +210,8 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         if (heldItem == null || result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
             heldItem = null;
             blockEntity.sendData();
-            {
-                ci.cancel();
-                return;
-            }
+            ci.cancel();
+            return;
         }
         heldItem.locked = result == BeltProcessingBehaviour.ProcessingResult.HOLD;
         if (heldItem.locked != wasLocked || !previousItem.equals(heldItem.stack, false)) {
@@ -264,10 +270,13 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
-        if (afterInsert.getCount() != 0)
+        if (afterInsert.getCount() != 0) {
             createLazyTick$applyBackoff(control);
+        }
         else
+        {
             createLazyTick$resetDelayTick(control);
+        }
 
 
 
@@ -288,7 +297,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Unique
     public int createLazyTick$getCurrentDelayTick() {
-        return ((ISmartBlockEntityControl) this.blockEntity).createLazyTick$getLazyTickInterval();
+        return ((ISmartBlockEntityControl) this.blockEntity).createLazyTick$getCurrentSuperTick();
     }
 
     @Unique

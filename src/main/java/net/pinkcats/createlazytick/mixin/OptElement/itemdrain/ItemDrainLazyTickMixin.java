@@ -55,7 +55,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.getItemDrainDelayMax());
+                this.level, this.worldPosition, control.createLazyTick$getCurrentSuperTick(), ServerConfig.getItemDrainDelayMax());
 
         /*if(!level.isClientSide()) {
             System.out.println("ItemDrain:" + createLazyTick$itemDrainTick + "|" + control.createLazyTick$getLazyTickInterval());
@@ -74,7 +74,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
         // 无论是物品输出堵塞还是流体倾倒堵塞，有冷却就跳过
         createLazyTick$itemDrainTick++;
-        if (createLazyTick$itemDrainTick < control.createLazyTick$getLazyTickInterval()) {
+        if (createLazyTick$itemDrainTick < control.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
             return;
         }
@@ -94,7 +94,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
             boolean wasAtBeginning = processingTicks == ItemDrainBlockEntity.FILLING_TIME;
             if (!onClient) {
 
-                int interval = control.createLazyTick$getLazyTickInterval();
+                int interval = control.createLazyTick$getCurrentSuperTick();
                 boolean success = createLazyTick$performLazyDrain(accessor, interval);
 
                 // 1. 如果处理中断 (返回 false)，直接退出
@@ -137,7 +137,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         heldItem.prevBeltPosition = heldItem.beltPosition;
         heldItem.prevSideOffset = heldItem.sideOffset;
 
-        int currentInterval = control.createLazyTick$getLazyTickInterval();
+        int currentInterval = control.createLazyTick$getCurrentSuperTick();
         float movementSpeed = 1 / 8f;
         float proposedDist = movementSpeed * currentInterval;
         float targetPos = heldItem.beltPosition + proposedDist;
@@ -285,7 +285,7 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
         createLazyTick$itemDrainTick = 0;
 
-        int currentInterval = control.createLazyTick$getLazyTickInterval();
+        int currentInterval = control.createLazyTick$getCurrentSuperTick();
         int newInterval = LazyTickLogic.computeNextInterval(control, currentInterval, ServerConfig.getItemDrainDelayMax());
         if (newInterval != currentInterval) {
             LazyTickLogic.setIntervalSafe(control, newInterval);

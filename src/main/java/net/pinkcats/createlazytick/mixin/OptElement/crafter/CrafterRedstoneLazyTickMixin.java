@@ -99,7 +99,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         }
 
         // 不在窗口期时,累加延时检测
-        int currentInterval = this.createLazyTick$getLazyTickInterval();
+        int currentInterval = this.createLazyTick$getCurrentSuperTick();
         if (currentInterval < maxDelay) {
             int newDelayTick = LazyTickLogic.computeNextInterval(this, currentInterval, maxDelay);
 
@@ -121,7 +121,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         LowFreq_Schedule.RandomTick();
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.getCrafterRedstoneDelayMax());
+                this.level, this.worldPosition, this.createLazyTick$getCurrentSuperTick(), ServerConfig.getCrafterRedstoneDelayMax());
 
         /*if (!level.isClientSide()) {
             System.out.println("Crafter:" + lazytick$redstoneTick + "/" + this.createLazyTick$getLazyTickInterval());
@@ -147,7 +147,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
 
         // 在懒加载期间时,则返回独立缓存的信号状态
         // 防止因 Mixin 跳过检测导致机器状态与真实信号不同步,进而引发每tick的极高频震荡(单独debug三秒给你刷几十上百KB)
-        int interval = this.createLazyTick$getLazyTickInterval();
+        int interval = this.createLazyTick$getCurrentSuperTick();
         if (interval > 1) {
             lazytick$redstoneTick++;
             if (lazytick$redstoneTick < interval) {

@@ -47,8 +47,8 @@ public interface ISmartBlockEntityControl {
     boolean createLazyTick$isDelayForced();
 
     // mixin的一般是private,如果需要让Helper使用,需要一个Interface
-    void createLazyTick$setLazyTickInterval(int tick);
-    int createLazyTick$getLazyTickInterval();
+    void createLazyTick$setCurrentSuperTick(int tick);
+    int createLazyTick$getCurrentSuperTick();
 
     default List<Component> createLazyTick$getCustomTooltipInfo() {
         return new ArrayList<>();
