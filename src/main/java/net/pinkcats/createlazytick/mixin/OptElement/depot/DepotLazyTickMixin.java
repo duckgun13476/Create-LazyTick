@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -80,46 +81,50 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private int createLazyTick$DepotDelayTick = 0;
 
     @Unique
-    private void createLazyTick$applyBackoff() {
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
-
+    private void createLazyTick$applyBackoff(ISmartBlockEntityControl control) {
         int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
-
-        int newLazyTickInterval = LazyTickLogic.computeNextInterval(control, currentLazyTickInterval, ServerConfig.getDepotDelayMax());
-
+        int newLazyTickInterval = LazyTickLogic.computeNextInterval(
+                control, currentLazyTickInterval, ServerConfig.getDepotDelayMax()
+        );
         if (newLazyTickInterval != currentLazyTickInterval) {
             LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
         }
     }
 
     @Unique
-    private void createLazyTick$resetDelayTick() {
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
+    private void createLazyTick$resetDelayTick(ISmartBlockEntityControl control) {
         createLazyTick$DepotDelayTick = 0;
-
         LazyTickLogic.setIntervalSafe(control, 1);
     }
 
-    @Inject(method = "tick*",at=@At("HEAD" ),cancellable = true,remap = false)
+    @Inject(method = "tick()V",at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {
-            return;
-        }
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {return;}
 
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
+        Level world = blockEntity.getLevel();
+        if (world == null) { ci.cancel(); return; }
 
         super.tick();
 
-        NetworkSyncHelper.createLazyTick$syncPacketData(control, this.blockEntity.getLevel(),
-                this.blockEntity.getBlockPos(), control.createLazyTick$getLazyTickInterval(), ServerConfig.getDepotDelayMax());
+        if (!(this.blockEntity instanceof ISmartBlockEntityControl control)) {
+            mes.error("BlockEntity is not a SmartBlockEntityControl!");
+            return;
+        }
 
-        Level world = blockEntity.getLevel();
+        NetworkSyncHelper.createLazyTick$syncPacketData(
+                control,
+                this.blockEntity.getLevel(),
+                this.blockEntity.getBlockPos(),
+                control.createLazyTick$getLazyTickInterval(),
+                ServerConfig.getDepotDelayMax());
+
+
         for (Iterator<TransportedItemStack> iterator = incoming.iterator(); iterator.hasNext();) {
             TransportedItemStack ts = iterator.next();
             boolean tick_res = tick(ts);
             //System.out.println(tick_res);
 
-            if (!tick_res || world == null)
+            if (!tick_res)
                 continue;
             if (world.isClientSide && !blockEntity.isVirtual())
                 continue;
@@ -149,16 +154,10 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
         BlockPos pos = blockEntity.getBlockPos();
 
-        if (world == null || world.isClientSide) {
+        if (world.isClientSide) {
             ci.cancel();
             return;
         }
-
-        //tick emerge
-        /*if (!world.isClientSide()) {
-            System.out.println("Depot" + createLazyTick$DepotDelayTick + "  " + control.createLazyTick$getLazyTickInterval());
-        }*/
-
 
         createLazyTick$DepotDelayTick++;
         if (createLazyTick$DepotDelayTick < control.createLazyTick$getLazyTickInterval()) {
@@ -184,8 +183,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
-
-
         ItemStack previousItem = heldItem.stack;
         boolean wasLocked = heldItem.locked;
         BeltProcessingBehaviour.ProcessingResult result = wasLocked ? processingBehaviour.handleHeldItem(heldItem, transportedHandler)
@@ -193,16 +190,13 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
 
 
-
-
-
         if (result == BeltProcessingBehaviour.ProcessingResult.PASS) {
-            createLazyTick$applyBackoff();
+            createLazyTick$applyBackoff(control);
         }
 
 
         if (result == BeltProcessingBehaviour.ProcessingResult.HOLD) {
-            createLazyTick$resetDelayTick();
+            createLazyTick$resetDelayTick(control);
         }
 
         if (heldItem == null || result == BeltProcessingBehaviour.ProcessingResult.REMOVE) {
@@ -213,7 +207,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
                 return;
             }
         }
-
         heldItem.locked = result == BeltProcessingBehaviour.ProcessingResult.HOLD;
         if (heldItem.locked != wasLocked || !previousItem.equals(heldItem.stack, false)) {
             blockEntity.sendData();
@@ -224,9 +217,9 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Inject(method = "handleBeltFunnelOutput",at=@At("HEAD" ),remap = false,cancellable = true)
     private void handleBeltFunnelOutput(CallbackInfoReturnable<Boolean> cir) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {
-            return;
-        }
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {return;}
+
+        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
 
         BlockState funnel = getWorld().getBlockState(getPos().above());
         Direction funnelFacing = AbstractFunnelBlock.getFunnelFacing(funnel);
@@ -271,15 +264,12 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
 
-        if (afterInsert.getCount() != 0) {
-            createLazyTick$applyBackoff();
-        } else {
-            createLazyTick$resetDelayTick();
-        }
+        if (afterInsert.getCount() != 0)
+            createLazyTick$applyBackoff(control);
+        else
+            createLazyTick$resetDelayTick(control);
 
-        //System.out.println(afterInsert);
 
-        //System.out.println("previousItem Output:"+previousItem);
 
         if (previousItem.getCount() != afterInsert.getCount()) {
             if (afterInsert.isEmpty())
