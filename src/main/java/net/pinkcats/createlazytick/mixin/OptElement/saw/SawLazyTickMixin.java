@@ -42,7 +42,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     @Unique
     private void createLazyTick$applyBackoff() {
         createLazyTick$sawTick = 0;
-        int currentInterval = this.createLazyTick$getLazyTickInterval();
+        int currentInterval = this.createLazyTick$getCurrentSuperTick();
         int newInterval = LazyTickLogic.computeNextInterval(this, currentInterval, ServerConfig.getSawDelayMax());
 
         if (newInterval != currentInterval) {
@@ -60,7 +60,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         if (level == null || level.isClientSide) return;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getLazyTickInterval(), ServerConfig.getSawDelayMax());
+                this.level, this.worldPosition, this.createLazyTick$getCurrentSuperTick(), ServerConfig.getSawDelayMax());
 
         createLazyTick$inventoryChanged = false;
     }
@@ -85,7 +85,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         createLazyTick$sawTick++;
 
         // Tick < Interval -> Cancel
-        if (createLazyTick$sawTick < this.createLazyTick$getLazyTickInterval()) {
+        if (createLazyTick$sawTick < this.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
             // reset timer and try Logic

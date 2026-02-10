@@ -75,11 +75,11 @@ public class LazyTickLogic {
             control.createLazyTick$setDelayForced(true);
             if (frc == 0) {
                 // 强制全速 -> 间隔锁定为 1
-                control.createLazyTick$setLazyTickInterval(1);
+                control.createLazyTick$setCurrentSuperTick(1);
             } else {
                 // 强制限制 -> 计算目标间隔
                 int targetTick = Math.max(1, (int) ((frc / 100.0f) * maxConfigDelay));
-                control.createLazyTick$setLazyTickInterval(targetTick);
+                control.createLazyTick$setCurrentSuperTick(targetTick);
             }
         } else { // 2. 动态模式
             control.createLazyTick$setDelayForced(false); // 标记为非强制
@@ -87,23 +87,23 @@ public class LazyTickLogic {
             if (dyn == 100) {
                 // 默认模式 -> 移除监视
                 ForcedActiveManager.unregister(level, pos);
-                control.createLazyTick$setLazyTickInterval(1);
+                control.createLazyTick$setCurrentSuperTick(1);
             } else {
                 // 动态限制模式 (1% ~ 99%)
                 ForcedActiveManager.register(level, pos, blockName, playerUUID, playerName, dyn, false);
 
                 // 兜底：如果 dyn <= 0，通常应走 Forced 0，但这里设为 1 防止出问题
                 if (dyn <= 0) {
-                    control.createLazyTick$setLazyTickInterval(1);
+                    control.createLazyTick$setCurrentSuperTick(1);
                 }
 
                 // 计算修改后的理论最大休眠上限时间
                 int effectiveMaxLimit = Math.max(1, (int) ((dyn / 100.0f) * maxConfigDelay));
                 // 获取当前休眠上限时间
-                int currentInterval = control.createLazyTick$getLazyTickInterval();
+                int currentInterval = control.createLazyTick$getCurrentSuperTick();
                 // 如果当前上限超过理论最大上限,则强制拉回
                 if (currentInterval > effectiveMaxLimit) {
-                    control.createLazyTick$setLazyTickInterval(effectiveMaxLimit);
+                    control.createLazyTick$setCurrentSuperTick(effectiveMaxLimit);
                 }
 
                 // 其他正常的 Interval 计算交给 computeNextInterval
@@ -148,7 +148,7 @@ public class LazyTickLogic {
      */
     public static void setIntervalSafe(ISmartBlockEntityControl control, int interval) {
         if (!control.createLazyTick$isDelayForced()) {
-            control.createLazyTick$setLazyTickInterval(interval);
+            control.createLazyTick$setCurrentSuperTick(interval);
         }
     }
 }

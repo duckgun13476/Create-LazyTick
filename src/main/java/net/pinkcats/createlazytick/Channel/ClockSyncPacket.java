@@ -80,6 +80,7 @@ public class ClockSyncPacket {
                 PacketCache.clear();
             }
 
+            // Remove the same
             for (ClientData existingData : PacketCache) {
                 if (data.isSimilar(existingData))
                     return;
