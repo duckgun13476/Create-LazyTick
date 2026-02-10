@@ -5,6 +5,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public class ClockSyncPacket {
     private final BlockPos pos;
     private final String dimension;
     private final int extraData;
-    private final boolean isQuery; // [新增]
+    private final boolean isQuery;
 
     public static List<ClientData> PacketCache = new ArrayList<>();
 
@@ -51,36 +52,40 @@ public class ClockSyncPacket {
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {
-        var ctx = supplier.get();
+        NetworkEvent.Context ctx = supplier.get();
+
+        ctx.setPacketHandled(true);
 
         ServerPlayer player = ctx.getSender();
         if (player == null) return;
 
-        // 查询模式
-        if (isQuery) {
-            @SuppressWarnings("resource")
-            Level level = player.level();
-            if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof ISmartBlockEntityControl control) {
-                control.createLazyTick$sendBlockUpdated();
+        // Move to Main loop
+        ctx.enqueueWork(() -> {
+            // 查询模式
+            if (isQuery) {
+                Level level = player.level();
+                if (level.isLoaded(pos)) {
+                    if (level.getBlockEntity(pos) instanceof ISmartBlockEntityControl control) {
+                        control.createLazyTick$sendBlockUpdated();
+                    }
+                }
+                return;
             }
-            ctx.setPacketHandled(true);
-            return;
-        }
 
-        ClientData data = new ClientData(extraData,dimension,pos);
-        //System.out.println("handle:" + data);
+            ClientData data = new ClientData(extraData, dimension, pos);
 
-        if (PacketCache.size() > 80) {
-            PacketCache.clear();
-        }
+            // Packet Lock
+            if (PacketCache.size() > 80) {
+                mes.error("ServerPacket Cargo is full. This gonna not happen!");
+                PacketCache.clear();
+            }
 
-        for (ClientData existingData : PacketCache) {
-            //System.out.println("awa "+existingData.toString());
-            if (data.isSimilar(existingData))
+            for (ClientData existingData : PacketCache) {
+                if (data.isSimilar(existingData))
                     return;
-        }
-        PacketCache.add(data);
-        ctx.setPacketHandled(true);
+            }
+            PacketCache.add(data);
+        });
     }
 
 
