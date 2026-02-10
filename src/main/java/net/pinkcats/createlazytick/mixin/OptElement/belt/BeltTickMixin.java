@@ -35,6 +35,8 @@ public class BeltTickMixin {
     @Shadow(remap = false)
     boolean beltMovementPositive;
 
+    @Shadow(remap = false)
+    TransportedItemStack lazyClientItem;
 
     @Shadow(remap = false)
     private void insert(TransportedItemStack newStack) {}
@@ -57,6 +59,8 @@ public class BeltTickMixin {
     private int animal_delay = 0;
     @Unique
     private int HasItemCount = 0;
+    @Unique
+    private int LastItemListSize = 0;
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
@@ -64,7 +68,25 @@ public class BeltTickMixin {
             return;
         }
 
-        //System.out.println("Belt "+BeltCurrentTick+"   "+BeltDelayTick);
+        BeltInventoryAccessor accessor = (BeltInventoryAccessor) this;
+        BeltInventory OrginalBeltInventory = (BeltInventory) (Object) this;
+
+        BeltBlockEntity belt = accessor.getBelt();
+        List<TransportedItemStack> toInsert = accessor.getToInsert();
+        List<TransportedItemStack> toRemove = accessor.getToRemove();
+        List<TransportedItemStack> items = accessor.getItems();
+
+        int queuedInsertions = toInsert.size();
+        int queuedRemovals = toRemove.size();
+        if (createLazyTick$drainPendingTransfers(belt, toInsert, toRemove, items)) {
+            createLazyTick$resetDelayCounters();
+        }
+
+        if (items.size() != LastItemListSize) {
+            LastItemListSize = items.size();
+            createLazyTick$resetDelayCounters();
+        }
+
         if (BeltCurrentTick >= BeltDelayTick){
             BeltCurrentTick = 0;
         } else {
@@ -74,32 +96,24 @@ public class BeltTickMixin {
                 return;}
         }
 
-
-
-        BeltInventoryAccessor accessor = (BeltInventoryAccessor) this;
-        BeltInventory OrginalBeltInventory = (BeltInventory) (Object) this;
-
-        BeltBlockEntity belt = accessor.getBelt();
-        List<TransportedItemStack>  toInsert = accessor.getToInsert();
-        List<TransportedItemStack>  toRemove = accessor.getToRemove();
-        List<TransportedItemStack> items = accessor.getItems();
-
-
-
-        // Added/Removed items from previous cycle
-        if (!toInsert.isEmpty() || !toRemove.isEmpty()) {
-            toInsert.forEach(this::insert);
-            toInsert.clear();
-            items.removeAll(toRemove);
-            toRemove.clear();
-            belt.setChanged();
-            belt.sendData();
-            //System.out.println("item removed/added");
-            BeltDelayTick = 0;
-            animal_delay = 0;
+        // Residual item for "smooth" transitions
+        if (lazyClientItem != null) {
+            if (lazyClientItem.locked)
+                lazyClientItem = null;
+            else
+                lazyClientItem.locked = true;
         }
 
-        //stop
+//        System.out.println(
+//                "[LazyTick] pos=" + belt.getBlockPos()
+//                        + " delay=" + BeltDelayTick
+//                        + " cur=" + BeltCurrentTick
+//                        + " toInsert=" + queuedInsertions
+//                        + " toRemove=" + queuedRemovals
+//                        + " items=" + items.size()
+//        );
+
+        // stop
         if (belt.getSpeed() == 0) {
             ci.cancel();
             return;
@@ -200,7 +214,7 @@ public class BeltTickMixin {
             float nextOffset = currentItem.beltPosition + limitedMovement;
 
             if (Math.abs(limitedMovement) < 0.00001){
-                currentItem.stack.getCount();
+                stop_count = stop_count + currentItem.stack.getCount();
             }
 
 
@@ -278,6 +292,8 @@ public class BeltTickMixin {
 
                 currentItem.stack = remainder;
                 if (remainder.isEmpty()) {
+                    lazyClientItem = currentItem;
+                    lazyClientItem.locked = false;
                     iterator.remove();
                 } else
                     currentItem.stack = remainder;
@@ -315,18 +331,41 @@ public class BeltTickMixin {
         }
 
         else {
-            BeltDelayTick = 0;
-            animal_delay = 0;
+            createLazyTick$resetDelayCounters();
         }
 
         if (HasItemCount != count) {
             HasItemCount = count;
-            BeltDelayTick = 0;
-            animal_delay = 0;
+            createLazyTick$resetDelayCounters();
         }
 
         ci.cancel();
     }
+
+
+    @Unique
+    private boolean createLazyTick$drainPendingTransfers(BeltBlockEntity belt, List<TransportedItemStack> toInsert,
+                                                    List<TransportedItemStack> toRemove, List<TransportedItemStack> items) {
+        if (toInsert.isEmpty() && toRemove.isEmpty())
+            return false;
+
+        toInsert.forEach(this::insert);
+        toInsert.clear();
+        if (!toRemove.isEmpty()) {
+            items.removeAll(toRemove);
+            toRemove.clear();
+        }
+        belt.notifyUpdate();
+        return true;
+    }
+
+    @Unique
+    private void createLazyTick$resetDelayCounters() {
+        BeltCurrentTick = 0;
+        BeltDelayTick = 0;
+        animal_delay = 0;
+    }
+
 
 
     @Unique
