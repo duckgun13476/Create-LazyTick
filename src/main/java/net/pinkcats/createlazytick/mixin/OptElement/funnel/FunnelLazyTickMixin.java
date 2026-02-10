@@ -1,5 +1,7 @@
-package net.pinkcats.createlazytick.mixin.OptElement;
+package net.pinkcats.createlazytick.mixin.OptElement.funnel;
 
+import net.pinkcats.createlazytick.Gui.mes;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Funnel;
@@ -26,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -67,9 +70,6 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
     @Shadow
     private boolean supportsDirectBeltInput(Direction side) {return false;}
-
-    @Shadow
-    private int extractionCooldown;
 
     @Shadow
     private VersionedInventoryTrackerBehaviour invVersionTracker;
@@ -126,8 +126,36 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
     @Unique
+    private void createLazyTick$applyBackoff(ISmartBlockEntityControl control) {
+        int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
+        int newLazyTickInterval = LazyTickLogic.computeNextInterval(
+                control, currentLazyTickInterval, ServerConfig.getFunnelDelayMax()
+        );
+        mes.error(newLazyTickInterval);
+        if (newLazyTickInterval != currentLazyTickInterval) {
+            LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
+        }
+    }
+
+    @Unique
+    private void createLazyTick$FunnelBackOff(ISmartBlockEntityControl control){
+        createLazyTick$applyBackoff(control);
+        createLazyTick$applyBackoff(control);
+    }
+
+    @Unique
+    private void createLazyTick$resetDelayTick(ISmartBlockEntityControl control) {
+        int defaultTick = AllConfigs.server().logistics.defaultExtractionTimer.get();
+        createLazyTick$FunnelDelayTick = defaultTick;
+        LazyTickLogic.setIntervalSafe(control, defaultTick);
+    }
+
+    @Shadow
+    private int extractionCooldown;
+
+    @Unique
     private void createlazytick$startCooldown() {
-        extractionCooldown = AllConfigs.server().logistics.defaultExtractionTimer.get() + ActualMultiCount;
+        extractionCooldown = AllConfigs.server().logistics.defaultExtractionTimer.get() + createLazyTick$FunnelDelayTick;
         //System.out.println("extraction cooldown: " + extractionCooldown);
     }
 
@@ -135,35 +163,38 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     public void onTransfer(ItemStack stack) {}
 
     @Unique
-    private int ActualMultiCount = 0;
+    private int createLazyTick$FunnelDelayTick = 0;
 
 
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
-        if (!ServerConfig.getEnableLazyTick() || ServerConfig.getEnableLazyFunnel()) {
+
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyFunnel()) {
             return;
         }
+        if (level == null) {
+            return;
+        }
+
+        if (!(this instanceof ISmartBlockEntityControl control)) {
+            mes.error("BlockEntity is not a SmartBlockEntityControl!");
+            return;}
+
         flap.tickChaser();
+
+        // for interface
         if (createlazytick$HasInterface){
-            ActualMultiCount = 0;
-
+            createLazyTick$FunnelDelayTick = (control.createLazyTick$getCurrentSuperTick() - 10) ;
         }
 
-
-        if(!createlazytick$HasInterface){
-            if (extractionCooldown > 0) {
-                extractionCooldown--;
-                ci.cancel();
-                return;
-            }
-            createlazytick$startCooldown();
-        }
-
-
+        createLazyTick$FunnelDelayTick++;
+        if (createLazyTick$FunnelDelayTick < control.createLazyTick$getCurrentSuperTick()) {
+            ci.cancel();
+            return;}
+        createLazyTick$FunnelDelayTick = 0;
 
         super.tick();
-
         Funnel.Mode mode = determineCurrentMode();
 
         if (level.isClientSide) {
@@ -174,27 +205,27 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
         // Redstone resets the extraction cooldown
         if (mode == Funnel.Mode.PAUSED)
-            extractionCooldown = 0;
+            createLazyTick$resetDelayTick(control);
         if (mode == Funnel.Mode.TAKING_FROM_BELT) {
             ci.cancel();
             return;
         }
 
-        if (createlazytick$HasInterface){
-            if (extractionCooldown > 0) {
-                extractionCooldown--;
-                ci.cancel();
-                return;
-            }
-        }
+
         BlockState blockState = getBlockState();
         BlockPos blockPos = getBlockPos();
-        createlazytick$HasInterface = IsMovingInterface(blockPos,blockState);
+        createlazytick$HasInterface = createLazyTick$IsMovingInterface(blockPos,blockState);
 
-        if (mode == Funnel.Mode.PUSHING_TO_BELT)
+        if (mode == Funnel.Mode.PUSHING_TO_BELT) {
+            //mes.warn("if (mode == Funnel.Mode.PUSHING_TO_BELT) {");
             activateExtractingBeltFunnel();
-        if (mode == Funnel.Mode.EXTRACT)
+
+        }
+
+        if (mode == Funnel.Mode.EXTRACT) {
+            //mes.warn("if (mode == Funnel.Mode.EXTRACT) {");
             activateExtractor();
+        }
 
 
         ci.cancel();
@@ -207,8 +238,90 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     @Unique
     private boolean createlazytick$HasInterface = false;
 
+    @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
+    private void activateExtractingBeltFunnel(CallbackInfo ci) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyFunnel()) {
+            return;
+        }
+
+        if (!(this instanceof ISmartBlockEntityControl control)) {
+            //mes.error("BlockEntity is not a SmartBlockEntityControl!");
+            return;}
+
+        if (invVersionTracker.stillWaiting(invManipulation)) {
+            //mes.blue("if (invVersionTracker.stillWaiting(invManipulation)) {");
+            ci.cancel();
+            return;
+        }
+        BlockState blockState = getBlockState();
+
+        //System.out.println();
+        Direction facing = blockState.getValue(BeltFunnelBlock.HORIZONTAL_FACING);
+        DirectBeltInputBehaviour inputBehaviour =
+                BlockEntityBehaviour.get(level, worldPosition.below(), DirectBeltInputBehaviour.TYPE);
+
+        if (inputBehaviour == null) {
+           // mes.blue("if (inputBehaviour == null) {");
+            ci.cancel();
+            return;
+        }
+        if (!inputBehaviour.canInsertFromSide(facing)) {
+           // mes.blue("   if (!inputBehaviour.canInsertFromSide(facing)) {");
+            ci.cancel();
+            return;
+        }
+        if (inputBehaviour.isOccupied(facing)) {
+            createLazyTick$FunnelBackOff(control);
+            ci.cancel();
+            return;
+        }
+
+        int amountToExtract = getAmountToExtract();
+        ItemHelper.ExtractionCountMode mode = getModeToExtract();
+        MutableBoolean deniedByInsertion = new MutableBoolean(false);
+
+        AtomicInteger extract_time = new AtomicInteger();
+        // delay from this
+        ItemStack stack = invManipulation.extract(mode, amountToExtract, s -> {
+            extract_time.getAndIncrement();
+            //System.out.println("Extracting belt funnel"+extract_time);
+
+            ItemStack handleInsertion = inputBehaviour.handleInsertion(s, facing, true);
+            if (handleInsertion.isEmpty()) {
+                //System.out.println("Extracting fail!");
+                return true;
+            }
+            deniedByInsertion.setTrue();
+            //System.out.println("Extracting success!");
+            return false;
+        });
+
+        if (stack.isEmpty()) {
+
+            //mes.blue("if (stack.isEmpty()) {");
+            createLazyTick$FunnelBackOff(control);
+            if (deniedByInsertion.isFalse())
+                invVersionTracker.awaitNewVersion(invManipulation.getInventory());
+            return;
+        }
+
+        flap(false);
+        onTransfer(stack);
+        inputBehaviour.handleInsertion(stack, facing, false);
+
+        createLazyTick$resetDelayTick(control);
+       // mes.blue("end");
+        ci.cancel();
+    }
+
+
+
+
+
+    //Tool func
     @Unique
-    private boolean IsMovingInterface(BlockPos blockPos,BlockState blockState) {
+    private boolean createLazyTick$IsMovingInterface(BlockPos blockPos, BlockState blockState) {
+
         if (createlazytick$targetDirection == null) {
             if (level != null) {
                 try {
@@ -242,82 +355,6 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         }
 
         return false;
-    }
-
-
-
-    @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
-    private void activateExtractingBeltFunnel(CallbackInfo ci) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyFunnel()) {
-            return;
-        }
-
-        if (invVersionTracker.stillWaiting(invManipulation)) {
-            ci.cancel();
-            return;
-        }
-        BlockState blockState = getBlockState();
-
-        //System.out.println();
-        Direction facing = blockState.getValue(BeltFunnelBlock.HORIZONTAL_FACING);
-        DirectBeltInputBehaviour inputBehaviour =
-                BlockEntityBehaviour.get(level, worldPosition.below(), DirectBeltInputBehaviour.TYPE);
-
-        if (inputBehaviour == null) {
-            ci.cancel();
-            return;
-        }
-        if (!inputBehaviour.canInsertFromSide(facing)) {
-            ci.cancel();
-            return;
-        }
-        if (inputBehaviour.isOccupied(facing)) {
-            ci.cancel();
-            return;
-        }
-
-        int amountToExtract = getAmountToExtract();
-        ItemHelper.ExtractionCountMode mode = getModeToExtract();
-        MutableBoolean deniedByInsertion = new MutableBoolean(false);
-
-        AtomicInteger extract_time = new AtomicInteger();
-        // delay from this
-        ItemStack stack = invManipulation.extract(mode, amountToExtract, s -> {
-            extract_time.getAndIncrement();
-            //System.out.println("Extracting belt funnel"+extract_time);
-
-            ItemStack handleInsertion = inputBehaviour.handleInsertion(s, facing, true);
-            if (handleInsertion.isEmpty()) {
-                //System.out.println("Extracting fail!");
-                return true;
-            }
-            deniedByInsertion.setTrue();
-            //System.out.println("Extracting success!");
-            return false;
-        });
-        //
-
-        if (stack.isEmpty()) {
-
-            //System.out.println("stack is empty");
-            if (ActualMultiCount < ServerConfig.getFunnelDelayMax()) {
-                ActualMultiCount = ActualMultiCount + 10;
-            }
-            createlazytick$startCooldown();
-            if (deniedByInsertion.isFalse())
-                invVersionTracker.awaitNewVersion(invManipulation.getInventory());
-            return;
-        }
-
-        if (ActualMultiCount >=10 ) {
-            ActualMultiCount = Math.max(0,ActualMultiCount - 30);
-        }
-
-        flap(false);
-        onTransfer(stack);
-        inputBehaviour.handleInsertion(stack, facing, false);
-        createlazytick$startCooldown();
-        ci.cancel();
     }
 
 
