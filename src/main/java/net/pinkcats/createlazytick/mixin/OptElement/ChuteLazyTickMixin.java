@@ -83,7 +83,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
     private void createLazyTick$LazyTickChute(boolean CanDownload){
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
-        int currentLazyTickInterval = control.createLazyTick$getLazyTickInterval();
+        int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
         if (level != null && !level.isClientSide) {
             // Current tick
             if (CanDownload) {
@@ -109,7 +109,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getLazyTickInterval(), ServerConfig.getChuteDelayMax());
+                this.level, this.worldPosition, control.createLazyTick$getCurrentSuperTick(), ServerConfig.getChuteDelayMax());
 
 
         if (level != null && !level.isClientSide) canPickUpItems = canDirectlyInsert();
@@ -137,7 +137,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
         if (level != null && !level.isClientSide) {
             // 获取当前实际的休眠间隔
-            timeMultiplier = control.createLazyTick$getLazyTickInterval();
+            timeMultiplier = control.createLazyTick$getCurrentSuperTick();
         }
 
         // 计算补偿位移
@@ -149,7 +149,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         if (level != null && !level.isClientSide) {
             createLazyTick$chuteTick++;
             //System.out.println("chuteTick: "+createLazyTick$chuteTick+"|"+control.createLazyTick$getLazyTickInterval());
-            if (createLazyTick$chuteTick < control.createLazyTick$getLazyTickInterval()) {
+            if (createLazyTick$chuteTick < control.createLazyTick$getCurrentSuperTick()) {
                 ci.cancel();
                 return;
             }

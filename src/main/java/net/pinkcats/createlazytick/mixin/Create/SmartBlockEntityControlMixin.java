@@ -246,12 +246,12 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     }
 
     @Override
-    public void createLazyTick$setLazyTickInterval(int tick) {
+    public void createLazyTick$setCurrentSuperTick(int tick) {
         this.createLazyTick$CurrentDelayTick = tick;
     }
 
     @Override
-    public int createLazyTick$getLazyTickInterval() {
+    public int createLazyTick$getCurrentSuperTick() {
         return this.createLazyTick$CurrentDelayTick;
     }
 

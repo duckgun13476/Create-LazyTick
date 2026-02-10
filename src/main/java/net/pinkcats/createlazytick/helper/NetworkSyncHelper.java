@@ -3,6 +3,7 @@ package net.pinkcats.createlazytick.helper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.pinkcats.createlazytick.Channel.ClientData;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 
@@ -19,8 +20,10 @@ public class NetworkSyncHelper {
             int currentDelayTick,
             int maxDelayTick
     ) {
+        //mes.error(PacketCache.size());
         if (level == null || level.isClientSide) return;
         if (PacketCache.isEmpty()) return;
+
 
         String currentDim = level.dimension().location().toString();
 
@@ -34,6 +37,7 @@ public class NetworkSyncHelper {
             if (cmd != 0) {
                 control.CLT$onClientRequest(cmd);
             }
+            //
 
             control.lazytick$setSyncedTier(currentDelayTick, maxDelayTick);
 
