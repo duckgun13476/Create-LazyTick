@@ -14,8 +14,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.BeltEum;
+import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -48,19 +50,38 @@ public class BeltTickMixin {
     @Shadow(remap = false)
     protected boolean handleBeltProcessingAndCheckIfRemoved(TransportedItemStack currentItem, float nextOffset,
                                                             boolean noMovement) {return false;}
+    @Unique
+    private void createLazyTick$applyBackoff(ISmartBlockEntityControl control) {
+        int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
+        int newLazyTickInterval = LazyTickLogic.computeNextInterval(
+                control, currentLazyTickInterval, ServerConfig.getBeltDelayMax()
+        );
+        if (newLazyTickInterval != currentLazyTickInterval) {
+            LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
+        }
+    }
+
+    @Unique
+    private void createLazyTick$resetDelayTick(ISmartBlockEntityControl control) {
+        //createLazyTick$DepotDelayTick = 0;
+        LazyTickLogic.setIntervalSafe(control, 1);
+    }
+
+    @Unique
+    private void createLazyTick$resetDelayCounters() {
+        CLT$BeltCurrentTick = 0;
+        CLT$BeltSlideTick = 0;
+    }
 
 
-
     @Unique
-    private int BeltCurrentTick = 0;
+    private int CLT$BeltCurrentTick = 0;
     @Unique
-    private int BeltDelayTick = 0;
+    private int CLT$BeltSlideTick = 0;
     @Unique
-    private int animal_delay = 0;
+    private int CLT$HasItemCount = 0;
     @Unique
-    private int HasItemCount = 0;
-    @Unique
-    private int LastItemListSize = 0;
+    private int CLT$LastItemListSize = 0;
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
@@ -76,22 +97,22 @@ public class BeltTickMixin {
         List<TransportedItemStack> toRemove = accessor.getToRemove();
         List<TransportedItemStack> items = accessor.getItems();
 
-        int queuedInsertions = toInsert.size();
-        int queuedRemovals = toRemove.size();
+
+        // Added/Removed items from previous cycle
         if (createLazyTick$drainPendingTransfers(belt, toInsert, toRemove, items)) {
             createLazyTick$resetDelayCounters();
         }
 
-        if (items.size() != LastItemListSize) {
-            LastItemListSize = items.size();
+        if (items.size() != CLT$LastItemListSize) {
+            CLT$LastItemListSize = items.size();
             createLazyTick$resetDelayCounters();
         }
 
-        if (BeltCurrentTick >= BeltDelayTick){
-            BeltCurrentTick = 0;
+        if (CLT$BeltCurrentTick >= CLT$BeltSlideTick){
+            CLT$BeltCurrentTick = 0;
         } else {
-            BeltCurrentTick++;
-            if (BeltDelayTick > 20)
+            CLT$BeltCurrentTick++;
+            if (CLT$BeltSlideTick > 20)
             {ci.cancel();
                 return;}
         }
@@ -316,26 +337,22 @@ public class BeltTickMixin {
 
             }
         }
+        //if (onClient)
+            //System.out.println(stop_count +"  " + count);
 
-        //System.out.println(stop_count +"  " + count);
-
-
+        // equal means belt is full Use backoff
         if (stop_count == count){
-            animal_delay++;
-            if (animal_delay>100) {
-                if (BeltDelayTick < ServerConfig.getBeltDelayMax()) {
-                    BeltDelayTick = BeltDelayTick + Math.max(1, BeltDelayTick / 10);
-
+                if (CLT$BeltSlideTick < ServerConfig.getBeltDelayMax()) {
+                    CLT$BeltSlideTick = CLT$BeltSlideTick + Math.max(1, CLT$BeltSlideTick / 10);
                 }
-            }
         }
 
         else {
             createLazyTick$resetDelayCounters();
         }
 
-        if (HasItemCount != count) {
-            HasItemCount = count;
+        if (CLT$HasItemCount != count) {
+            CLT$HasItemCount = count;
             createLazyTick$resetDelayCounters();
         }
 
@@ -359,18 +376,14 @@ public class BeltTickMixin {
         return true;
     }
 
-    @Unique
-    private void createLazyTick$resetDelayCounters() {
-        BeltCurrentTick = 0;
-        BeltDelayTick = 0;
-        animal_delay = 0;
-    }
 
 
 
+
+    //High impact need to fix but is limited in vanilla
     @Unique
     private BeltEum.Ending createLazyTick$resolveEnding() {
-
+        //mes.debug("createLazyTick$resolveEnding tick");
         BeltInventoryAccessor accessor = (BeltInventoryAccessor) this;
         BeltBlockEntity belt = accessor.getBelt();
 

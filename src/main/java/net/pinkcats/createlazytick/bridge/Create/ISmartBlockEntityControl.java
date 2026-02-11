@@ -73,4 +73,6 @@ public interface ISmartBlockEntityControl {
 
     // 纯净发包接口 (Server Only)
     void createLazyTick$sendBlockUpdated();
+
+    boolean CLT$IsController();
 }

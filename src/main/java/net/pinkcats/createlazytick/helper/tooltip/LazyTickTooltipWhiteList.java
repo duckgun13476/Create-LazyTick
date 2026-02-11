@@ -60,6 +60,7 @@ public enum LazyTickTooltipWhiteList {
         return maxTickSupplier.get();
     }
 
+
     public Type getType() {
         return type;
     }
