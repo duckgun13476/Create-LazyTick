@@ -9,15 +9,11 @@ import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 
 import java.util.List;
 
 @Mixin(value = SmartBlockEntity.class, remap = false)
 public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
-
-    @Unique
-    private int createLazyTick$tick = 0;
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
@@ -34,7 +30,8 @@ public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
 
         if (this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
-            this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
+            int CLT$tick = 0;
+            LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, CLT$tick, maxDelayTick);
             return true;
         }
         return false;
