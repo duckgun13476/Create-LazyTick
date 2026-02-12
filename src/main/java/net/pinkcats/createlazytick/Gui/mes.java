@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.Gui;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import org.jetbrains.annotations.NotNull;
 
@@ -83,5 +85,29 @@ public class mes {
         return sb.toString();
     }
 
+
+    // display func
+    public static Component spaces(int n) {
+        if (n <= 0) return Component.empty();
+        return Char(" ".repeat(n));
+    }
+
+    public static Component enter(){
+        return Char("\n");
+    }
+
+    /**
+     * Only Used for text which not need to translate
+     * @return Component
+     */
+    public static Component Char(String string) {
+        return Component.literal(string);}
+
+    /**
+     * Only Used for text which do not need to translate
+     * @return Component
+     */
+    public static MutableComponent CharM(String string) {
+        return (MutableComponent) Char(string);}
 
 }

@@ -5,7 +5,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.Map;
@@ -23,8 +23,10 @@ public class FilterParser {
     public static final Pattern TOKEN_PATTERN = Pattern.compile("\"?([a-zA-Z]+)\"?\\s*(:|>=|<=|>|<|=)\\s*(\"[^\"]*\"|[^\"\\s,{}]+)");
     public static final Pattern TOKEN_PATTERN_FOR_SUGGESTION = Pattern.compile("^\"?([a-zA-Z]+)\"?\\s*(:|>=|<=|>|<|=)\\s*(.*)");
 
-    private static final SimpleCommandExceptionType ERROR_EMPTY = new SimpleCommandExceptionType(
-            Component.literal("未检测到筛选条件,格式示例: {name:mechanical_saw,value>50} (若括号内有空格,请在括号外再加一对双引号)"));
+    private static final SimpleCommandExceptionType ERROR_EMPTY =
+            new SimpleCommandExceptionType(
+                    Component.translatable("createlazytick.error.filter_empty_hint")
+            );
 
     public static Predicate<Map.Entry<BlockPos, LazyTickStatCache>> parse(String input) throws CommandSyntaxException {
         return parse(input, false);
@@ -62,8 +64,13 @@ public class FilterParser {
 
             // 如果间隙里包含除了空格和逗号以外的字符就报错
             if (!gap.isBlank() && !gap.matches("[,\\s]+")) {
-               throw new SimpleCommandExceptionType(Component.literal("发现意外字符: " + gap + " (如果为开头的括号等,请检查是否完全闭合)")).create();
+                throw new SimpleCommandExceptionType(
+                        Component.translatable(
+                                "createlazytick.error.unexpected_chars",
+                                mes.CharM(gap).withStyle(ChatFormatting.UNDERLINE))
+                ).create();
             }
+
 
             lastMatchEnd = matcher.end();
 
@@ -79,22 +86,29 @@ public class FilterParser {
             } catch (CommandSyntaxException e) {
                 throw e;
             } catch (Exception e) {
-                CreateLazyTick.LOGGER.error("An unexpected error occurred while trying to parse conditions!\n Key: {}, Val: {}", key, val, e);
-                throw new SimpleCommandExceptionType(Component.literal("发生内部错误，请联系管理员检查后台日志")).create();
+                mes.error(
+                        "An unexpected error occurred while trying to parse conditions!\n Key: "+key+", Val: "+val+" "+e
+                );
+                throw new SimpleCommandExceptionType(
+                        Component.translatable("createlazytick.error.internal_error_contact_admin")
+                ).create();
             }
         }
 
         String remaining = trimmed.substring(lastMatchEnd).trim().replaceAll("[,\\s]+", "");
         if (!remaining.isEmpty()) {
             throw new SimpleCommandExceptionType(
-                    Component.literal("无法解析部分条件: [")
-                            .append(Component.literal(remaining).withStyle(ChatFormatting.UNDERLINE))
-                            .append("] (请检查格式)")
+                    Component.translatable(
+                            "createlazytick.error.unparsed_conditions",
+                            mes.CharM(remaining).withStyle(ChatFormatting.UNDERLINE)
+                    )
             ).create();
         }
 
         if (!hasAnyValidFilter) {
-            throw new SimpleCommandExceptionType(Component.literal("请输入有效的筛选条件 (示例: {name:saw,value>50} (若括号内有空格,请在括号外再加一对双引号))")).create();
+            throw new SimpleCommandExceptionType(
+                    Component.translatable("createlazytick.error.filter_invalid_hint")
+            ).create();
         }
 
         return finalPredicate;
@@ -104,7 +118,7 @@ public class FilterParser {
     private static Predicate<Map.Entry<BlockPos, LazyTickStatCache>> createSingleFilter(String key, String op, String val) throws CommandSyntaxException {
         switch (key) {
             case "name", "id" -> {
-                return entry -> entry.getValue().getBlockName().toLowerCase().contains(val.toLowerCase());
+                return entry -> entry.getValue().getBlockId().toLowerCase().contains(val.toLowerCase());
             }
             case "operator", "player" -> {
                 return entry -> entry.getValue().getOwnerName().equalsIgnoreCase(val);
@@ -116,9 +130,10 @@ public class FilterParser {
                     return entry -> !entry.getValue().isForced();
                 }
                 throw new SimpleCommandExceptionType(
-                        Component.literal("模式参数错误: [")
-                                .append(Component.literal(val).withStyle(ChatFormatting.UNDERLINE))
-                                .append("] (仅限 forced 或 dynamic)")
+                        Component.translatable(
+                                "createlazytick.error.mode_param_only_forced_dynamic",
+                                mes.CharM(val).withStyle(ChatFormatting.UNDERLINE)
+                        )
                 ).create();
             }
             case "value" -> {
@@ -127,9 +142,9 @@ public class FilterParser {
                     targetVal = Integer.parseInt(val);
                 } catch (NumberFormatException e) {
                     throw new SimpleCommandExceptionType(
-                            Component.literal("数值格式错误: [")
-                                    .append(Component.literal(val).withStyle(ChatFormatting.UNDERLINE))
-                                    .append(Component.literal("]"))
+                            Component.translatable("createlazytick.error.value_format")
+                                    .append(mes.CharM(val).withStyle(ChatFormatting.UNDERLINE))
+                                    .append(mes.Char("]"))
                     ).create();
                 }
                 return entry -> compareInt(entry.getValue().getScrollValue(), targetVal, op);
@@ -140,9 +155,10 @@ public class FilterParser {
                     targetDuration = CommandHelper.parseDuration(val);
                 } catch (NumberFormatException e) {
                     throw new SimpleCommandExceptionType(
-                            Component.literal("时间格式错误: [")
-                                    .append(Component.literal(val).withStyle(ChatFormatting.UNDERLINE))
-                                    .append(Component.literal("]"))
+                            Component.translatable(
+                                    "createlazytick.error.time_format",
+                                    mes.CharM(val).withStyle(ChatFormatting.UNDERLINE)
+                            )
                     ).create();
                 }
                 long now = System.currentTimeMillis();
@@ -155,24 +171,23 @@ public class FilterParser {
             }
         }
         throw new SimpleCommandExceptionType(
-                Component.literal("未知的筛选键: [")
-                        .append(Component.literal(key).withStyle(ChatFormatting.UNDERLINE))
-                        .append(Component.literal("]"))
+                Component.translatable(
+                        "createlazytick.error.unknown_filter_key",
+                        mes.CharM(key).withStyle(ChatFormatting.UNDERLINE)
+                )
         ).create();
+
     }
 
     private static boolean compareInt(int a, int b, String op) {
-        return switch (op) {
-            case ">" -> a > b;
-            case "<" -> a < b;
-            case ">=" -> a >= b;
-            case "<=" -> a <= b;
-            case "=", ":" -> a == b;
-            default -> false;
-        };
+        return ApplyCompare(a, b, op);
     }
 
     private static boolean compareLong(long a, long b, String op) {
+        return ApplyCompare(a, b, op);
+    }
+
+    private static boolean ApplyCompare(long a, long b, String op) {
         return switch (op) {
             // 对于"时间年龄(time/Age)"，大于(>)意味着"更老"，小于(<)意味着"更新"
             case ">" -> a > b;

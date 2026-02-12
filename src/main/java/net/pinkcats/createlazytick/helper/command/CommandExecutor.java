@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickSavedLimitList;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
@@ -35,10 +36,10 @@ public class CommandExecutor {
 
         if (mode == null) {
             String wrongArg = StringArgumentType.getString(ctx, "sort");
+            String available = "default, time, name, player, method, value, nearest, loaded";
+            MutableComponent argComp = mes.CharM(wrongArg).withStyle(ChatFormatting.UNDERLINE);
             throw new SimpleCommandExceptionType(
-                    Component.literal("未知的排序模式: [")
-                            .append(Component.literal(wrongArg).withStyle(ChatFormatting.UNDERLINE))
-                            .append("] (可用: default, time, name, player, method, value, nearest, loaded)")
+                    Component.translatable("createlazytick.error.unknown_sort_mode", argComp, available)
             ).create();
         }
 
@@ -68,28 +69,35 @@ public class CommandExecutor {
         if (block != null && block != Blocks.AIR) {
             nameComponent = block.getName(); // 获取翻译组件
         } else {
-            nameComponent = Component.literal(id); // 降级为 ID
+            nameComponent = mes.Char(id); // 降级为 ID
         }
 
-        Component desc = Component.literal("名称 [")
-                .append(nameComponent.copy().withStyle(ChatFormatting.AQUA))
-                .append("]");
+        Component desc = Component.translatable(
+                "createlazytick.desc.name_bracket",
+                nameComponent.copy().withStyle(ChatFormatting.AQUA)
+        );
 
         return CommandHelper.executeReset(ctx, desc,
-                entry -> entry.getValue().getBlockName().equals(id));
+                entry -> entry.getValue().getBlockId().equals(id));
     }
 
     public static int onResetByPlayer(CommandContext<CommandSourceStack> ctx) {
         String owner = StringArgumentType.getString(ctx, "player_name");
-        Component desc = Component.literal("所有者 [" + owner + "]");
-        return CommandHelper.executeReset(ctx,  desc,
+        Component desc = Component.translatable(
+                "createlazytick.reset.desc.owner",
+                owner);
+        return CommandHelper.executeReset(ctx, desc,
                 entry -> entry.getValue().getOwnerName().equals(owner));
     }
 
     public static int onResetByMode(CommandContext<CommandSourceStack> ctx) {
         String modeStr = StringArgumentType.getString(ctx, "mode_type");
         boolean isForced = modeStr.equalsIgnoreCase("forced");
-        Component desc = Component.literal("模式 [" + (isForced ? "强制" : "动态") + "]");
+        Component modeComp = Component.translatable(
+                isForced ? "createlazytick.mode.short.forced" : "createlazytick.mode.short.dynamic");
+        Component desc = Component.translatable(
+                "createlazytick.reset.desc.mode",
+                modeComp);
         return CommandHelper.executeReset(ctx, desc,
                 entry -> entry.getValue().isForced() == isForced);
     }
@@ -115,11 +123,17 @@ public class CommandExecutor {
                 logic = Integer::equals;
             }
             default -> {
-                ctx.getSource().sendFailure(Component.literal("未知的操作符: " + operator));
+                ctx.getSource().sendFailure(
+                        Component.translatable("createlazytick.error.unknown_operator", operator)
+                );
                 return 0;
             }
         }
-        Component desc = Component.literal("数值 [" + displaySymbol + " " + targetVal + "]");
+        Component desc = Component.translatable(
+                "createlazytick.desc.value_bracket",
+                displaySymbol,
+                targetVal
+        );
         return CommandHelper.executeReset(ctx, desc, entry -> {
             // Never negative (-)
             int currentVal = entry.getValue().getScrollValue();
@@ -132,7 +146,7 @@ public class CommandExecutor {
         BlockPos center = BlockPos.containing(ctx.getSource().getPosition());
         double rangeSqr = range * range;
 
-        Component desc = Component.literal("半径 [" + range + "格]");
+        Component desc = Component.translatable("createlazytick.desc.radius_block", range);
         return CommandHelper.executeReset(ctx, desc,
                 entry -> entry.getKey().distToCenterSqr(center.getX(), center.getY(), center.getZ()) <= rangeSqr);
     }
@@ -146,9 +160,10 @@ public class CommandExecutor {
             targetDuration = CommandHelper.parseDuration(durationStr);
         } catch (NumberFormatException e) {
             ctx.getSource().sendFailure(
-                    Component.literal("时间格式错误: [")
-                            .append(Component.literal(durationStr).withStyle(ChatFormatting.UNDERLINE))
-                            .append("] (示例: 3d; 12h; 30m; 3d8h6m30s)")
+                    Component.translatable(
+                            "createlazytick.error.duration_format_with_examples",
+                            mes.CharM(durationStr).withStyle(ChatFormatting.UNDERLINE)
+                    )
             );
             return 0;
         }
@@ -169,11 +184,17 @@ public class CommandExecutor {
                 logic = (age, target) -> age < target;
             }
             default -> {
-                ctx.getSource().sendFailure(Component.literal("时间筛选仅支持 olderthan (早于) 或 newerthan (晚于)"));
+                ctx.getSource().sendFailure(
+                        Component.translatable("createlazytick.error.time_filter_operator_only")
+                );
                 return 0;
             }
         }
-        Component desc = Component.literal("注册时长 [" + displaySymbol + " " + durationStr + "]");
+        Component desc = Component.translatable(
+                "createlazytick.desc.registered_duration",
+                displaySymbol,
+                durationStr
+        );
 
         long now = System.currentTimeMillis();
 
@@ -196,14 +217,14 @@ public class CommandExecutor {
             Predicate<Map.Entry<BlockPos, LazyTickStatCache>> filter = FilterParser.parse(query);
 
             // 2. 构造描述文本
-            Component desc = Component.literal("组合条件 [" + query + "]");
+            Component desc = Component.translatable("createlazytick.desc.composite_query", query);
 
             // 3. 执行重置
             return CommandHelper.executeReset(ctx, desc, filter);
 
         } catch (CommandSyntaxException e) {
             // 捕获解析器throw出的语法错误并反馈
-            ctx.getSource().sendFailure(Component.literal(e.getMessage()));
+            ctx.getSource().sendFailure(mes.Char(e.getMessage()));
             return 0;
         }
     }
@@ -213,31 +234,63 @@ public class CommandExecutor {
         ServerLevel level = ctx.getSource().getLevel();
         LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
 
-        // 选择器可能返回@a(多个人的玩家档案,需要遍历)
-        MutableComponent successMessage = Component.literal("已设置玩家 ");
+        MutableComponent playersComp = Component.empty();
+        boolean first = true;
+
         for (GameProfile profile : profiles) {
             data.setLimit(profile.getId(), limit);
-            successMessage.append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD)).append(" ");
+
+            if (!first) playersComp.append(mes.spaces(1));
+            first = false;
+
+            playersComp.append(mes.CharM(profile.getName()).withStyle(ChatFormatting.GOLD));
         }
-        successMessage.append("共" + profiles.size() + "人的懒惰刻调节配额为: ")
-                .append(Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA));
+
+        // limit 显示：-1 => “无限”，否则数字（AQUA）
+        Component limitComp = (limit == -1)
+                ? Component.translatable("createlazytick.quota.unlimited").withStyle(ChatFormatting.AQUA)
+                : mes.CharM(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
+
+        int count = profiles.size();
+
+        MutableComponent successMessage = Component.translatable(
+                "createlazytick.limit.set_success_multi",
+                playersComp,
+                count,
+                limitComp
+        );
+
         ctx.getSource().sendSuccess(() -> successMessage, true);
-        return profiles.size();
+        return count;
     }
 
     public static int onLimitRemove(CommandContext<CommandSourceStack> ctx, Collection<GameProfile> profiles) {
         ServerLevel level = ctx.getSource().getLevel();
         LazyTickSavedLimitList data = LazyTickSavedLimitList.get(level);
 
-        MutableComponent successMessage = Component.literal("已移除玩家 ");
+        // 玩家名列表组件（带颜色）
+        MutableComponent playersComp = Component.empty();
+        boolean first = true;
+
         for (GameProfile profile : profiles) {
             data.removeLimit(profile.getId());
-            successMessage.append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD)).append(" ");
+
+            if (!first) playersComp.append(mes.spaces(1));
+            first = false;
+
+            playersComp.append(mes.CharM(profile.getName()).withStyle(ChatFormatting.GOLD));
         }
-        successMessage.append("共" + profiles.size() + "人的限制 (现在配额为无限)");
+
+        int count = profiles.size();
+
+        MutableComponent successMessage = Component.translatable(
+                "createlazytick.limit.remove_success_multi",
+                playersComp,
+                count
+        );
 
         ctx.getSource().sendSuccess(() -> successMessage, true);
-        return profiles.size();
+        return count;
     }
 
     public static int onLimitCheck(CommandContext<CommandSourceStack> ctx, Collection<GameProfile> profiles) {
@@ -252,16 +305,22 @@ public class CommandExecutor {
             int used = ForcedActiveManager.getPlayerUsageCount(level, profile.getId());
 
             MutableComponent limitDisplay = (limit == -1)
-                    ? Component.literal("无限").withStyle(ChatFormatting.GREEN)
-                    : Component.literal(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
+                    ? Component.translatable("createlazytick.quota.unlimited").withStyle(ChatFormatting.GREEN)
+                    : mes.CharM(String.valueOf(limit)).withStyle(ChatFormatting.AQUA);
 
             ChatFormatting statusColor = (limit != -1 && used >= limit) ? ChatFormatting.RED : ChatFormatting.GREEN;
+            MutableComponent usedDisplay = mes.CharM(String.valueOf(used)).withStyle(statusColor);
 
-            ctx.getSource().sendSuccess(() -> Component.literal("玩家 ")
-                    .append(Component.literal(profile.getName()).withStyle(ChatFormatting.GOLD))
-                    .append(" 状态统计:\n")
-                    .append(" - 当前已激活: ").append(Component.literal(String.valueOf(used)).withStyle(statusColor)).append(" ")
-                    .append(" - 最大配额: ").append(limitDisplay), false);
+
+            MutableComponent playerName = mes.CharM(profile.getName()).withStyle(ChatFormatting.GOLD);
+
+            ctx.getSource().sendSuccess(() -> Component.translatable(
+                    "createlazytick.stats.player_quota",
+                    playerName,
+                    usedDisplay,
+                    limitDisplay
+            ), false);
+
         }
         return profiles.size();
     }

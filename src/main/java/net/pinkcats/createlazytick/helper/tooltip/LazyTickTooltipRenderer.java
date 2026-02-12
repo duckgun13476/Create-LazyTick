@@ -35,14 +35,7 @@ public class LazyTickTooltipRenderer {
         int dynamicValue = control.createLazyTick$getDynamicValue();
         int forcedValue = control.createLazyTick$getForcedValue();
 
-        if (tooltip.isEmpty()) {
-            // 如果是第一行（置物台），加4个空格缩进，给左侧图标留位置
-            tooltip.add(Component.literal("        LazyTick Status:").withStyle(ChatFormatting.GRAY));
-        } else {
-            // 如果不是第一行，先加个空行隔开
-            tooltip.add(Component.literal("   "));
-            tooltip.add(Component.literal("LazyTick Status:").withStyle(ChatFormatting.GRAY));
-        }
+        ToolTipStatus(tooltip);
 
         if (control.createLazyTick$shouldRenderMode() && ClientConfig.showModeTooltip()) {
             // 渲染目前懒加载模式
@@ -52,7 +45,7 @@ public class LazyTickTooltipRenderer {
         if (control.createLazyTick$shouldRenderTier() && ClientConfig.showTierTooltip()) {
             // 渲染目前懒加载状态
             int currentInterval = control.createLazyTick$getCurrentSuperTick();
-            mes.debug(currentInterval);
+            //mes.debug(currentInterval);
 
             // 2. 计算百分比上限 (用于绘制紫色游标)
             // 优先取强制值，否则取动态上限。
@@ -67,7 +60,7 @@ public class LazyTickTooltipRenderer {
         String op = control.createLazyTick$getOwnerName();
         if (!op.isEmpty()) {
             // 渲染操作者
-            tooltip.add(Component.literal(" 操作者: " + op).withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(Component.translatable("createlazytick.tooltip.operator", op).withStyle(ChatFormatting.DARK_GRAY));
         }
 
         if (control.createLazyTick$shouldRenderMode() && ClientConfig.showDescriptionTooltip()) {
@@ -77,7 +70,7 @@ public class LazyTickTooltipRenderer {
         List<Component> customInfo = control.createLazyTick$getCustomTooltipInfo();
         if (customInfo != null && !customInfo.isEmpty()) {
             // 渲染自定义文本
-            tooltip.add(Component.literal("  "));
+            tooltip.add(mes.spaces(3));
             tooltip.addAll(customInfo);
         }
 
@@ -88,17 +81,26 @@ public class LazyTickTooltipRenderer {
     public static void appendSimpleConfigInfo(Object be, List<Component> tooltip) {
         LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(be);
         if (whiteItem != null) {
-            if (tooltip.isEmpty()) {
-                tooltip.add(Component.literal("        LazyTick Status:").withStyle(ChatFormatting.GRAY));
-            } else {
-                tooltip.add(Component.literal("   "));
-                tooltip.add(Component.literal("LazyTick Status:").withStyle(ChatFormatting.GRAY));
+            ToolTipStatus(tooltip);
+            if (whiteItem == LazyTickTooltipWhiteList.PIPE || whiteItem == LazyTickTooltipWhiteList.PUMP) {
+                tooltip.add(Component.translatable("createlazytick.tooltip.fluid_system_delay", whiteItem.getMaxTick())
+                        .withStyle(ChatFormatting.GRAY));
+            } else if (whiteItem == LazyTickTooltipWhiteList.BELT) {
+                tooltip.add(Component.translatable( "createlazytick.tooltip.belt_system_delay" , whiteItem.getMaxTick())
+                        .withStyle(ChatFormatting.GRAY));
             }
-
-            tooltip.add(Component.literal("流体系统延迟刻(懒惰刻): " + whiteItem.getMaxTick())
-                    .withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.literal("* 此为全局配置，不可单独调整")
+            tooltip.add(Component.translatable("createlazytick.tooltip.global_config_note")
                     .withStyle(ChatFormatting.DARK_GRAY));
+        }
+    }
+
+    private static void ToolTipStatus(List<Component> tooltip) {
+        if (tooltip.isEmpty()) {
+            tooltip.add(mes.spaces(9));
+            tooltip.add(Component.translatable("createlazytick.tooltip.status").withStyle(ChatFormatting.GRAY));
+        } else {
+            tooltip.add(mes.spaces(3));
+            tooltip.add(Component.translatable("createlazytick.tooltip.status").withStyle(ChatFormatting.GRAY));
         }
     }
 }

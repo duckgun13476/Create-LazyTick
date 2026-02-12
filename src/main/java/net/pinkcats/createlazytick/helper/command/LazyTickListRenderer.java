@@ -7,6 +7,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
 import java.util.Map;
@@ -22,25 +23,35 @@ public class LazyTickListRenderer {
         String lowerSort = safeSortStr.toLowerCase();
 
         switch (lowerSort) {
-            case "default" -> sortDisplayComp = Component.literal("默认");
-            case "nearest" -> sortDisplayComp = Component.literal("距离");
-            case "time" -> sortDisplayComp = Component.literal("时间");
-            case "name" -> sortDisplayComp = Component.literal("机器名称");
-            case "player" -> sortDisplayComp = Component.literal("玩家名称");
-            case "mode" -> sortDisplayComp = Component.literal("模式");
-            case "value" -> sortDisplayComp = Component.literal("数值");
-            case "loaded" -> sortDisplayComp = Component.literal("加载");
-            default -> sortDisplayComp = Component.literal("复合")
-                    .withStyle(ChatFormatting.YELLOW, ChatFormatting.UNDERLINE)
-                    .withStyle(style -> style.withHoverEvent(
-                            new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("排序逻辑: " + safeSortStr))
-                    ));
+            case "default" -> sortDisplayComp = Component.translatable("createlazytick.sort.default");
+            case "nearest" -> sortDisplayComp = Component.translatable("createlazytick.sort.nearest");
+            case "time"    -> sortDisplayComp = Component.translatable("createlazytick.sort.time");
+            case "name"    -> sortDisplayComp = Component.translatable("createlazytick.sort.name");
+            case "player"  -> sortDisplayComp = Component.translatable("createlazytick.sort.player");
+            case "mode"    -> sortDisplayComp = Component.translatable("createlazytick.sort.mode");
+            case "value"   -> sortDisplayComp = Component.translatable("createlazytick.sort.value");
+            case "loaded"  -> sortDisplayComp = Component.translatable("createlazytick.sort.loaded");
+            default -> {
+                MutableComponent hover = Component.translatable(
+                        "createlazytick.sort.hover_logic",
+                        safeSortStr
+                );
+
+                sortDisplayComp = Component.translatable("createlazytick.sort.composite")
+                        .withStyle(ChatFormatting.YELLOW, ChatFormatting.UNDERLINE)
+                        .withStyle(style -> style.withHoverEvent(
+                                new HoverEvent(HoverEvent.Action.SHOW_TEXT, hover)
+                        ));
+            }
         }
 
-        MutableComponent header = Component.literal("== 非默认懒加载元件名单 (第 " + page + "/" + totalPages + " 页 | 共 " + total + " 个 | 排序: ")
-                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-                .append(sortDisplayComp)
-                .append(Component.literal(") =="));
+        MutableComponent header = Component.translatable(
+                "createlazytick.list.header.non_default",
+                page,
+                totalPages,
+                total,
+                sortDisplayComp
+        ).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
 
         source.sendSystemMessage(header);
     }
@@ -51,42 +62,66 @@ public class LazyTickListRenderer {
         BlockPos pos = entry.getKey();
         LazyTickStatCache info = entry.getValue();
 
-        String statusPrefix = isLoaded ? "" : "[未加载] ";
+
         ChatFormatting nameColor = isLoaded ? ChatFormatting.AQUA : ChatFormatting.DARK_AQUA;
 
         // 获取本地方块名称
         Component localizedName = info.getDisplayName();
 
         // 构建悬停文本 (HoverText)
-        String modeStr = info.isForced() ? "强制锁定" : "动态控制";
+
         ChatFormatting modeColor = info.isForced() ? ChatFormatting.RED : ChatFormatting.AQUA;
 
-        MutableComponent hoverText = Component.literal("详细信息:\n")
+        String modeKey = info.isForced()
+                ? "createlazytick.mode.forced_locked"
+                : "createlazytick.mode.dynamic_control";
+
+        MutableComponent modeValue = Component.translatable(modeKey).withStyle(modeColor);
+
+        MutableComponent hoverText = Component.translatable("createlazytick.hover.details")
                 .withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal("模式状态: ").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal(modeStr + "\n").withStyle(modeColor))
-                .append(Component.literal("机器名称: ").withStyle(ChatFormatting.GRAY))
-                .append(localizedName.copy().withStyle(ChatFormatting.GRAY)).append("\n")
-                .append(Component.literal("最后操作者: " + info.getOwnerName() + "\n").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal("注册时间: " + info.getFormattedTime() + "\n").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal("设定数值: " + info.getScrollValue() + "%\n").withStyle(ChatFormatting.GRAY))
-                .append(Component.literal("点击传送").withStyle(ChatFormatting.GREEN));
+                .append(mes.enter())
+
+                .append(Component.translatable("createlazytick.hover.mode", modeValue)
+                        .withStyle(ChatFormatting.GRAY))
+                .append(mes.enter())
+
+                .append(Component.translatable("createlazytick.hover.machine", localizedName.copy())
+                        .withStyle(ChatFormatting.GRAY))
+                .append(mes.enter())
+
+                .append(Component.translatable("createlazytick.hover.last_operator", info.getOwnerName())
+                        .withStyle(ChatFormatting.GRAY))
+                .append(mes.enter())
+
+                .append(Component.translatable("createlazytick.hover.registered_time", info.getFormattedTime())
+                        .withStyle(ChatFormatting.GRAY))
+                .append(mes.enter())
+
+                .append(Component.translatable("createlazytick.hover.scroll_value", info.getScrollValue())
+                        .withStyle(ChatFormatting.GRAY))
+                .append(mes.enter())
+
+                .append(Component.translatable("createlazytick.hover.click_teleport")
+                        .withStyle(ChatFormatting.GREEN));
 
         String tpCommand = "/tp @s " + pos.getX() + " " + pos.getY() + " " + pos.getZ();
 
         // 构建列表行(1行)
-        MutableComponent listEntry = Component.literal(" " + index + ". ")
+        MutableComponent listEntry = mes.CharM(" " + index + ". ")
                 .withStyle(ChatFormatting.GRAY)
-                .append(Component.literal(statusPrefix).withStyle(nameColor))
+                .append((isLoaded ? Component.empty()
+                        : Component.translatable("createlazytick.status.not_loaded_prefix"))
+                        .copy().withStyle(nameColor))
                 .append(localizedName.copy().withStyle(nameColor))
-                .append(Component.literal(" [" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
+                .append(mes.CharM(" [" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
                         .withStyle(ChatFormatting.GREEN)
                         .withStyle(style -> style
                                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
                                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverText))
                         )
                 )
-                .append(Component.literal(" (" + info.getOwnerName() + ")").withStyle(ChatFormatting.DARK_GRAY));
+                .append(mes.CharM(" (" + info.getOwnerName() + ")").withStyle(ChatFormatting.DARK_GRAY));
 
         source.sendSystemMessage(listEntry);
     }
@@ -94,31 +129,29 @@ public class LazyTickListRenderer {
     // 渲染翻页导航栏(内部生成带参数自动命令)
     public static void renderNavBar(CommandSourceStack source, int page, int totalPages,
                                     String sortStr, boolean isReverse, String filterStr) {
-        source.sendSystemMessage(Component.literal("")); // 空行分隔
-
-        MutableComponent navBar = Component.literal("      "); // 缩进
+        source.sendSystemMessage(mes.spaces(0)); // 空行分隔
+        MutableComponent navBar = (MutableComponent) mes.spaces(6); // 缩进
 
         // 上一页
         if (page > 1) {
-            appendNavButton(navBar, "<<< 上一页", page - 1, sortStr, isReverse, filterStr);
+            appendNavButton(navBar, "createlazytick.nav.prev", page - 1, sortStr, isReverse, filterStr);
         } else {
-            navBar.append(Component.literal("<<< 上一页").withStyle(ChatFormatting.DARK_GRAY)); // 不可用状态
+            navBar.append(Component.translatable("createlazytick.nav.prev").withStyle(ChatFormatting.DARK_GRAY)); // 不可用状态
         }
-
-        navBar.append(Component.literal("   |   ").withStyle(ChatFormatting.GRAY));
+        navBar.append(mes.CharM("   |   ").withStyle(ChatFormatting.GRAY));
 
         // 下一页
         if (page < totalPages) {
-            appendNavButton(navBar, "下一页 >>>", page + 1, sortStr, isReverse, filterStr);
+            appendNavButton(navBar, "createlazytick.nav.next", page + 1, sortStr, isReverse, filterStr);
         } else {
-            navBar.append(Component.literal("下一页 >>>").withStyle(ChatFormatting.DARK_GRAY));
+            navBar.append(Component.translatable("createlazytick.nav.next").withStyle(ChatFormatting.DARK_GRAY));
         }
 
         source.sendSystemMessage(navBar);
     }
 
     // 生成翻页按钮
-    private static void appendNavButton(MutableComponent parent, String text, int targetPage,
+    private static void appendNavButton(MutableComponent parent, String textKey, int targetPage,
                                         String sortStr, boolean isReverse, String filterStr) {
         String safeSort = (sortStr == null || sortStr.isEmpty()) ? "default" : sortStr;
         String safeFilter = (filterStr == null || filterStr.isEmpty()) ? "{}" : filterStr;
@@ -126,15 +159,17 @@ public class LazyTickListRenderer {
         safeSort = quoteIfNecessary(safeSort);
         safeFilter = quoteIfNecessary(safeFilter);
 
-        // 此处需完整命令
         // /createlazytick list <page> <sortMode> <isReverse> <filter>
         String command = "/createlazytick list " + targetPage + " complex " + safeSort + " " + isReverse + " " + safeFilter;
 
-        parent.append(Component.literal(text)
+        parent.append(Component.translatable(textKey)
                 .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
                 .withStyle(style -> style
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击前往第 " + targetPage + " 页")))
+                        .withHoverEvent(new HoverEvent(
+                                HoverEvent.Action.SHOW_TEXT,
+                                Component.translatable("createlazytick.nav.hover_go_page", targetPage)
+                        ))
                 ));
     }
 
