@@ -370,7 +370,7 @@ public class CommandHelper {
     }
 
     private static void RestoreFailed(Exception e2) {
-        mes.error("回退默认方法排序失败:\n"+ e2.getMessage());
+        mes.error("Failed to fallback to default sorting:\n"+ e2.getMessage());
     }
 
     // 字符串截断辅助方法
@@ -404,12 +404,12 @@ public class CommandHelper {
         }
 
         if (!foundAny) {
-            throw new NumberFormatException("无效的时间格式: " + input + " (示例: 3d; 12h; 30m; 3d8h6m30s)");
+            throw new NumberFormatException("Invalid time format: " + input + " (Example: 3d; 12h; 30m; 3d8h6m30s)");
         }
 
         String leftOver = matcher.replaceAll("");
         if (!leftOver.isBlank()) {
-            throw new NumberFormatException("时间包含非法字符: " + leftOver);
+            throw new NumberFormatException("Duration contains invalid characters: " + leftOver);
         }
 
         return totalMs;

@@ -131,6 +131,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         int newLazyTickInterval = LazyTickLogic.computeNextInterval(
                 control, currentLazyTickInterval, ServerConfig.getFunnelDelayMax()
         );
+        // mes.error(newLazyTickInterval);
         if (newLazyTickInterval != currentLazyTickInterval) {
             LazyTickLogic.setIntervalSafe(control, newLazyTickInterval);
         }
