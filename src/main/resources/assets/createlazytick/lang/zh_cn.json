@@ -126,6 +126,9 @@
   "createlazytick.error.file_write_failed": "文件写入失败,请检查服务器日志",
   "createlazytick.error.mode_param_only_forced_dynamic": "模式参数错误: [%s] (仅限 forced 或 dynamic)",
   "createlazytick.export.no_records_cancelled": "没有符合筛选条件的记录,导出取消",
-  "createlazytick.export.success_with_path": "导出成功! 文件已保存至 %s"
+  "createlazytick.export.success_with_path": "导出成功! 文件已保存至 %s",
+
+  "item.createlazytick.clock.tooltip.line1": "当佩戴护目镜的时候，使用此物品可调节机械动力元件工作状态",
+  "item.createlazytick.clock.tooltip.line2": "也可以对准元件下半部分长按以进行细微控制"
 }
 

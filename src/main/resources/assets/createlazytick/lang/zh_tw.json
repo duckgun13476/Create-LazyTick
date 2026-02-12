@@ -126,5 +126,8 @@
   "createlazytick.error.file_write_failed": "檔案寫入失敗，請檢查伺服器日誌",
   "createlazytick.error.mode_param_only_forced_dynamic": "模式參數錯誤: [%s] (僅限 forced 或 dynamic)",
   "createlazytick.export.no_records_cancelled": "沒有符合篩選條件的紀錄，匯出已取消",
-  "createlazytick.export.success_with_path": "匯出成功! 檔案已儲存至 %s"
+  "createlazytick.export.success_with_path": "匯出成功! 檔案已儲存至 %s",
+
+  "item.createlazytick.clock.tooltip.line1": "當配戴護目鏡時，使用此物品可調整機械動力元件的運作狀態",
+  "item.createlazytick.clock.tooltip.line2": "也可對準元件下半部長按以進行精細控制"
 }
