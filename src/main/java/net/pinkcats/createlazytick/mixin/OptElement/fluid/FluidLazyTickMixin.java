@@ -2,7 +2,6 @@ package net.pinkcats.createlazytick.mixin.OptElement.fluid;
 
 
 import com.simibubi.create.content.fluids.FluidTransportBehaviour;
-import com.simibubi.create.content.fluids.PipeConnection;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -19,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 
-//记得补偿流体(目前速度有异常)
 @Mixin(value = FluidTransportBehaviour.class, remap = false)
 public class FluidLazyTickMixin extends BlockEntityBehaviour {
 
