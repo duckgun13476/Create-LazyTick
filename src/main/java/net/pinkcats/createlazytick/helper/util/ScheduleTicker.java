@@ -14,10 +14,10 @@ public class ScheduleTicker {
     public ScheduleTicker(int triggerInterval, Runnable targetFunction) {
         // 原有参数校验
         if (triggerInterval <= 0) {
-            throw new IllegalArgumentException("触发间隔必须是正整数，当前值：" + triggerInterval);
+            throw new IllegalArgumentException("Trigger interval must be a positive integer, current value: " + triggerInterval);
         }
         if (targetFunction == null) {
-            throw new IllegalArgumentException("目标函数不能为null");
+            throw new IllegalArgumentException("Target function cannot be null");
         }
         this.triggerInterval = triggerInterval;
         this.targetFunction = targetFunction;
