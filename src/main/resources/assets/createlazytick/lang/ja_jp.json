@@ -1,0 +1,156 @@
+{
+  "creativetab.createlazytick_tab": "Create: 遅延ティック",
+  "item.createlazytick.clock": "遅延ティッククロック",
+
+  "createlazytick.arm.config_exemption_full_speed": "[設定除外] フルスピード応答",
+  "createlazytick.arm.ignore_list_disabled": "対象ブロックが遅延ティック無効リストに含まれているため、遅延ティックを無効化しました",
+  "createlazytick.arm.cannot_change_interval": "遅延ティックの休止間隔を変更できません",
+  "createlazytick.arm.config_exemption_weak": "[設定除外] 弱い遅延ティック",
+  "createlazytick.arm.weak_list_shortened": "対象ブロックが弱い遅延ティックリストに含まれているため、休止間隔を短縮しました",
+  "createlazytick.arm.can_change_by_force": "強制モードで遅延ティックの休止間隔を変更できます",
+
+  "createlazytick.crafter.redstone_powered": "レッドストーン状態: 有効",
+  "createlazytick.crafter.full_speed_window": "フルスピード応答中（2分間）",
+  "createlazytick.crafter.fast_speed_window": "フルスピード応答中（10秒間）",
+  "createlazytick.crafter.idle_too_long": "長時間未使用のため休止しました",
+  "createlazytick.crafter.forced_control": "強制モードにより遅延ティック上限が制御されています",
+  "createlazytick.crafter.redstone_unpowered": " レッドストーン状態: 無信号",
+  "createlazytick.crafter.no_delay_full_slots": "通常の満スロット合成には遅延はありません（レッドストーン検知のみ遅延の可能性あり）",
+
+  "createlazytick.clock.global_config_locked": "このコンポーネントはグローバル設定で管理されているため変更できません",
+  "createlazytick.clock.mode_changed": "遅延ティックモードを変更しました: ",
+
+  "createlazytick.mode.auto_sleep_light": " [軽度自動休止モード]",
+  "createlazytick.mode.auto_sleep_medium": " [中度自動休止モード]",
+  "createlazytick.mode.auto_sleep_deep": " [深度自動休止モード]",
+  "createlazytick.mode.auto_sleep_default": " [深度自動休止モード](デフォルト)",
+
+  "createlazytick.mode.forced_full": " [強制フルスピードモード]",
+  "createlazytick.mode.forced_sleep_light": " [強制軽度休止モード]",
+  "createlazytick.mode.forced_sleep_medium": " [強制中度休止モード]",
+  "createlazytick.mode.forced_sleep_deep": " [強制深度休止モード]",
+
+  "createlazytick.mode.forced_sleep_info": " (固定休止: %d%%|%dt)",
+  "createlazytick.mode.dynamic_limit_info": " (動的上限: %d%%|%dt)",
+  "createlazytick.mode.unknown": " [不明なモード]",
+
+  "createlazytick.mode.description.forced_full": "  説明: 遅延最適化を無効化し、常にフルスピードで動作します。",
+  "createlazytick.mode.description.forced_sleep": "  説明: 負荷を無視し、固定頻度で動作します。",
+  "createlazytick.mode.description.auto_default": "  説明: デフォルト設定。機能を維持しつつ可能な限り休止します。",
+  "createlazytick.mode.description.auto_dynamic": "  説明: 負荷に応じて休止時間を動的に計算します。",
+  "createlazytick.mode.description.unknown_bug": "  説明: これが表示された場合、不具合の可能性があります。",
+
+  "createlazytick.scroll.config": "設定",
+  "createlazytick.scroll.dynamic_control": "動的制御",
+  "createlazytick.scroll.forced_control": "強制制御",
+  "createlazytick.scroll.forced_active": "強制有効",
+
+  "createlazytick.tooltip.status": "遅延ティック状態:",
+  "createlazytick.tooltip.operator": " 操作者: %s",
+  "createlazytick.tooltip.fluid_system_delay": "流体系遅延ティック: %d",
+  "createlazytick.tooltip.belt_system_delay": "ベルト系遅延ティック: %d",
+  "createlazytick.tooltip.global_config_note": "* グローバル設定のため個別変更不可",
+
+  "createlazytick.command.no_forced_machines": "現在読み込み中のチャンクに強制有効な機械はありません。",
+  "createlazytick.command.forced_machines_header": "=== 強制有効機械一覧 (ページ %d/%d | 合計 %d 件) ===",
+  "createlazytick.command.invalid_or_unloaded": "無効/未読み込み",
+  "createlazytick.command.unknown": "不明",
+  "createlazytick.command.click_to_teleport": "クリックしてテレポート",
+  "createlazytick.command.operator": " (操作者: %s)",
+  "createlazytick.command.next_page": ">>> 次のページを見る >>>",
+  "createlazytick.command.ban": "遅延ティック調整機能の使用が禁止されています！",
+
+  "createlazytick.message.adjust_limit_reached": "調整可能なコンポーネント数が上限に達しました！（%d/%d）",
+
+  "createlazytick.export.success_with_path": "エクスポート成功！保存先: %s",
+  "createlazytick.export.no_data": "エクスポート可能なデータがありません",
+  "createlazytick.export.no_records_cancelled": "条件に一致する記録がありません。エクスポートを中止しました",
+  "createlazytick.export.sort_fallback": "並び替え中にエラーが発生したため、デフォルト順でエクスポートします",
+
+  "createlazytick.error.file_write_failed": "ファイル書き込みに失敗しました。サーバーログを確認してください",
+  "createlazytick.error.internal_error_contact_admin": "内部エラーが発生しました。管理者に連絡してください",
+  "createlazytick.error.sort_internal_error": "並び替え中に内部エラーが発生しました",
+  "createlazytick.error.unknown_operator": "不明な演算子: %s",
+  "createlazytick.error.unknown_sort_mode": "不明なソートモード: [%s] (利用可能: %s)",
+  "createlazytick.error.unexpected_chars": "予期しない文字を検出: %s",
+  "createlazytick.error.unparsed_conditions": "条件の一部を解析できません: [%s]",
+  "createlazytick.error.duration_format_with_examples": "時間形式エラー: [%s] (例: 3d; 12h; 30m; 3d8h6m30s)",
+  "createlazytick.error.time_format": "時間形式エラー: [%s]",
+  "createlazytick.error.filter_invalid_hint": "有効なフィルター条件を入力してください",
+  "createlazytick.error.filter_empty_hint": "フィルター条件が指定されていません",
+  "createlazytick.error.unknown_filter_key": "不明なフィルターキー: [%s]",
+  "createlazytick.error.mode_param_only_forced_dynamic": "無効なモードパラメータ: [%s] (forced または dynamic のみ有効)",
+  "createlazytick.hover.details": "詳細:",
+  "createlazytick.hover.mode": "モード: %s",
+  "createlazytick.hover.machine": "機械名: %s",
+  "createlazytick.hover.last_operator": "最終操作者: %s",
+  "createlazytick.hover.registered_time": "登録: %s",
+  "createlazytick.hover.scroll_value": "設定値: %d%%",
+  "createlazytick.hover.click_teleport": "クリックしてテレポート",
+
+  "createlazytick.sort.default": "デフォルト",
+  "createlazytick.sort.nearest": "最寄り",
+  "createlazytick.sort.time": "時間",
+  "createlazytick.sort.name": "機械名",
+  "createlazytick.sort.player": "プレイヤー名",
+  "createlazytick.sort.mode": "モード",
+  "createlazytick.sort.value": "値",
+  "createlazytick.sort.loaded": "読み込み済み",
+  "createlazytick.sort.composite": "複合",
+  "createlazytick.sort.hover_logic": "ソート条件: %s",
+
+  "createlazytick.mode.forced_locked": "強制ロック",
+  "createlazytick.mode.dynamic_control": "動的制御",
+
+  "createlazytick.error.mode_param": "無効なモードパラメータ: [%s]",
+  "createlazytick.error.value_format": "数値形式が無効です: [%s]",
+
+  "createlazytick.message.no_non_default_machines": "現在の一覧には、デフォルト以外の設定を持つ機械はありません。",
+  "createlazytick.message.no_filtered_records": "現在のフィルター条件に一致する記録はありません。",
+
+  "createlazytick.quota.unlimited": "無制限",
+  "createlazytick.stats.player_quota": "プレイヤー %s の状態:\n - 有効: %s  - 上限: %s",
+
+  "createlazytick.desc.name_bracket": "名前 [%s]",
+  "createlazytick.reset.desc.owner": "所有者 [%s]",
+  "createlazytick.reset.desc.mode": "モード [%s]",
+
+  "createlazytick.mode.short.forced": "強制",
+  "createlazytick.mode.short.dynamic": "動的",
+
+  "createlazytick.nav.prev": "<<< 前へ",
+  "createlazytick.nav.next": "次へ >>>",
+  "createlazytick.nav.hover_go_page": "クリックして %d ページへ移動",
+
+  "createlazytick.list.header.non_default": "== デフォルト以外の遅延ティック部品一覧 (ページ %d/%d | 合計 %d | ソート: %s) ==",
+
+  "createlazytick.desc.value_bracket": "値 [%s %d]",
+  "createlazytick.tooltip.extra.fixed": "(固定休止: %d%% | %s)",
+  "createlazytick.tooltip.extra.dynamic": "(動的上限: %d%% | %s)",
+  "createlazytick.status.not_loaded_prefix": "[未読み込み] ",
+
+  "createlazytick.desc.radius_block": "半径 [%d ブロック]",
+  "createlazytick.error.time_filter_operator_only": "時間フィルターは [olderthan]（より前）または [newerthan]（より後）のみ対応しています。",
+  "createlazytick.desc.registered_duration": "登録期間 [%s %s]",
+
+  "createlazytick.mode.auto_sleep.light": " [軽度自動休止モード]",
+  "createlazytick.mode.auto_sleep.medium": " [中度自動休止モード]",
+  "createlazytick.mode.auto_sleep.deep": " [深度自動休止モード]",
+  "createlazytick.mode.auto_sleep.default": " [深度自動休止モード] (デフォルト)",
+
+  "createlazytick.mode.forced.full": " [強制フルスピードモード]",
+  "createlazytick.mode.forced.sleep_light": " [強制軽度休止モード]",
+  "createlazytick.mode.forced.sleep_medium": " [強制中度休止モード]",
+  "createlazytick.mode.forced.sleep_deep": " [強制深度休止モード]",
+
+  "createlazytick.desc.composite_query": "複合条件 [%s]",
+
+  "createlazytick.reset.success_loaded_only": "読み込み済み範囲で、%s に一致する機械を %d 台リセットしました。",
+  "createlazytick.reset.note_unloaded_unchanged": "(未読み込み範囲は変更されません。)",
+  "createlazytick.reset.not_found_loaded_only": "読み込み済み範囲に、%s に一致する記録はありません。",
+
+  "createlazytick.limit.set_success_multi": "%2$d 人のプレイヤーに対して遅延ティック調整の上限を設定しました: %1$s -> %3$s",
+  "createlazytick.limit.remove_success_multi": "%2$d 人のプレイヤーの上限を解除しました: %1$s（上限は無制限になりました。）",
+
+  "createlazytick.reset.no_records": "リセットできる記録がありません。"
+}
