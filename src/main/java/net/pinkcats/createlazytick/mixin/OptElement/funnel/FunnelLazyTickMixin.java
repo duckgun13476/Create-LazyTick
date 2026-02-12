@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Mixin;
@@ -146,24 +147,15 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     @Unique
     private void createLazyTick$resetDelayTick(ISmartBlockEntityControl control) {
         int defaultTick = AllConfigs.server().logistics.defaultExtractionTimer.get();
-        createLazyTick$FunnelDelayTick = defaultTick;
+        CLT$FunnelDelayTick = defaultTick;
         LazyTickLogic.setIntervalSafe(control, defaultTick);
-    }
-
-    @Shadow
-    private int extractionCooldown;
-
-    @Unique
-    private void createlazytick$startCooldown() {
-        extractionCooldown = AllConfigs.server().logistics.defaultExtractionTimer.get() + createLazyTick$FunnelDelayTick;
-        //System.out.println("extraction cooldown: " + extractionCooldown);
     }
 
     @Shadow
     public void onTransfer(ItemStack stack) {}
 
     @Unique
-    private int createLazyTick$FunnelDelayTick = 0;
+    private int CLT$FunnelDelayTick = 0;
 
 
 
@@ -184,15 +176,19 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         flap.tickChaser();
 
         // for interface
-        if (createlazytick$HasInterface){
-            createLazyTick$FunnelDelayTick = (control.createLazyTick$getCurrentSuperTick() - 10) ;
-        }
+        CLT$FunnelDelayTick++;
+        if (!CLT$HasInterface){
+            if (CLT$FunnelDelayTick < control.createLazyTick$getCurrentSuperTick()) {
+                ci.cancel();
+                return;}
 
-        createLazyTick$FunnelDelayTick++;
-        if (createLazyTick$FunnelDelayTick < control.createLazyTick$getCurrentSuperTick()) {
-            ci.cancel();
-            return;}
-        createLazyTick$FunnelDelayTick = 0;
+        } else {
+            if (CLT$FunnelDelayTick < AllConfigs.server().logistics.defaultExtractionTimer.get()) {
+                ci.cancel();
+                return;}
+        }
+        CLT$FunnelDelayTick = 0;
+
 
         super.tick();
         Funnel.Mode mode = determineCurrentMode();
@@ -214,7 +210,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
         BlockState blockState = getBlockState();
         BlockPos blockPos = getBlockPos();
-        createlazytick$HasInterface = createLazyTick$IsMovingInterface(blockPos,blockState);
+        CLT$HasInterface = createLazyTick$IsMovingInterface(blockPos,blockState);
 
         if (mode == Funnel.Mode.PUSHING_TO_BELT) {
             //mes.warn("if (mode == Funnel.Mode.PUSHING_TO_BELT) {");
@@ -235,7 +231,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
     @Unique
-    private boolean createlazytick$HasInterface = false;
+    private boolean CLT$HasInterface = false;
 
     @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
     private void activateExtractingBeltFunnel(CallbackInfo ci) {
@@ -381,6 +377,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         behaviours.add(new DirectBeltInputBehaviour(this).onlyInsertWhen(this::supportsDirectBeltInput)
                 .setInsertionHandler(this::handleDirectBeltInput));
         registerAwardables(behaviours, AllAdvancements.FUNNEL);
+        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 
 
