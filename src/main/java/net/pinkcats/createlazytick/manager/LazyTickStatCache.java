@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.Gui.mes;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,16 +16,16 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class LazyTickStatCache {
-    private final String blockName;     // 机器名称(id) (create:mechanical_saw")
+    private final String blockId;     // 机器名称(id) ("create:mechanical_saw")
     private final UUID ownerUUID;       // 调整玩家的uuid(鉴权)
     private final String ownerName;     // 调整玩家 ("Steve")
     private final long registeredTime;  // 调整时间 (timestamp)
     private final int scrollValue;      // 滚轮数值 (0~100)
     private final boolean isForced;     // 模式标记 (强制/动态)
 
-    public LazyTickStatCache(String blockName, UUID ownerUUID, String ownerName, long registeredTime,
+    public LazyTickStatCache(String blockId, UUID ownerUUID, String ownerName, long registeredTime,
                              int scrollValue, boolean isForced) {
-        this.blockName = blockName;
+        this.blockId = blockId;
         this.ownerUUID = ownerUUID;
         this.ownerName = ownerName;
         this.registeredTime = registeredTime;
@@ -32,7 +33,7 @@ public class LazyTickStatCache {
         this.isForced = isForced;
     }
 
-    public String getBlockName() { return blockName; }
+    public String getBlockId() { return blockId; }
     public UUID getOwnerUUID() { return ownerUUID; }
     public String getOwnerName() { return ownerName; }
     public int getScrollValue() { return scrollValue; }
@@ -50,7 +51,7 @@ public class LazyTickStatCache {
     public Component getDisplayName() {
         try {
             // 尝试将存储的 blockName(id) 转为资源路径(e.g. "create:creative_motor")
-            ResourceLocation rl = ResourceLocation.tryParse(this.blockName);
+            ResourceLocation rl = ResourceLocation.tryParse(this.blockId);
             if (rl != null) {
                 // 从注册表中查找方块
                 Block block = ForgeRegistries.BLOCKS.getValue(rl);
@@ -61,10 +62,10 @@ public class LazyTickStatCache {
                 }
             }
         } catch (Exception e) {
-            CreateLazyTick.LOGGER.error("Error occurred when trying to parse the block id:\n{}",e.getMessage());
+            mes.error("Error occurred when trying to parse the block id: "+ e.getMessage());
         }
         // 回退,抛出注册id
-        return Component.literal(this.blockName);
+        return mes.Char(this.blockId);
     }
 
     // 用于 SavedData 判断数据是否变化
@@ -76,19 +77,19 @@ public class LazyTickStatCache {
         return registeredTime == that.registeredTime &&
                 scrollValue == that.scrollValue &&
                 isForced == that.isForced &&
-                Objects.equals(blockName, that.blockName) &&
+                Objects.equals(blockId, that.blockId) &&
                 Objects.equals(ownerUUID, that.ownerUUID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(blockName, ownerUUID, registeredTime, scrollValue, isForced);
+        return Objects.hash(blockId, ownerUUID, registeredTime, scrollValue, isForced);
     }
 
     // 序列化存盘(nbt)
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
-        tag.putString("Name", blockName);
+        tag.putString("Name", blockId);
         tag.putUUID("OwnerUUID", ownerUUID);
         tag.putString("Owner", ownerName);
         tag.putLong("Time", registeredTime);
