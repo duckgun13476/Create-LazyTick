@@ -1,11 +1,13 @@
 package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
-import net.createmod.catnip.config.ui.BaseConfigScreen;
+import com.simibubi.create.AllCreativeModeTabs;
+import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -16,7 +18,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.pinkcats.createlazytick.Register.LazyTickCreativeTabs;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
@@ -56,7 +57,7 @@ public class CreateLazyTick {
         IEventBus modEventBus = modContext.getModEventBus();
 
         LazyTickItem.register(modEventBus);
-        LazyTickCreativeTabs.register(modEventBus);
+
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -95,6 +96,14 @@ public class CreateLazyTick {
         public static void onClientSetup(FMLClientSetupEvent event)
         {
 
+        }
+
+
+        @SubscribeEvent
+        public static void addToCreateTabs(BuildCreativeModeTabContentsEvent event) {
+            if (event.getTab() == AllCreativeModeTabs.BASE_CREATIVE_TAB.get()) {
+                event.accept(LazyTickItem.CLOCK.get());
+            }
         }
     }
 
