@@ -1,32 +1,69 @@
-
----
-
-![logo.png](logo.png)
+<img width="496" height="149" alt="logo" src="https://github.com/user-attachments/assets/b437a026-1527-48b9-9bda-a49af8369c89" />
 
 <p align="center">
-<a href="https://modrinth.com/mod/create-entity-control"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/available/modrinth_vector.svg" alt="Modrinth Page"></a>
-<a href="https://www.curseforge.com/minecraft/mc-mods/create-entitycontroller"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/available/curseforge_vector.svg" alt="CurseForge Page"></a>
+<a href="https://modrinth.com/mod/createlazytick"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/available/modrinth_vector.svg" alt="Modrinth Page"></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/create-lazytick"><img src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/available/curseforge_vector.svg" alt="CurseForge Page"></a>
 </p>
 
-## Create: Lazy Tick ⚙️
+
+## Create: LazyTick ⚙️
 
 ---
 
-A highly optimized mod based on Lazy Tick, designed to significantly reduce the workload of Create components and their constant usage 🔄. This allows servers to support 2-3 times more Create power production lines compared to pure Create!
+A performance-focused optimization addon for **Create**.
 
-1. **Belt**: Reduces static usage of conveyor belts, achieving a 2-4 times reduction in constant usage compared to vanilla.
-2. **Caching Mechanism**: Dramatically reduces the usage of Power Synthesizers, Power Mixers, and Power Saws under heavy recipe loads (constant usage can be as low as 2us! Vanilla can reach up to 300us).
-   - **Crafter**
-   - **Mechanic Arm**
-   - **Deployer**
-   - **Mixer**
-3. **Funnel**: Static usage of hoppers is reduced by 5-7 times compared to vanilla.
-4. **Chute**: Reduces entity ticks for chutes, achieving a 2-3 times reduction in usage compared to vanilla.
-5. **Drain**: Reduces entity ticks, achieving a 10 times reduction in abnormal usage and 1.2 times in constant usage compared to vanilla.
-6. **Saws**: Reduces entity ticks, achieving a 30 times reduction in abnormal usage and 10 times in constant usage compared to vanilla.
-7. **Storage Tables**: Reduces entity ticks, achieving an 8 times reduction in constant usage compared to vanilla.
-8. **Fluid Systems**: Reduces fluid ticks, achieving a 4 times reduction in constant fluid usage compared to vanilla (can be adjusted in the configuration file).
+By introducing lazy ticking and caching mechanisms, this mod significantly reduces unnecessary computation and idle overhead of Create machinery, allowing servers to handle **2–4× more active production lines** compared to vanilla Create, as well as much larger semi-idle infrastructure.
 
-**Note**: Lazy Tick may cause some original component animations to exhibit slight delays, which is unavoidable. You can modify the configuration file to find the most suitable parameters.
+---
 
---- 
+### 🔧 Core Optimizations
+
+#### 🧱 Logistics Components
+- **Belt / Funnel / Chute / Depot**
+- 50%–95% reduction in idle overhead
+- 40%–80% reduction in dynamic extra workload
+- Significant gains in large-scale storage and filtering systems
+
+---
+
+#### 🏭 Processing Components
+- **Mechanical Crafter / Mechanical Mixer / Mechanical Saw / Basin**
+- Introduces recipe caching mechanisms
+- Performance improvement scales with recipe count
+- 70%–95% reduction in active workload
+- In extreme cases, workload drops from ~300µs to ~2–10µs
+
+---
+
+#### 🤖 Interaction Components
+- **Mechanical Arm / Deployer**
+- Reduces frequent checks and repeated searches
+- 20%–60% workload reduction
+- Greater gains when interacting with Belts
+
+---
+
+#### 🌊 Fluid System Optimization
+- Global fluid ticking reduced to 1/k of vanilla (default: 1/5)
+- Multiplier configurable via config
+- Significant improvements in large pipe networks
+
+---
+
+### 📊 Real-World Performance
+
+In live server testing environments:
+
+- Supports 2–3× more fully active production lines
+- Semi-idle structures can scale beyond 5× vanilla capacity
+- Optimization strength increases with larger recipe datasets
+
+---
+
+### ⚠️ Important Notes
+
+- Reduced tick frequency may cause slight animation delays (configurable)
+- Some logic checks have been modified; contraptions relying on strict vanilla tick synchronization may require adjustment using the **LazyTick Clock**
+- Always test and back up your world before deploying to production servers
+
+---
