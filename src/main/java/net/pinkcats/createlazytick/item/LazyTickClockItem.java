@@ -8,6 +8,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,6 +22,7 @@ import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +31,15 @@ public class LazyTickClockItem extends Item {
 
     public LazyTickClockItem(Properties properties) {
         super(properties);
+    }
+
+
+    @Override
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("item.createlazytick.clock.tooltip.line1")
+                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.createlazytick.clock.tooltip.line2")
+                .withStyle(ChatFormatting.GRAY));
     }
 
     @Override
