@@ -25,7 +25,7 @@
     "OptElement.fluid.FluidAccessor",
     "OptElement.fluid.FluidLazyTickMixin",
     "OptElement.fluid.FluidNetworkAccessor",
-    "OptElement.fluid.FluidNetworkMixin",
+    "OptElement.fluid.FluidNetworkTransferSpeedMixin",
     "OptElement.fluid.PipeConnectionAccessor",
     "OptElement.funnel.FunnelLazyTickMixin",
     "OptElement.itemdrain.ItemDrainAccessor",
