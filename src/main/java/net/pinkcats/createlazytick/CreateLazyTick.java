@@ -12,6 +12,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -64,6 +65,11 @@ public class CreateLazyTick {
 
         modLoadingContext.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modLoadingContext.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+
+        DistExecutor.safeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                () -> net.pinkcats.createlazytick.Register.ClientInit::initClient
+        );
+        // problem
         modLoadingContext.registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
@@ -71,6 +77,8 @@ public class CreateLazyTick {
                                 .withSpecs(ClientConfig.SPEC, null, ServerConfig.SPEC)
                 )
         );
+
+
     }
 
 
@@ -114,7 +122,7 @@ public class CreateLazyTick {
 
 
     @SuppressWarnings("unchecked")
-    private static ModLoadingContext getModLoadingContextViaReflection() {
+    public static ModLoadingContext getModLoadingContextViaReflection() {
         try {
             Field contextField = ModLoadingContext.class.getDeclaredField("context");
             contextField.setAccessible(true);
