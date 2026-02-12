@@ -328,6 +328,8 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
 
     //Tool func
+
+    //paradox Code (interesting func)
     @Unique
     private boolean createLazyTick$IsMovingInterface(BlockPos blockPos, BlockState blockState) {
 
