@@ -2,10 +2,8 @@ package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.AllCreativeModeTabs;
-import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -68,14 +66,6 @@ public class CreateLazyTick {
 
         DistExecutor.safeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
                 () -> net.pinkcats.createlazytick.Register.ClientInit::initClient
-        );
-        // problem
-        modLoadingContext.registerExtensionPoint(
-                ConfigScreenHandler.ConfigScreenFactory.class,
-                () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
-                                .withSpecs(ClientConfig.SPEC, null, ServerConfig.SPEC)
-                )
         );
 
 
