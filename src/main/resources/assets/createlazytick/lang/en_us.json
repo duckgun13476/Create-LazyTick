@@ -1,7 +1,7 @@
 {
   "creativetab.createlazytick_tab": "Create:Lazy Tick",
 
-  "item.createlazytick.clock": "Lazytick CLock",
+  "item.createlazytick.clock": "Lazytick Clock",
 
   "createlazytick.arm.config_exemption_full_speed": "[Config Exemption] Full Speed Response",
   "createlazytick.arm.ignore_list_disabled": "Target blocks in ignore lazy tick list, lazy tick disabled",

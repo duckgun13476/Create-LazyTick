@@ -100,9 +100,9 @@ public class LazyTickStatCache {
 
     // 反序列化(从nbt(盘)读)
     public static LazyTickStatCache deserializeNBT(CompoundTag tag) {
-        String name = tag.contains("Name") ? tag.getString("Name") : "未知元件";
+        String name = tag.contains("Name") ? tag.getString("Name") : "Unknown";
         UUID ownerUUID = tag.contains("OwnerUUID") ? tag.getUUID("OwnerUUID") : Util.NIL_UUID;
-        String owner = tag.contains("Owner") ? tag.getString("Owner") : "未知";
+        String owner = tag.contains("Owner") ? tag.getString("Owner") : "Unknown";
         long time = tag.contains("Time") ? tag.getLong("Time") : 0L;
         int scroll = tag.contains("Scroll") ? tag.getInt("Scroll") : 0;
         boolean forced = tag.contains("IsForced") && tag.getBoolean("IsForced");
