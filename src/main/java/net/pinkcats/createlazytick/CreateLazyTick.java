@@ -69,14 +69,6 @@ public class CreateLazyTick {
         DistExecutor.safeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
                 () -> net.pinkcats.createlazytick.Register.ClientInit::initClient
         );
-        // problem
-        modLoadingContext.registerExtensionPoint(
-                ConfigScreenHandler.ConfigScreenFactory.class,
-                () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
-                                .withSpecs(ClientConfig.SPEC, null, ServerConfig.SPEC)
-                )
-        );
 
 
     }
