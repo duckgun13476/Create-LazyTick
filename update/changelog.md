@@ -1,21 +1,36 @@
+### 2.4-beta (Big Update)
+#### Feature
+1. New item, lazy clock, allows for BlockEntity control using the clock.
+2. Now you can use clock to use scroller to set tick particular.
+3. New Command system: You can use /createlazytick [command] to search which entity is controlled by user(Avoid abuse)
+4. New UI: When you have CLT clock in main hand and with Create Glass, you can see a better UI to know Entity symptom.
 
+#### Fix
+1. Fix belt delay problem(Contributor: miiiiiint #5)
+2. Fix saw problem(now saw won't lock recipe.)
+3. Fix fluid system Opt problem to improve compat for other mod's inject(destroy,mek)
+4. Fix funnel problem, now funnel can be over tick by redstone,even if author advise use clock to control.
+5. Fix clock model.
+6. Fix mechanical arm match problem(some mechanical arm is malfunction on belt)
+7. Fix funnel deadlock which cause moving structures can't transfer item with interface.
 
+---
 ### 1.3-beta
 1. Fix config problem.
 2. Add Spout recipes cache
-
+---
 ### 1.2-beta
 1. Fix a crush bug.
-
+---
 ### 1.1-beta
 1. Added LazyTick for Arm, Crafter, Deployer, Item drain and Saw.
 2. Further optimization of the work basin has been made, but it may still not be fully optimized.
 3. The format of the config has been rewritten to allow better control over formatting.
 4. Fixed all potential issues that were not correctly labeled (remap = false).
-
+---
 ### 1.1-alpha
 1. Add all LazyTick to config.(为所有的Mixin添加了配置项)
-
+---
 ### 1.0-alpha
 1. Add chute and funnel lazy tick.
 2. Plant lazytick for create6.0.
