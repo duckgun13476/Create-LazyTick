@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Mixin;
@@ -140,14 +141,13 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     @Unique
     private void createLazyTick$FunnelBackOff(ISmartBlockEntityControl control){
         createLazyTick$applyBackoff(control);
-        createLazyTick$applyBackoff(control);
     }
 
     @Unique
     private void createLazyTick$resetDelayTick(ISmartBlockEntityControl control) {
-        int defaultTick = AllConfigs.server().logistics.defaultExtractionTimer.get();
-        createLazyTick$FunnelDelayTick = defaultTick;
-        LazyTickLogic.setIntervalSafe(control, defaultTick);
+        /*int defaultTick = AllConfigs.server().logistics.defaultExtractionTimer.get();
+        createLazyTick$FunnelDelayTick = defaultTick;*/
+        LazyTickLogic.setIntervalSafe(control, 1);
     }
 
     @Shadow
@@ -184,14 +184,23 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         flap.tickChaser();
 
         // for interface
-        if (createlazytick$HasInterface){
-            createLazyTick$FunnelDelayTick = (control.createLazyTick$getCurrentSuperTick() - 10) ;
+        int targetInterval = control.createLazyTick$getCurrentSuperTick();
+
+        if (createlazytick$HasInterface) {
+            targetInterval = Math.max(1, targetInterval - 10);
         }
 
         createLazyTick$FunnelDelayTick++;
-        if (createLazyTick$FunnelDelayTick < control.createLazyTick$getCurrentSuperTick()) {
+
+        if (createLazyTick$FunnelDelayTick < targetInterval) {
             ci.cancel();
-            return;}
+            return;
+        }
+
+        if (extractionCooldown > 0) {
+            extractionCooldown = Math.max(0, extractionCooldown - createLazyTick$FunnelDelayTick);
+        }
+
         createLazyTick$FunnelDelayTick = 0;
 
         super.tick();
@@ -310,6 +319,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
 
         createLazyTick$resetDelayTick(control);
        // mes.blue("end");
+        createlazytick$startCooldown();
         ci.cancel();
     }
 
@@ -379,6 +389,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         behaviours.add(new DirectBeltInputBehaviour(this).onlyInsertWhen(this::supportsDirectBeltInput)
                 .setInsertionHandler(this::handleDirectBeltInput));
         registerAwardables(behaviours, AllAdvancements.FUNNEL);
+        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 
 
