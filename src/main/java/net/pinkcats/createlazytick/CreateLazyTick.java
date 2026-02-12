@@ -31,7 +31,7 @@ import static net.pinkcats.createlazytick.Register.LazyTickCommand.RegisterCLTCo
 public class CreateLazyTick {
     public static final String MODID = "createlazytick";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static boolean IsServerReload = false;
+    public static volatile boolean IsServerReload = false;
 
     public static ResourceLocation DropResourceLocation(String Location){
         return ResourceLocation.parse(Location);

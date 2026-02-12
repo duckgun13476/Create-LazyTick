@@ -190,28 +190,28 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
         boolean isDelayForced = CrafterExtraDataTool.unpackIsDelayForced(data);
 
         if (isPowered) {
-            tooltip.add(Component.literal("红石状态: 已激活").withStyle(ChatFormatting.RED));
+            tooltip.add(Component.translatable("createlazytick.crafter.redstone_powered").withStyle(ChatFormatting.RED));
             if (!isDelayForced) {
                 if (isInWindow) {
-                    tooltip.add(Component.literal("全速响应中(窗口期2分钟)").withStyle(ChatFormatting.GREEN));
+                    tooltip.add(Component.translatable("createlazytick.crafter.full_speed_window").withStyle(ChatFormatting.GREEN));
                 } else {
-                    tooltip.add(Component.literal("闲置过久,已休眠").withStyle(ChatFormatting.RED));
+                    tooltip.add(Component.translatable("createlazytick.crafter.idle_too_long").withStyle(ChatFormatting.RED));
                 }
             } else {
-                tooltip.add(Component.literal("已被强行控制懒加载时间上限,按照所选模式进行休眠").withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.translatable("createlazytick.crafter.forced_control").withStyle(ChatFormatting.GRAY));
             }
         } else {
-            tooltip.add(Component.literal(" 红石状态: 无信号").withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(Component.translatable("createlazytick.crafter.redstone_unpowered").withStyle(ChatFormatting.DARK_GRAY));
             if (isInWindow) {
                 if (isDelayForced) {
-                    tooltip.add(Component.literal("已被强行控制懒加载时间上限,按照所选模式进行休眠").withStyle(ChatFormatting.GRAY));
+                    tooltip.add(Component.translatable("createlazytick.crafter.forced_control").withStyle(ChatFormatting.GRAY));
                 } else {
-                    tooltip.add(Component.literal("全速响应中(窗口期10秒)").withStyle(ChatFormatting.GREEN));
+                    tooltip.add(Component.translatable("createlazytick.crafter.fast_speed_window").withStyle(ChatFormatting.GREEN));
                 }
             }
         }
 
-        tooltip.add(Component.literal("正常满槽位合成没有延迟,仅红石检测可能有延迟").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("createlazytick.crafter.no_delay_full_slots").withStyle(ChatFormatting.GRAY));
         return tooltip;
     }
 }

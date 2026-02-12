@@ -3,28 +3,28 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ClientConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 
-//需要翻译文本
 public enum LazyTickMode {
-    AUTO_SLEEP_LIGHT(" [浅度自动休眠模式]", ChatFormatting.YELLOW, false),
-    AUTO_SLEEP_MEDIUM(" [中度自动休眠模式]", ChatFormatting.GOLD, false),
-    AUTO_SLEEP_DEEP(" [深度自动休眠模式]", ChatFormatting.RED, false),
-    AUTO_SLEEP_DEFAULT(" [深度自动休眠模式](默认)", ChatFormatting.DARK_GRAY, false),
+    AUTO_SLEEP_LIGHT("createlazytick.mode.auto_sleep.light", ChatFormatting.YELLOW, false),
+    AUTO_SLEEP_MEDIUM("createlazytick.mode.auto_sleep.medium", ChatFormatting.GOLD, false),
+    AUTO_SLEEP_DEEP("createlazytick.mode.auto_sleep.deep", ChatFormatting.RED, false),
+    AUTO_SLEEP_DEFAULT("createlazytick.mode.auto_sleep.default", ChatFormatting.DARK_GRAY, false),
 
-    FORCED_FULL(" [强制全速模式]", ChatFormatting.DARK_PURPLE, true),
-    FORCED_SLEEP_LIGHT( " [强制浅度休眠模式]", ChatFormatting.YELLOW, true),
-    FORCED_SLEEP_MEDIUM( " [强制中度休眠模式]", ChatFormatting.GOLD, true),
-    FORCED_SLEEP_DEEP( " [强制深度休眠模式]", ChatFormatting.RED, true);
+    FORCED_FULL("createlazytick.mode.forced.full", ChatFormatting.DARK_PURPLE, true),
+    FORCED_SLEEP_LIGHT("createlazytick.mode.forced.sleep_light", ChatFormatting.YELLOW, true),
+    FORCED_SLEEP_MEDIUM("createlazytick.mode.forced.sleep_medium", ChatFormatting.GOLD, true),
+    FORCED_SLEEP_DEEP("createlazytick.mode.forced.sleep_deep", ChatFormatting.RED, true);
 
-    private final String text;
+    private final String key;
     private final ChatFormatting color;
     private final boolean isBold;
-    LazyTickMode(String text, ChatFormatting color, boolean isBold) {
-        this.text = text;
+    LazyTickMode(String key, ChatFormatting color, boolean isBold) {
+        this.key = key;
         this.color = color;
         this.isBold = isBold;
     }
@@ -34,7 +34,7 @@ public enum LazyTickMode {
         LazyTickMode mode = resolveMode(dynamicValue, forcedValue);
 
         if (mode == null) {
-            return List.of(Component.literal(" [未知模式]").withStyle(ChatFormatting.DARK_RED));
+            return List.of(Component.translatable("createlazytick.mode.unknown").withStyle(ChatFormatting.DARK_RED));
         }
 
         // 2. 生成额外数值说明信息
@@ -78,27 +78,26 @@ public enum LazyTickMode {
         String timeStr = LazyTickTooltipTool.formatTime(actualInterval);
 
         // 3. 生成文本
-        String text;
         if (isForced) {
-            // [翻译键写法]:
-            // return Component.translatable("tooltip.clt.extra.fixed", percentage, timeStr).withStyle(ChatFormatting.GRAY);
-
-            // [中文写法]: (固定休眠: 0% | 1t)
-            text = String.format("(固定休眠: %d%% | %s)", percentage, timeStr);
+            return Component.translatable(
+                    "createlazytick.tooltip.extra.fixed",
+                    percentage,
+                    timeStr
+            ).withStyle(ChatFormatting.GRAY);
         } else {
-            // return Component.translatable("tooltip.clt.extra.dynamic", percentage, timeStr).withStyle(ChatFormatting.GRAY);
+            return Component.translatable(
+                    "createlazytick.tooltip.extra.dynamic",
+                    percentage,
+                    timeStr
+            ).withStyle(ChatFormatting.GRAY);
 
-            // (动态上限: 50% | 20t)
-            text = String.format("(动态上限: %d%% | %s)", percentage, timeStr);
         }
-
-        return Component.literal(text).withStyle(ChatFormatting.GRAY); // 统一设置为灰色
     }
 
     private MutableComponent getBaseComponent() {
-        MutableComponent base = Component.literal(text);  // -> 比如 "[中度自动休眠模式]"
-        base.withStyle(color);
-        if (isBold) base.withStyle(style -> style.withBold(true));
+        MutableComponent base = Component.translatable(key); // ✅ 会走 lang
+        base = base.withStyle(color);
+        if (isBold) base = base.withStyle(style -> style.withBold(true));
         return base;
     }
 
@@ -116,7 +115,8 @@ public enum LazyTickMode {
         // 如果是 NUMBER 或 BOTH，就添加第二行
         if (format == ClientConfig.ModeFormat.NUMBER || format == ClientConfig.ModeFormat.BOTH) {
             if (extraInfo != null) {
-                list.add(Component.literal(" ").append(extraInfo));
+                MutableComponent a = (MutableComponent) mes.spaces(1);
+                list.add(a.append(extraInfo));
             }
         }
 
@@ -132,25 +132,25 @@ public enum LazyTickMode {
         // 强制模式解释
         if (forcedValue != -1) {
             if (forcedValue == 0) {
-                return Component.literal("  说明: 懒加载优化已关闭，机器将保持全速运行。")
+                return Component.translatable("createlazytick.mode.description.forced_full")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC);
             }
-            return Component.literal("  说明: 忽略机器负载，强制按照固定的频率运行。")
+            return Component.translatable("createlazytick.mode.description.forced_sleep")
                     .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC);
         }
 
         // 自动模式解释
         if (dynamicValue > 0) {
             if (dynamicValue == 100) {
-                return Component.literal("  说明: 默认配置。机器将在不影响功能的前提下尽可能休眠。")
+                return Component.translatable("createlazytick.mode.description.auto_default")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC);
             }
-            return Component.literal("  说明: 根据负载动态计算休眠时长，但不会超过设定的上限。")
+            return Component.translatable("createlazytick.mode.description.auto_dynamic")
                     .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC);
         }
 
         // 预留文本
-        return Component.literal("  说明: 如果你看到这个，可能哪里出了bug")
+        return Component.translatable("createlazytick.mode.description.unknown_bug")
                 .withStyle(ChatFormatting.RED, ChatFormatting.ITALIC);
     }
 }

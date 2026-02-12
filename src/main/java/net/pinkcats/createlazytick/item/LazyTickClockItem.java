@@ -53,7 +53,7 @@ public class LazyTickClockItem extends Item {
             }
 
             if (whiteItem == LazyTickTooltipWhiteList.PUMP || whiteItem == LazyTickTooltipWhiteList.PIPE) {
-                player.displayClientMessage(Component.literal("此元件受全局配置控制，不可手动调整")
+                player.displayClientMessage(Component.translatable("createlazytick.clock.global_config_locked")
                         .withStyle(ChatFormatting.RED), true);
                 return InteractionResult.FAIL;
             }
@@ -103,7 +103,7 @@ public class LazyTickClockItem extends Item {
 
             // 8. 反馈消息 & 添加冷却 (0.5秒)
             int maxDelayTick = whiteItem.getMaxTick();
-            MutableComponent message = Component.literal("懒加载模式已切换: ");
+            MutableComponent message = Component.translatable("createlazytick.clock.mode_changed");
 
             List<Component> infoList = LazyTickMode.getDisplayComponents(
                     control.createLazyTick$getDynamicValue(),

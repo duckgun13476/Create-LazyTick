@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
@@ -61,7 +62,7 @@ public class CommandHelper {
         // 1. 从管理器获取原始数据
         Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
         if (forcedMachines.isEmpty()) {
-            source.sendSystemMessage(Component.literal("当前名单中没有非默认配置的机器").withStyle(ChatFormatting.GREEN));
+            source.sendSystemMessage(Component.translatable("createlazytick.message.no_non_default_machines").withStyle(ChatFormatting.GREEN));
             return 0;
         }
 
@@ -80,7 +81,7 @@ public class CommandHelper {
         }
 
         if (filteredEntries.isEmpty()) {
-            source.sendFailure(Component.literal("没有符合筛选条件的记录"));
+            source.sendFailure(Component.translatable("createlazytick.message.no_filtered_records"));
             return 0;
         }
 
@@ -104,14 +105,14 @@ public class CommandHelper {
                 filteredEntries.sort(finalComparator);
             }
         } catch (Exception e1) {
-            source.sendFailure(Component.literal("执行排序时发生内部错误,请联系管理员查看控制台"));
-            CreateLazyTick.LOGGER.error("List sort error: {}",e1.getMessage());
+            source.sendFailure(Component.translatable("createlazytick.error.sort_internal_error"));
+            mes.error("List sort error: " + e1.getMessage());
             // 排序失败则降级为默认排序再次尝试
             try {
                 filteredEntries.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(sortContext.getLoadedPositions(),
                         sortContext.getPlayerPos(), false));
             } catch (Exception e2) {
-                CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e2.getMessage());
+                RestoreFailed(e2);
             }
         }
 
@@ -148,10 +149,14 @@ public class CommandHelper {
             LazyTickSortMode mode = LazyTickSortMode.byName(cleanPart);
 
             if (mode == null) {
+                String available = "default, time, name, player, method, value, nearest, loaded";
+
                 throw new SimpleCommandExceptionType(
-                        Component.literal("未知的排序模式: [")
-                                .append(Component.literal(cleanPart).withStyle(ChatFormatting.UNDERLINE))
-                                .append("] (可用: default, time, name, player, method, value, nearest, loaded)")
+                        Component.translatable(
+                                "createlazytick.error.unknown_sort_mode",
+                                mes.CharM(cleanPart).withStyle(ChatFormatting.UNDERLINE),
+                                available
+                        )
                 ).create();
             }
 
@@ -174,7 +179,7 @@ public class CommandHelper {
 
         Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
         if (forcedMachines.isEmpty()) {
-            source.sendFailure(Component.literal("没有任何记录可供重置"));
+            source.sendFailure(Component.translatable("createlazytick.reset.no_records"));
             return 0;
         }
 
@@ -197,12 +202,20 @@ public class CommandHelper {
         int count = ForcedActiveManager.executeBatchReset(level, candidates);
 
         if (count > 0) {
-            source.sendSuccess(() -> Component.literal("已在加载区域内重置 " + count + " 个匹配 ")
-                    .append(description).append(" 的机器").append("\n")
-                    .append(Component.literal("(未加载区域保持不变)").withStyle(ChatFormatting.GRAY)), true);
+            source.sendSuccess(() -> Component.translatable(
+                            "createlazytick.reset.success_loaded_only",
+                            count,
+                            description
+                    ).append("\n")
+                    .append(Component.translatable("createlazytick.reset.note_unloaded_unchanged")
+                            .withStyle(ChatFormatting.GRAY)), true);
         } else {
-            source.sendFailure(Component.literal("在当前已加载区域未找到匹配 ").append(description).append(" 的记录"));
+            source.sendFailure(Component.translatable(
+                    "createlazytick.reset.not_found_loaded_only",
+                    description
+            ));
         }
+
         return 1;
     }
 
@@ -217,7 +230,7 @@ public class CommandHelper {
         // 从管理器获取原始数据
         Map<BlockPos, LazyTickStatCache> forcedMachines = ForcedActiveManager.getForcedMachines(level);
         if (forcedMachines.isEmpty()) {
-            source.sendFailure(Component.literal("没有任何数据可供导出"));
+            source.sendFailure(Component.translatable("createlazytick.export.no_data"));
             return 0;
         }
 
@@ -244,7 +257,9 @@ public class CommandHelper {
         }
 
         if (resultList.isEmpty()) {
-            source.sendFailure(Component.literal("没有符合筛选条件的记录,导出取消"));
+            source.sendFailure(
+                    Component.translatable("createlazytick.export.no_records_cancelled")
+            );
             return 0;
         }
 
@@ -269,13 +284,15 @@ public class CommandHelper {
                 resultList.sort(finalComparator);
             }
         } catch (Exception e1) {
-            source.sendFailure(Component.literal("排序时发生错误,将使用默认顺序导出"));
-            CreateLazyTick.LOGGER.error("Dump sort error: ", e1);
+            source.sendFailure(
+                    Component.translatable("createlazytick.export.sort_fallback")
+            );
+            mes.error("Dump sort error: "+ e1);
             try {
                 resultList.sort(LazyTickSortMode.DEFAULT.getThreadSafeComparator(sortContext.getLoadedPositions(),
                         sortContext.getPlayerPos(), false));
             } catch (Exception e2) {
-                CreateLazyTick.LOGGER.error("回退默认方法排序失败:\n{}", e2.getMessage());
+                RestoreFailed(e2);
             }
         }
 
@@ -320,7 +337,7 @@ public class CommandHelper {
                     // 使用 truncate 防止过长的名字破坏表格排版
                     String line = String.format("%-25s | %-30s | %-16s | %-8s | %-6s | %-7s | %s",
                             locStr,
-                            truncate(data.getBlockName(), 29),
+                            truncate(data.getBlockId(), 29),
                             truncate(data.getOwnerName(), 15),
                             modeStr, valStr, loadStr, timeStr);
 
@@ -331,20 +348,29 @@ public class CommandHelper {
 
             // --- 反馈结果 ---
             // 生成可点击的文件名组件 (点击复制)
-            MutableComponent fileComp = Component.literal(fileName)
+            MutableComponent fileComp = mes.CharM(fileName)
                     .withStyle(ChatFormatting.UNDERLINE, ChatFormatting.AQUA)
                     .withStyle(style -> style.withClickEvent(new net.minecraft.network.chat.ClickEvent(
                             net.minecraft.network.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, fileName)));
 
-            source.sendSuccess(() -> Component.literal("导出成功! 文件已保存至 dumps/createlazytick/ ")
-                    .append(fileComp), true);
+            String path = "dumps/createlazytick/";
+            source.sendSuccess(() -> Component.translatable(
+                    "createlazytick.export.success_with_path",
+                    path
+            ).append(fileComp), true);
 
             return resultList.size();
 
         } catch (IOException e) {
-            CreateLazyTick.LOGGER.error("Failed to write dump file", e);
-            throw new SimpleCommandExceptionType(Component.literal("文件写入失败,请检查服务器日志")).create();
+            mes.error("Failed to write dump file"+ e);
+            throw new SimpleCommandExceptionType(
+                    Component.translatable("createlazytick.error.file_write_failed")
+            ).create();
         }
+    }
+
+    private static void RestoreFailed(Exception e2) {
+        mes.error("回退默认方法排序失败:\n"+ e2.getMessage());
     }
 
     // 字符串截断辅助方法
@@ -527,7 +553,7 @@ public class CommandHelper {
 
             // 获取当前维度的机器数据
             cache.machineNames = machines.stream()
-                    .map(LazyTickStatCache::getBlockName)
+                    .map(LazyTickStatCache::getBlockId)
                     .filter(s -> s != null && !s.isEmpty())
                     .collect(Collectors.toSet());
 

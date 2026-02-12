@@ -76,7 +76,7 @@ public class ClockSyncPacket {
 
             // Packet Lock
             if (PacketCache.size() > 80) {
-                mes.error("ServerPacket Cargo is full. This gonna not happen!");
+                mes.error("ServerPacket Cargo is full. This shouldn't happen!");
                 PacketCache.clear();
             }
 

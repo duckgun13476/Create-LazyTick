@@ -14,7 +14,6 @@
     "OptElement.SpoutRecipeMixin",
     "OptElement.basin.BasinLazyTickMixin",
     "OptElement.basin.BasinOperatingLazyTickMixin",
-    "OptElement.belt.BeltBlockEntityMixin",
     "OptElement.belt.BeltFunnelInteractionLazyTickMixin",
     "OptElement.belt.BeltInventoryAccessor",
     "OptElement.belt.BeltTickMixin",

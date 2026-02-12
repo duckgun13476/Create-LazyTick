@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
@@ -38,7 +39,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
         }
 
         // 2. new ScrollBehaviour
-        LazyTickScrollBehaviour behaviour = new LazyTickScrollBehaviour(Component.literal("配置"), be);
+        LazyTickScrollBehaviour behaviour = new LazyTickScrollBehaviour(Component.translatable("createlazytick.scroll.config"), be);
 
         // 3. Set range (-100 ~ 100)
         behaviour.between(-100, 100);
@@ -100,16 +101,16 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
                 100,
                 10,
                 ImmutableList.of(
-                        Component.literal("动态控制"), // Row 0
-                        Component.literal("强制控制")  // Row 1
+                        Component.translatable("createlazytick.scroll.dynamic_control"), // Row 0
+                        Component.translatable("createlazytick.scroll.forced_control")  // Row 1
                 ),
                 new ValueSettingsFormatter(this::formatDualSettings)
         );
     }
 
     public MutableComponent formatDualSettings(ValueSettingsBehaviour.ValueSettings settings) {
-        if (settings.value() == 0) return Component.literal("强制活跃");
-        return Component.literal(settings.value() + "%");
+        if (settings.value() == 0) return Component.translatable("createlazytick.scroll.forced_active");
+        return mes.CharM(settings.value() + "%");
     }
 
     // Read

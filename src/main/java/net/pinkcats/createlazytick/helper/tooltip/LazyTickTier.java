@@ -3,10 +3,12 @@ package net.pinkcats.createlazytick.helper.tooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ClientConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 //需要秒和tick(转换)
 public enum LazyTickTier {
@@ -55,7 +57,8 @@ public enum LazyTickTier {
         // 2. 数值 (NUMBER 或 BOTH)
         if (format == ClientConfig.TierFormat.NUMBER || format == ClientConfig.TierFormat.BOTH) {
             if (format == ClientConfig.TierFormat.BOTH) {
-                list.add(Component.literal(" ").append(stats));
+                MutableComponent b2 = (MutableComponent) mes.spaces(1);
+                list.add(b2.append(stats));
             } else {
                 // 如果单显数值，顶格显示
                 list.add(stats);
@@ -111,7 +114,7 @@ public enum LazyTickTier {
             limitIndex = limitPercent / 3;
         }
 
-        MutableComponent bar = Component.literal(" [").withStyle(ChatFormatting.GRAY);
+        MutableComponent bar = mes.CharM(" [").withStyle(ChatFormatting.GRAY);
 
         // 5. 循环渲染
         for (int i = 0; i < BAR_COUNT; i++) {
@@ -144,12 +147,11 @@ public enum LazyTickTier {
             else {
                 barColor = ChatFormatting.DARK_GRAY;
             }
-
-            bar.append(Component.literal("|").withStyle(barColor));
+            bar.append(mes.CharM("|").withStyle(barColor));
         }
 
         // 6. 尾部数值
-        bar.append(Component.literal("] ").withStyle(ChatFormatting.GRAY));
+        bar.append(mes.CharM("] ").withStyle(ChatFormatting.GRAY));
 
         return bar;
     }
@@ -158,8 +160,7 @@ public enum LazyTickTier {
         String currStr = LazyTickTooltipTool.formatTime(currentInterval);
         String maxStr = LazyTickTooltipTool.formatTime(maxTick);
 
-        return Component.literal(String.format("(%s / %s)", currStr, maxStr))
-                .withStyle(ChatFormatting.GRAY);
+        return mes.CharM(String.format("(%s / %s)", currStr, maxStr)).withStyle(ChatFormatting.GRAY);
     }
 
     /**

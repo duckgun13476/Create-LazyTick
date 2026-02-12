@@ -319,13 +319,13 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         boolean weak = ArmExtraDataTool.unpackWeak(data);
 
         if (ignore) {
-            tooltip.add(Component.literal("[配置豁免]全速响应").withStyle(ChatFormatting.GOLD));
-            tooltip.add(Component.literal("有目标方块在忽略懒加载名单内，已禁用懒加载").withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.literal("不可更改懒加载休眠间隔").withStyle(ChatFormatting.GOLD));
+            tooltip.add(Component.translatable("createlazytick.arm.config_exemption_full_speed").withStyle(ChatFormatting.GOLD));
+            tooltip.add(Component.translatable("createlazytick.arm.ignore_list_disabled").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("createlazytick.arm.cannot_change_interval").withStyle(ChatFormatting.GOLD));
         } else if (weak) {
-            tooltip.add(Component.literal("[配置豁免]弱懒加载").withStyle(ChatFormatting.YELLOW));
-            tooltip.add(Component.literal("有目标方块在弱懒加载名单内，缩短休眠间隔").withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.literal("可通过强制指定状态更改懒加载休眠间隔").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("createlazytick.arm.config_exemption_weak").withStyle(ChatFormatting.YELLOW));
+            tooltip.add(Component.translatable("createlazytick.arm.weak_list_shortened").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("createlazytick.arm.can_change_by_force").withStyle(ChatFormatting.GRAY));
         }
 
         return tooltip;

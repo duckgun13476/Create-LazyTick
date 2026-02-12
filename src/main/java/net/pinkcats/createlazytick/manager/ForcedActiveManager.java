@@ -150,7 +150,7 @@ public class ForcedActiveManager {
 
         // 2. 封禁 (0) 直接拦截
         if (limit == 0) {
-            player.displayClientMessage(Component.literal("你已被禁止使用懒惰刻调节功能！")
+            player.displayClientMessage(Component.translatable("createlazytick.command.ban")
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }
@@ -171,7 +171,11 @@ public class ForcedActiveManager {
         // 检查是否超标
         int currentUsage = ForcedActiveManager.getPlayerUsageCount(level, playerUUID);
         if (currentUsage >= limit) {
-            player.displayClientMessage(Component.literal("您可调整的元件数量已达上限,无法调整更多元件! (" + currentUsage + "/" + limit + ")")
+            player.displayClientMessage(Component.translatable(
+                            "createlazytick.message.adjust_limit_reached",
+                            currentUsage,
+                            limit
+                    )
                     .withStyle(ChatFormatting.RED), true);
             return false;
         }

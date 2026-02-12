@@ -54,7 +54,7 @@ public enum LazyTickSortMode {
     // 正常: A -> Z
     // 反序: Z -> A
     NAME("name", (e1, e2, source) ->
-            e1.getValue().getBlockName().compareTo(e2.getValue().getBlockName())),
+            e1.getValue().getBlockId().compareTo(e2.getValue().getBlockId())),
 
     // 5. 玩家名排序
     // 正常: A -> Z

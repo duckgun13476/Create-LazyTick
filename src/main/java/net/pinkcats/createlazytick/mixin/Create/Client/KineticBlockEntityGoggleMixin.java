@@ -37,6 +37,12 @@ public class KineticBlockEntityGoggleMixin {
             return;
         }
 
+        if (whiteItem == LazyTickTooltipWhiteList.BELT) {
+            LazyTickTooltipRenderer.appendSimpleConfigInfo(this, tooltip);
+            cir.setReturnValue(true);
+            return;
+        }
+
         if ((Object) this instanceof ISmartBlockEntityControl control) {
             int maxDelayTick = whiteItem.getMaxTick();
             this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
