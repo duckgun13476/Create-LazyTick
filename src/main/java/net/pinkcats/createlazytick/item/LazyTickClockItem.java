@@ -64,7 +64,9 @@ public class LazyTickClockItem extends Item {
                 return InteractionResult.PASS;
             }
 
-            if (whiteItem == LazyTickTooltipWhiteList.PUMP || whiteItem == LazyTickTooltipWhiteList.PIPE) {
+            if (whiteItem == LazyTickTooltipWhiteList.PUMP ||
+                    whiteItem == LazyTickTooltipWhiteList.PIPE ||
+                    whiteItem == LazyTickTooltipWhiteList.BELT) {
                 player.displayClientMessage(Component.translatable("createlazytick.clock.global_config_locked")
                         .withStyle(ChatFormatting.RED), true);
                 return InteractionResult.FAIL;
