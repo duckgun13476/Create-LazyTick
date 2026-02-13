@@ -42,6 +42,10 @@ public abstract class BasinOperatingLazyTickMixin {
 
         BasinBlockEntity basin = basinOpt.get();
 
+        //Ensure cache can create use vanilla
+        if (basin.isEmpty()) return;
+
+
         // 统一强转为接口
         IBasinOptimization optimizedBasin = (IBasinOptimization) basin;
 
@@ -58,6 +62,7 @@ public abstract class BasinOperatingLazyTickMixin {
                 currentHeat == cachedHeatLevel) {
 
             cir.setReturnValue(cachedRecipes);
+            cir.cancel();
         }
     }
 
@@ -74,14 +79,14 @@ public abstract class BasinOperatingLazyTickMixin {
             this.cachedBasinRef = basin;
             this.cachedBasinVersion = optimizedBasin.getInventoryVersion();
             this.cachedHeatLevel = optimizedBasin.optimization$getHeatLevel();
-            this.cachedRecipes = cir.getReturnValue();
 
-            if (this.cachedRecipes == null) {
-                this.cachedRecipes = Collections.emptyList();
-            }
+            List<Recipe<?>> ret = cir.getReturnValue();
+            this.cachedRecipes = (ret == null) ? Collections.emptyList() : ret;
         } else {
             this.cachedRecipes = null;
             this.cachedBasinRef = null;
+            this.cachedBasinVersion = -1;
+            this.cachedHeatLevel = BlazeBurnerBlock.HeatLevel.NONE;
         }
     }
 }
