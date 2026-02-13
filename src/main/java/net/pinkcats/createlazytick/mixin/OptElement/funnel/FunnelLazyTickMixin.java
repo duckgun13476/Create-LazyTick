@@ -46,31 +46,28 @@ import static com.simibubi.create.AllBlocks.DEPLOYER;
 import static com.simibubi.create.AllBlocks.PORTABLE_STORAGE_INTERFACE;
 
 @Mixin(value = FunnelBlockEntity.class, remap = false)
-public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveringInformation {
+public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveringInformation {
 
     @Shadow
     LerpedFloat flap;
-
 
     @Shadow
     private InvManipulationBehaviour invManipulation;
 
     @Shadow
-    private ItemStack handleDirectBeltInput(TransportedItemStack stack, Direction side, boolean simulate) {
-        return null;
-    }
+    protected abstract ItemStack handleDirectBeltInput(TransportedItemStack stack, Direction side, boolean simulate);
 
     @Shadow
-    private boolean supportsAmountOnFilter() {return false;}
+    protected abstract boolean supportsAmountOnFilter();
 
     @Shadow
     private FilteringBehaviour filtering;
 
     @Shadow
-    private boolean supportsFiltering() {return false;}
+    protected abstract boolean supportsFiltering();
 
     @Shadow
-    private boolean supportsDirectBeltInput(Direction side) {return false;}
+    protected abstract boolean supportsDirectBeltInput(Direction side);
 
     @Shadow
     private VersionedInventoryTrackerBehaviour invVersionTracker;
@@ -81,21 +78,24 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     }
 
     @Shadow
-    public void flap(boolean inward) {}
+    public abstract void flap(boolean inward);
 
     @Shadow
-    private void activateExtractingBeltFunnel() {}
-
-
-    @Shadow
-    private void activateExtractor() {}
+    protected abstract void activateExtractingBeltFunnel();
 
 
     @Shadow
-    public int getAmountToExtract() {return 0;}
+    protected abstract void activateExtractor();
+
 
     @Shadow
-    public ItemHelper.ExtractionCountMode getModeToExtract() {return null;}
+    public abstract int getAmountToExtract();
+
+    @Shadow
+    public abstract ItemHelper.ExtractionCountMode getModeToExtract();
+
+    @Shadow
+    public abstract void onTransfer(ItemStack stack);
 
     @Unique
     public Funnel.Mode determineCurrentMode() {
@@ -147,12 +147,11 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     @Unique
     private void createLazyTick$resetDelayTick(ISmartBlockEntityControl control) {
         int defaultTick = AllConfigs.server().logistics.defaultExtractionTimer.get();
-        CLT$FunnelDelayTick = defaultTick;
+        CLT$FunnelDelayTick = 0;
         LazyTickLogic.setIntervalSafe(control, defaultTick);
     }
 
-    @Shadow
-    public void onTransfer(ItemStack stack) {}
+
 
     @Unique
     private int CLT$FunnelDelayTick = 0;
@@ -188,7 +187,6 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
                 return;}
         }
         CLT$FunnelDelayTick = 0;
-
 
 
         Funnel.Mode mode = determineCurrentMode();
@@ -234,7 +232,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
     private boolean CLT$HasInterface = false;
 
     @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
-    private void activateExtractingBeltFunnel(CallbackInfo ci) {
+    private void clt$activateExtractingBeltFunnel(CallbackInfo ci) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyFunnel()) {
             return;
         }
