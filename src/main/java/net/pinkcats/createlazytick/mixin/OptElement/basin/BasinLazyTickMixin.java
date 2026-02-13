@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = BasinBlockEntity.class,remap = false)
 public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBasinOptimization {
 
+    @Deprecated
     @Shadow
     private boolean contentsChanged; // 引用原版的脏标记字段
 
@@ -38,33 +39,30 @@ public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBa
         return optimization$inventoryVersion;
     }
 
+
     //手动实现获取热量等级的方法
     //复刻了新版 BasinBlockEntity.getHeatLevel() 的逻辑
     //包含 NPE 检查和单 Tick 缓存机制
     @Override
     public BlazeBurnerBlock.HeatLevel optimization$getHeatLevel() {
-        if (this.lazytick$cachedHeatLevel == null) {
-            // 防范 NPE: 如果 level 为空，直接返回 NONE
-            if (this.level == null) {
-                return BlazeBurnerBlock.HeatLevel.NONE;
-            }
-            // 计算下方方块热量并写入缓存
-            // distance: 1 -> below()
-            BlockState stateBelow = this.level.getBlockState(this.worldPosition.below());
-            this.lazytick$cachedHeatLevel = BlazeBurnerBlock.getHeatLevelOf(stateBelow);
+        if (lazytick$cachedHeatLevel == null) {
+            if (level == null) return BlazeBurnerBlock.HeatLevel.NONE;
+            BlockState stateBelow = level.getBlockState(worldPosition.below());
+            lazytick$cachedHeatLevel = BlazeBurnerBlock.getHeatLevelOf(stateBelow);
         }
-        return this.lazytick$cachedHeatLevel;
+        return lazytick$cachedHeatLevel;
     }
 
-    @Inject(method = "tick", at = @At("HEAD"))
-    private void onTick(CallbackInfo ci) {
+    @Inject(method = "tick", at = @At("HEAD"), remap = false)
+    private void clt$onTick(CallbackInfo ci) {
         // 每 Tick 开始时重置缓存，确保数据实时性
-        this.lazytick$cachedHeatLevel = null;
+        lazytick$cachedHeatLevel = null;
+    }
 
-        // 如果 Create 认为内容变了,让版本号 +1,否则维持原态(如果在没变化的情况下再次查询直接返回原状态值)
+    // Advanced version change can fix tick jump
+    @Inject(method = "notifyChangeOfContents", at = @At("HEAD"), remap = false)
+    private void clt$onNotifyChange(CallbackInfo ci) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBasin()) return;
-        if (this.contentsChanged) {
-            optimization$inventoryVersion++;
-        }
+        optimization$inventoryVersion++;
     }
 }
