@@ -4,12 +4,12 @@ license = "MIT"
 
 
 [[mods]] #mandatory
-modId = "${mod_id}" #mandatory
-logoFile="icon.png"
-version = "${mod_version}" #mandatory
-displayName = "${mod_name}" #mandatory
-authors = "${mod_authors}" #optional
-description = '''${mod_description}'''
+    modId = "${mod_id}" #mandatory
+    logoFile="icon.png"
+    version = "${mod_version}" #mandatory
+    displayName = "${mod_name}" #mandatory
+    authors = "${mod_authors}" #optional
+    description = '''${mod_description}'''
 
 
 [[dependencies."${mod_id}"]]
