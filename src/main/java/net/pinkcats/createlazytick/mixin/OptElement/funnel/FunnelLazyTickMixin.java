@@ -174,7 +174,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
             return;}
 
         flap.tickChaser();
-
+        super.tick();
         // for interface
         CLT$FunnelDelayTick++;
         if (!CLT$HasInterface){
@@ -190,7 +190,7 @@ public class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveri
         CLT$FunnelDelayTick = 0;
 
 
-        super.tick();
+
         Funnel.Mode mode = determineCurrentMode();
 
         if (level.isClientSide) {
