@@ -1,3 +1,9 @@
+
+### 2.3.2-beta
+1. Fix funnel sync problem.
+2. Fix mixer stuck when only process once.(#12/1000mb)
+3. Fix belt cache problem
+---
 ### 2.4-beta (Big Update)
 #### Feature
 1. New item, lazy clock, allows for BlockEntity control using the clock.
