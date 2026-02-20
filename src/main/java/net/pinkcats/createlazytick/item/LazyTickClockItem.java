@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -13,6 +14,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.network.NetworkHooks;
+import net.pinkcats.NutUI.menu.Nutprovider;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -42,6 +45,7 @@ public class LazyTickClockItem extends Item {
                 .withStyle(ChatFormatting.GRAY));
     }
 
+
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
 
@@ -55,6 +59,12 @@ public class LazyTickClockItem extends Item {
 
         BlockPos pos = context.getClickedPos();
         BlockEntity be = level.getBlockEntity(pos);
+
+        if (be != null){
+            NetworkHooks.openScreen((ServerPlayer) player,
+                    new Nutprovider(pos),pos);
+            return InteractionResult.SUCCESS;
+        }
 
         if (be instanceof ISmartBlockEntityControl control) {
 

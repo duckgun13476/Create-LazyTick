@@ -165,6 +165,7 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             return;
         }
         if (level == null) {
+            ci.cancel();
             return;
         }
 
@@ -172,8 +173,33 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             mes.error("BlockEntity is not a SmartBlockEntityControl!");
             return;}
 
-        flap.tickChaser();
+
         super.tick();
+        flap.tickChaser();
+
+        if (level.isClientSide) {
+            ci.cancel();
+            return;
+        }
+
+        Funnel.Mode mode = determineCurrentMode();
+
+        // Redstone resets the extraction cooldown
+        if (mode == Funnel.Mode.PAUSED) {
+            createLazyTick$resetDelayTick(control);
+            ci.cancel();
+            return;
+        }
+        if (mode == Funnel.Mode.TAKING_FROM_BELT) {
+            ci.cancel();
+            return;
+        }
+
+        BlockState blockState = getBlockState();
+        BlockPos blockPos = getBlockPos();
+        CLT$HasInterface = createLazyTick$IsMovingInterface(blockPos,blockState);
+
+
         // for interface
         CLT$FunnelDelayTick++;
         if (!CLT$HasInterface){
@@ -188,27 +214,6 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         }
         CLT$FunnelDelayTick = 0;
 
-
-        Funnel.Mode mode = determineCurrentMode();
-
-        if (level.isClientSide) {
-            ci.cancel();
-            return;
-        }
-
-
-        // Redstone resets the extraction cooldown
-        if (mode == Funnel.Mode.PAUSED)
-            createLazyTick$resetDelayTick(control);
-        if (mode == Funnel.Mode.TAKING_FROM_BELT) {
-            ci.cancel();
-            return;
-        }
-
-
-        BlockState blockState = getBlockState();
-        BlockPos blockPos = getBlockPos();
-        CLT$HasInterface = createLazyTick$IsMovingInterface(blockPos,blockState);
 
         if (mode == Funnel.Mode.PUSHING_TO_BELT) {
             //mes.warn("if (mode == Funnel.Mode.PUSHING_TO_BELT) {");
@@ -283,10 +288,12 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             ItemStack handleInsertion = inputBehaviour.handleInsertion(s, facing, true);
             if (handleInsertion.isEmpty()) {
                 //System.out.println("Extracting fail!");
+                ci.cancel();
                 return true;
             }
             deniedByInsertion.setTrue();
             //System.out.println("Extracting success!");
+            ci.cancel();
             return false;
         });
 
@@ -296,6 +303,7 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             createLazyTick$FunnelBackOff(control);
             if (deniedByInsertion.isFalse())
                 invVersionTracker.awaitNewVersion(invManipulation.getInventory());
+            ci.cancel();
             return;
         }
 
