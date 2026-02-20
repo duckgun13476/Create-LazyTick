@@ -2,8 +2,9 @@ package net.pinkcats.createlazytick.mixin.OptElement.fluid;
 
 
 import com.simibubi.create.content.fluids.FluidNetwork;
-import me.lucko.spark.lib.asm.Opcodes;
+
 import net.pinkcats.createlazytick.config.ServerConfig;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
