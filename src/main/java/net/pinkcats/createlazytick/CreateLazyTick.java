@@ -19,7 +19,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.pinkcats.NutUI.menu.MenuLib;
+import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
@@ -61,7 +61,7 @@ public class CreateLazyTick {
         LazyTickItem.register(modEventBus);
 
         // From UI Lib
-        MenuLib.init(modEventBus);
+        NutKineticMenu.init(modEventBus);
 
 
         modEventBus.addListener(this::commonSetup);

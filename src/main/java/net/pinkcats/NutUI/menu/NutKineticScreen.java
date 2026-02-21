@@ -14,12 +14,13 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Inventory;
+import net.pinkcats.NutUI.menu.architect.Helper.TextureSize;
 import net.pinkcats.NutUI.menu.architect.data.CoordinateData;
+import net.pinkcats.NutUI.menu.architect.data.NutMenuInfo;
 import net.pinkcats.NutUI.menu.architect.data.SharedData;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.NutUI.menu.Connect.Channel;
 import net.pinkcats.NutUI.menu.Connect.DataPacket;
-import net.pinkcats.NutUI.menu.architect.NutItemMenu;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -27,10 +28,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static net.pinkcats.NutUI.menu.architect.ResourceParse.LoadTextureN;
 
-
-public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
+public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.NutItemMenu> {
 
 
     private List<Rect2i> tempAreas = new ArrayList<>();
@@ -38,22 +37,18 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
     private List<Rect2i> extraAreas = Collections.emptyList();
 
 
-    // resources/assets/modid/gui/transfer_menu.png
-    public static final ResourceLocation TransferBoxGUI = LoadTextureN("gui/transfer_menu.png");
-
 
     private EditBox textF;
     private EditBox textY;
     private EditBox textZ;
     //private final TransferBoxEntity transferEntity;
-    private final NutItemMenu out_menu; // 添加成员变量
-    public NutKineticScreen(NutItemMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
+    private final NutKineticMenu.NutItemMenu out_menu; // 添加成员变量
+    public NutKineticScreen(NutKineticMenu.NutItemMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
         super(pMenu, pPlayerInventory, pTitle);
         this.inventoryLabelY = this.imageHeight - 110;
        // this.transferEntity = this.menu.getTransferEntity();
         this.out_menu = pMenu;
     }
-
 
 
 
@@ -74,7 +69,6 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
                             coordinateData.getPos(),
                             new int[]{out_menu.getPos().getX(), out_menu.getPos().getY(), out_menu.getPos().getZ()})) {
 
-
                         // 修改数值
                         coordinateData.setDimensionsX(menu.count);
                         modifiedCoordinate = coordinateData; // 记录修改的元素
@@ -92,173 +86,21 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
 
             // 更新共享数据
             SharedData.setCoordinatesList(coordinatesList);
-
-
             Channel.sendToServer(new DataPacket(SharedData.getDimension(), SharedData.getCoordinatesList()));
 
         //}
         ///Channel.sendToPlayer(new DataPacket(menu.count,DARA,(ServerPlayer) event.getEntity));
     }
 
-    private void sendY() {
-        CompoundTag mainTag = new CompoundTag();
-        mainTag.putInt("count", menu.count);
-        mainTag.putBoolean("lessThan", menu.lessThan);
-        //   System.out.println(menu.count);
-        //if (transferEntity != null) {
-
-            SharedData.setDimension(menu.count);
-            List<CoordinateData> coordinatesList = SharedData.getCoordinatesList();
-            CoordinateData modifiedCoordinate = null; // 用于存储修改的元素
-
-            for (CoordinateData coordinateData : coordinatesList) {
-                if (coordinateData != null) {
-                    if (Arrays.equals(
-                            coordinateData.getPos(),
-                            new int[]{out_menu.getPos().getX(), out_menu.getPos().getY(), out_menu.getPos().getZ()})) {
-
-
-                        // 修改数值
-                        coordinateData.setDimensionsY(menu.count);
-                        modifiedCoordinate = coordinateData; // 记录修改的元素
-
-
-                    }
-                }
-            }
-
-            if (modifiedCoordinate != null) {
-                coordinatesList.remove(modifiedCoordinate); // 移除修改的元素
-                coordinatesList.add(modifiedCoordinate); // 添加到列表末尾
-            }
-
-            SharedData.setCoordinatesList(coordinatesList);
-            Channel.sendToServer(new DataPacket(SharedData.getDimension(),SharedData.getCoordinatesList()));
-
-       // }
-    }
-    //Z
-    private void sendZ() {
-        CompoundTag mainTag = new CompoundTag();
-        mainTag.putInt("count", menu.count);
-        mainTag.putBoolean("lessThan", menu.lessThan);
-
-       // if (transferEntity != null) {
-            SharedData.setDimension(menu.count);
-
-            //Change
-            List<CoordinateData> coordinatesList = SharedData.getCoordinatesList();
-            CoordinateData modifiedCoordinate = null; // 用于存储修改的元素
-
-            for (CoordinateData coordinateData : coordinatesList) {
-                if (coordinateData != null) {
-                    if (Arrays.equals(
-                            coordinateData.getPos(),
-                            new int[]{out_menu.getPos().getX(), out_menu.getPos().getY(), out_menu.getPos().getZ()})) {
-
-                        // 修改数值
-                        coordinateData.setDimensionsZ(menu.count);
-                        modifiedCoordinate = coordinateData; // 记录修改的元素
-
-
-                    }
-                }
-            }
-
-            // 如果有元素被修改，则将其移动到列表末尾
-            if (modifiedCoordinate != null) {
-                coordinatesList.remove(modifiedCoordinate); // 移除修改的元素
-                coordinatesList.add(modifiedCoordinate); // 添加到列表末尾
-            }
-
-            // 更新共享数据
-            SharedData.setCoordinatesList(coordinatesList);
-            Channel.sendToServer(new DataPacket(SharedData.getDimension(),SharedData.getCoordinatesList()));
-
-       // }
-    }
     @Override
     public void init() {
         super.init();
         if(out_menu==null)
             return;
 
-
-        // this.font = Minecraft.getInstance().font;
-        //text X
-        //textF = new EditBox(font, leftPos + 84, topPos + 68-18, 21, font.lineHeight, Component.translatable("narrator.transfer.dimensionX"));
-        //textF.setMaxLength(3);
-        //textF.setBordered(false);
-        //textF.setVisible(true);
-        // textF.setTextColor(0xFFFFFF);
-        // textF.setValue("维度 dimension"
-        //   );
-        //  textF.setResponder(t -> {
-        //     try {
-        //         int c = Integer.parseInt(t);
-        //        textF.setTextColor(0x00FF00);
-        //        if(c >= 0) {
-        //             menu.count = c;
-        //               sendX();
-        //         }
-        //    } catch (NumberFormatException e) {
-        //        textF.setTextColor(0xFF0000);
-        //      }
-        // });
-        //    addRenderableWidget(textF);
-        //text Y
-        //  textY = new EditBox(font, leftPos + 114, topPos + 68-18, 21, font.lineHeight, Component.translatable("narrator.transfer.dimensionX"));
-        //  textY.setMaxLength(3);
-        //  textY.setBordered(false);
-        //   textY.setVisible(true);
-        //  textY.setTextColor(0xFFFFFF);
-        //    textY.setValue("维度 dimension"
-        //  );
-        //   textY.setResponder(t -> {
-        //  try {
-        //       int c = Integer.parseInt(t);
-        //       textY.setTextColor(0x00FF00);
-        //       if(c >= 0) {
-        //             menu.count = c;
-        //             sendY();
-        //        }
-        //     } catch (NumberFormatException e) {
-        //        textY.setTextColor(0xFF0000);
-        //      }
-        //  });
-        //    addRenderableWidget(textY);
-        // //text Z
-        //  textZ = new EditBox(font, leftPos + 144, topPos + 68-18, 21, font.lineHeight, Component.translatable("narrator.transfer.dimensionX"));
-        //   textZ.setMaxLength(3);
-        //  textZ.setBordered(false);
-        // textZ.setVisible(true);
-        //  textZ.setTextColor(0xFFFFFF);
-        //  textZ.setValue("维度 dimension"
-        //   );
-        //  textZ.setResponder(t -> {
-        //     try {
-        //        int c = Integer.parseInt(t);
-        //      textZ.setTextColor(0x00FF00);
-        //      if(c >= 0) {
-        //       menu.count = c;
-        //          sendZ();
-        //       }
-        //    } catch (NumberFormatException e) {
-        //         textZ.setTextColor(0xFF0000);
-        //      }
-        //   });
-        //   addRenderableWidget(textZ);
-
-        // addRenderableWidget(
-        //        new StateChooseButton(leftPos+136,topPos+12-18,28,15,out_menu.getPos(),Component.empty(), button -> {}));
-
-        // addRenderableWidget(
-        //        new StatusButton(leftPos+11,topPos+12-18,16,16,out_menu.getPos(),Component.empty(), button -> {}));
-
-
-        // addRenderableWidget(
-        //  new SwitchButton(leftPos+117,topPos+12-18,16,16,out_menu.getPos(),Component.empty(), button -> {}));
-
+        ResourceLocation tex = NutMenuInfo.require(out_menu.getMenuId()).texture();
+        TextureSize.Size s = TextureSize.get(tex);
+        mes.info("[TextureSize] tex=" + tex + " size=" + s.w() + "x" + s.h());
 
 
     }
@@ -283,15 +125,6 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
 
         //Show base picture
         //pGuiGraphics.blit(TransferBoxGUI,this.leftPos,this.topPos-18,0,0,this.imageWidth,this.imageHeight);
-
-        // Info   ：        width 245
-        // Search 0-35
-        // SearchAttach 42-61
-        // RequestBox   72-105
-        // NoRequestEnd  112-125
-        // InventoryStart 132-149
-        // InvMiddle     155-174
-        // InvTail   181-199
 
         //Show Box
         int BoxLine = 4;
@@ -340,30 +173,6 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
                 ImageWidth, 19);
 
 
-
-
-        // pGuiGraphics.drawCenteredString(
-        //         Minecraft.getInstance().font,
-        //           Component.literal("α      β      θ"),
-        //            this.leftPos+123,this.topPos-18+55,0x666666
-        //  );
-
-
-        // pGuiGraphics.drawCenteredString(
-        //          Minecraft.getInstance().font,
-        //      Component.literal("美味的紫月"),
-        //      25,  15, 0xffffff);
-        // pGuiGraphics.drawCenteredString(
-        //    Minecraft.getInstance().font,
-        //    Component.literal("美味的🐟🐟"),
-        //    25,  35, 0xffffff);
-
-
-
-        //pGuiGraphics.blit(EASYSCREENPATH,50,50,0,0,256,256);
-
-        //super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTicks);
-
         extraAreas = List.of(tempAreas.toArray(new Rect2i[0]));
         tempAreas.clear();
     }
@@ -372,7 +181,9 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
      *  Fancy Render for add Menu With box
      */
     protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY,int ISX, int ISY,int I_WIDTH, int I_HEIGHT) {
-        pGuiGraphics.blit(TransferBoxGUI, MSX, MSY, ISX, ISY, I_WIDTH, I_HEIGHT);
+        ResourceLocation tex = NutMenuInfo.require(out_menu.getMenuId()).texture();
+
+        pGuiGraphics.blit(tex, MSX, MSY, ISX, ISY, I_WIDTH, I_HEIGHT);
         //PlaceStrip JEI block
         tempAreas.add(new Rect2i(MSX+5, MSY+5, EnsurePositive(I_WIDTH-10), EnsurePositive(I_HEIGHT-10)));
     }
@@ -389,7 +200,6 @@ public class NutKineticScreen extends AbstractContainerScreen<NutItemMenu> {
         pGuiGraphics.drawString(this.font, headerTitle, this.titleLabelX+50, this.titleLabelY-38, 0x714A40, false);
 
         pGuiGraphics.drawString(this.font, requireTitle,  this.inventoryLabelX-56, this.inventoryLabelY+32, 0x714A40, false);
-
 
 
     }

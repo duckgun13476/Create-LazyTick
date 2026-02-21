@@ -1,6 +1,5 @@
 package net.pinkcats.NutUI.menu.Connect;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -8,7 +7,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.pinkcats.NutUI.menu.architect.data.EntryListPacket;
 
-import static net.pinkcats.NutUI.menu.architect.ResourceParse.BuildDefineFromNameSpace;
+import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.BuildDefine;
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 
 
@@ -19,7 +18,7 @@ public class Channel {
     private static int id = 0;
 
     public static final SimpleChannel INSTANCE_TO_SERVER = NetworkRegistry.newSimpleChannel(
-            BuildDefineFromNameSpace(MODID,"dimension_to_server"),
+            BuildDefine(MODID,"dimension_to_server"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -35,7 +34,7 @@ public class Channel {
 
 
     public static final SimpleChannel MSG_TO_CLIENT = NetworkRegistry.newSimpleChannel(
-            BuildDefineFromNameSpace(MODID,"msg_to_client"),
+            BuildDefine(MODID,"msg_to_client"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -52,7 +51,7 @@ public class Channel {
 
 
     public static final SimpleChannel INSTANCE_TO_CLIENT = NetworkRegistry.newSimpleChannel(
-            BuildDefineFromNameSpace(MODID,"dimension_to_client"),
+            BuildDefine(MODID,"dimension_to_client"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -64,10 +63,6 @@ public class Channel {
                 .consumerMainThread(DataPacket::handle)
                 .add();
     }
-
-
-
-
 
 
     public static <MSG> void setMsgToPlayer(MSG message, ServerPlayer player) {

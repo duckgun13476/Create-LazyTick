@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -14,6 +15,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraftforge.network.NetworkHooks;
 import net.pinkcats.NutUI.menu.Nutprovider;
 import net.pinkcats.createlazytick.config.ServerConfig;
@@ -29,6 +31,12 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static net.pinkcats.NutUI.menu.architect.Helper.MenuHelper.CreateNutMenu;
+import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.Nut_Menu_ID;
+import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenu;
+import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenuScroller;
+
 //需要翻译文本
 public class LazyTickClockItem extends Item {
 
@@ -61,9 +69,11 @@ public class LazyTickClockItem extends Item {
         BlockEntity be = level.getBlockEntity(pos);
 
         if (be != null){
-            NetworkHooks.openScreen((ServerPlayer) player,
-                    new Nutprovider(pos),pos);
-            return InteractionResult.SUCCESS;
+            CreateNutMenu(player,pos,LazyTickMenu);
+            return InteractionResult.CONSUME;
+        } else if (be == null) {
+            CreateNutMenu(player,pos,LazyTickMenuScroller);
+            return InteractionResult.CONSUME;
         }
 
         if (be instanceof ISmartBlockEntityControl control) {
