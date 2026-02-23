@@ -18,6 +18,9 @@ import net.pinkcats.NutUI.menu.architect.slots.SlotGhost;
 import net.pinkcats.NutUI.menu.architect.slots._SlotBase;
 import net.pinkcats.createlazytick.Gui.mes;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 
 public class NutKineticMenu {
@@ -126,6 +129,27 @@ public class NutKineticMenu {
 
         public BlockPos getPos() {
             return pos;
+        }
+
+        public Map<String, Object> buildAutoSyncVariables() {
+            Map<String, Object> variables = new HashMap<>();
+            appendBaseAutoSyncVariables(variables);
+            appendAutoSyncVariables(variables);
+            return variables;
+        }
+
+        protected void appendBaseAutoSyncVariables(Map<String, Object> variables) {
+            variables.put("count", count);
+            variables.put("lessThan", lessThan);
+            variables.put("menuId", menuId.toString());
+            variables.put("pos", new int[]{pos.getX(), pos.getY(), pos.getZ()});
+        }
+
+        /**
+         * Extension hook for child menus.
+         * Override this method to add custom synced variables.
+         */
+        protected void appendAutoSyncVariables(Map<String, Object> variables) {
         }
 
 
