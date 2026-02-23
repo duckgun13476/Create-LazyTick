@@ -27,10 +27,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.NutItemMenu> {
 
+    private static int DEMO_CLIENT_OPEN_COUNTER = 0;
 
     private List<Rect2i> tempAreas = new ArrayList<>();
     // 2. 最终存储不可变列表的变量（初始为空）
@@ -101,6 +103,15 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         ResourceLocation tex = NutMenuInfo.require(out_menu.getMenuId()).texture();
         TextureSize.Size s = TextureSize.get(tex);
         mes.info("[TextureSize] tex=" + tex + " size=" + s.w() + "x" + s.h());
+        DEMO_CLIENT_OPEN_COUNTER++;
+        Channel.sendToServer(new DataPacket(
+                SharedData.getDimension(),
+                SharedData.getCoordinatesList(),
+                Map.of(
+                        DataPacket.DEMO_CLIENT_OPEN_COUNTER_KEY, DEMO_CLIENT_OPEN_COUNTER,
+                        "menuId", out_menu.getMenuId().toString()
+                )
+        ));
 
 
     }
@@ -195,11 +206,15 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     protected void renderLabels(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
         MutableComponent headerTitle = Component.translatable("menu.transfer_block_container");
         MutableComponent requireTitle = Component.translatable("menu.transfer_block_require");
+        int serverCounter = SharedData.getSyncedInt(DataPacket.DEMO_SERVER_COUNTER_KEY, -1);
+        String syncState = SharedData.getSyncedBoolean(DataPacket.DEMO_SYNC_KEY, false) ? "OK" : "WAIT";
+        String demoLine = "SyncDemo [" + syncState + "] client=" + DEMO_CLIENT_OPEN_COUNTER + " server=" + serverCounter;
 
         //Show Name
         pGuiGraphics.drawString(this.font, headerTitle, this.titleLabelX+50, this.titleLabelY-38, 0x714A40, false);
 
         pGuiGraphics.drawString(this.font, requireTitle,  this.inventoryLabelX-56, this.inventoryLabelY+32, 0x714A40, false);
+        pGuiGraphics.drawString(this.font, demoLine, this.inventoryLabelX-56, this.inventoryLabelY+44, 0x3F6E5E, false);
 
 
     }
