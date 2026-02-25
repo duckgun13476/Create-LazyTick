@@ -7,6 +7,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.pinkcats.NutUI.menu.Connect.Channel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +35,13 @@ public class Nutprovider implements MenuProvider {
     @Override
     public @Nullable AbstractContainerMenu createMenu(
             int id, @NotNull Inventory inv, @NotNull Player player) {
-        return new NutKineticMenu.NutItemMenu(inv,id,blockPos,menuID);   //player.getMainHandItem()   Using in Remote future
+        NutKineticMenu.NutItemMenu menu = new NutKineticMenu.NutItemMenu(inv,id,blockPos,menuID);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            Channel.syncOpenedMenuNow(serverPlayer, menu);
+        }
+        return menu;   //player.getMainHandItem()   Using in Remote future
     }
+
+
 
 }
