@@ -1,7 +1,5 @@
 package net.pinkcats.NutUI.menu;
 
-
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -28,8 +26,7 @@ import java.util.List;
 
 public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.NutItemMenu> {
 
-    private List<Rect2i> tempAreas = new ArrayList<>();
-    // 2. 最终存储不可变列表的变量（初始为空）
+    private final List<Rect2i> tempAreas = new ArrayList<>();
     private List<Rect2i> extraAreas = Collections.emptyList();
 
 
@@ -61,20 +58,18 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      * Screen's Render Entrance
      */
     @Override
-    protected void renderBg(GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
-        //Prevent leak
+    protected void renderBg(@NotNull GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
+
+        //Sync size
         updateTextureSizeIfNeeded();
 
+        //Define pos
         int MenuStartPosX = this.leftPos-35;
         int MenuStartPosY = this.topPos-36;
 
 
         //Show Box
-        FancyRender(pGuiGraphics,
-                MenuStartPosX, MenuStartPosY                         //ShowPointOnScreen X Y
-                //StartPoint X Y
-        );                            //ImageSize W L
-
+        FancyRender(pGuiGraphics, MenuStartPosX, MenuStartPosY);
 
         extraAreas = List.of(tempAreas.toArray(new Rect2i[0]));
         tempAreas.clear();
@@ -100,16 +95,17 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         String demoLine = "SyncDemo [" + syncState + "] tick=" + syncTick;
         pGuiGraphics.drawString(this.font, demoLine, this.inventoryLabelX-56, this.inventoryLabelY+44, 0x3F6E5E, false);
 
-
     }
 
+
+    /// ///
 
 
     /**
      * Tool Func
      */
     @Override
-    public void render(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
         super.render(matrixStack, mouseX, mouseY, partialTicks);
         this.renderTooltip(matrixStack, mouseX, mouseY);
     }
@@ -151,7 +147,6 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      */
 
     public List<Rect2i> getExtraAreas() {
-
         return extraAreas;//Collections.emptyList();
     }
 
@@ -165,7 +160,7 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
 
         ResourceLocation texture = NutMenuInfo.require(out_menu.getMenuId()).texture();
         mes.warn("{}{}{}{}{}{}{}",texture,MSX, MSY, 0, 0, this.imageWidth,this.imageHeight);
-        pGuiGraphics.blit(texture, MSX, MSY, 0, 0, I_WIDTH,I_HEIGHT);
+        pGuiGraphics.blit(texture, MSX, MSY, 0, 0, I_WIDTH, I_HEIGHT, I_WIDTH, I_HEIGHT);
         //PlaceStrip JEI block
         tempAreas.add(new Rect2i(MSX+5, MSY+5, EnsurePositive(I_WIDTH-10), EnsurePositive(I_HEIGHT-10)));
     }
@@ -194,11 +189,4 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     }
 
 
-    public int getScreenHeight() {
-        return ScreenHeight;
-    }
-
-    public int getScreenWidth() {
-        return ScreenWidth;
-    }
 }
