@@ -35,6 +35,8 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
 
     private int ScreenWidth;
     private int ScreenHeight;
+    private int TextureWidth;
+    private int TextureHeight;
     private ResourceLocation lastTexture;
 
     public NutKineticScreen(NutKineticMenu.NutItemMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
@@ -64,8 +66,8 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         updateTextureSizeIfNeeded();
 
         //Define pos
-        int MenuStartPosX = this.leftPos-35;
-        int MenuStartPosY = this.topPos-36;
+        int MenuStartPosX = this.leftPos;
+        int MenuStartPosY = this.topPos;
 
 
         //Show Box
@@ -122,7 +124,8 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
             return;
         }
 
-        ResourceLocation tex = NutMenuInfo.require(out_menu.getMenuId()).texture();
+        NutMenuInfo.data info = NutMenuInfo.require(out_menu.getMenuId());
+        ResourceLocation tex = info.texture();
         if (tex.equals(this.lastTexture)) {
             return;
         }
@@ -131,13 +134,15 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         mes.info("[TextureSize] tex=" + tex + " size=" + s.w() + "x" + s.h());
 
         this.lastTexture = tex;
-        this.ScreenWidth = s.w();
-        this.ScreenHeight = s.h();
+        this.TextureWidth = s.w();
+        this.TextureHeight = s.h();
+        this.ScreenWidth = (info.w() == null || info.w() <= 0) ? this.TextureWidth : info.w();
+        this.ScreenHeight = (info.h() == null || info.h() <= 0) ? this.TextureHeight : info.h();
         this.imageWidth = this.ScreenWidth;
         this.imageHeight = this.ScreenHeight;
         this.inventoryLabelY = this.imageHeight - 110;
-        this.leftPos = (this.width - this.imageWidth) / 2;
-        this.topPos = (this.height - this.imageHeight) / 2;
+        this.leftPos = (this.width - this.imageWidth) / 2 + info.x();
+        this.topPos = (this.height - this.imageHeight) / 2 + info.y();
     }
 
 
@@ -158,9 +163,11 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         int I_WIDTH = this.ScreenWidth;
         int I_HEIGHT = this.ScreenHeight;
 
-        ResourceLocation texture = NutMenuInfo.require(out_menu.getMenuId()).texture();
+        NutMenuInfo.data info = NutMenuInfo.require(out_menu.getMenuId());
+        ResourceLocation texture = info.texture();
         mes.warn("{}{}{}{}{}{}{}",texture,MSX, MSY, 0, 0, this.imageWidth,this.imageHeight);
-        pGuiGraphics.blit(texture, MSX, MSY, 0, 0, I_WIDTH, I_HEIGHT, I_WIDTH, I_HEIGHT);
+        pGuiGraphics.blit(texture, MSX, MSY, info.textureStartX(), info.textureStartY(),
+                I_WIDTH, I_HEIGHT, this.TextureWidth, this.TextureHeight);
         //PlaceStrip JEI block
         tempAreas.add(new Rect2i(MSX+5, MSY+5, EnsurePositive(I_WIDTH-10), EnsurePositive(I_HEIGHT-10)));
     }

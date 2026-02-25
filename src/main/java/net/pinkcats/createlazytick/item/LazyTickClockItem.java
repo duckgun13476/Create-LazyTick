@@ -69,7 +69,9 @@ public class LazyTickClockItem extends Item {
         BlockEntity be = level.getBlockEntity(pos);
 
         if (be != null){
-            CreateNutMenu(player,pos,LazyTickMenu);
+            CreateNutMenu(player,pos,WhatIsThis);
+
+            //CreateNutMenu(player,pos,LazyTickMenu);
             return InteractionResult.CONSUME;
         } else if (be == null) {
             CreateNutMenu(player,pos,LazyTickMenuScroller);
