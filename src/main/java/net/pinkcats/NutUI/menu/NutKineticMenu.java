@@ -55,8 +55,14 @@ public class NutKineticMenu {
             super(ItemMenuRegiste.get(), containerId, pos, null, 9, 0, 9, false);
             this.pos = pos;
             this.menuId = menuId;
-            addPlayerInventory(inventory, 0, 85 + 35);
+            RenderPlayerInventory(inventory);
         }
+
+
+        protected void RenderPlayerInventory(Inventory inventory) {
+          //  addPlayerInventory(inventory, 0, 85 + 35);
+        }
+
 
         public ResourceLocation getMenuId() {
             return menuId;
