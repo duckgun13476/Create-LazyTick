@@ -50,10 +50,10 @@ public abstract class BasinOperatingLazyTickMixin {
         IBasinOptimization optimizedBasin = (IBasinOptimization) basin;
 
         // 获取版本号 (通过接口)
-        long currentVersion = optimizedBasin.getInventoryVersion();
+        long currentVersion = optimizedBasin.clt$getInventoryVersion();
 
         // 获取热量 (用接口中的复刻方法)
-        BlazeBurnerBlock.HeatLevel currentHeat = optimizedBasin.optimization$getHeatLevel();
+        BlazeBurnerBlock.HeatLevel currentHeat = optimizedBasin.clt$getHeatLevel();
 
         // 如果对象一致、版本一致、热量一致，直接返回缓存
         if (cachedRecipes != null &&
@@ -77,8 +77,8 @@ public abstract class BasinOperatingLazyTickMixin {
 
             // 记录当前状态，供下一次检查使用
             this.cachedBasinRef = basin;
-            this.cachedBasinVersion = optimizedBasin.getInventoryVersion();
-            this.cachedHeatLevel = optimizedBasin.optimization$getHeatLevel();
+            this.cachedBasinVersion = optimizedBasin.clt$getInventoryVersion();
+            this.cachedHeatLevel = optimizedBasin.clt$getHeatLevel();
 
             List<Recipe<?>> ret = cir.getReturnValue();
             this.cachedRecipes = (ret == null) ? Collections.emptyList() : ret;

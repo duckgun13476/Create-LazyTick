@@ -35,7 +35,7 @@ public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBa
     }
 
     @Override
-    public long getInventoryVersion() {
+    public long clt$getInventoryVersion() {
         return optimization$inventoryVersion;
     }
 
@@ -44,7 +44,7 @@ public abstract class BasinLazyTickMixin extends SmartBlockEntity implements IBa
     //复刻了新版 BasinBlockEntity.getHeatLevel() 的逻辑
     //包含 NPE 检查和单 Tick 缓存机制
     @Override
-    public BlazeBurnerBlock.HeatLevel optimization$getHeatLevel() {
+    public BlazeBurnerBlock.HeatLevel clt$getHeatLevel() {
         if (lazytick$cachedHeatLevel == null) {
             if (level == null) return BlazeBurnerBlock.HeatLevel.NONE;
             BlockState stateBelow = level.getBlockState(worldPosition.below());
