@@ -24,8 +24,6 @@ public class DataPacket {
     public static final String DEMO_SYNC_KEY = "nutui_sync_demo";
     public static final String DEMO_SYNC_VERSION_KEY = "nutui_sync_version";
     public static final String DEMO_SYNC_TICK_KEY = "nutui_sync_server_tick";
-    public static final String DEMO_CLIENT_OPEN_COUNTER_KEY = "nutui_demo_client_open_counter";
-    public static final String DEMO_SERVER_COUNTER_KEY = "nutui_demo_server_counter";
 
     private final int dimension;
     private final List<CoordinateData> entityList;
@@ -77,16 +75,10 @@ public class DataPacket {
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         var ctx = supplier.get();
-        SharedData.setDimension(dimension);
-        SharedData.setCoordinatesList(entityList);
-        SharedData.setSyncedVariables(variables);
-        if (ctx.getDirection() != null
-                && ctx.getDirection().getReceptionSide().isServer()
-                && ctx.getSender() != null) {
-            JsonElement counterElement = getVariable(DEMO_CLIENT_OPEN_COUNTER_KEY);
-            if (counterElement != null && counterElement.isJsonPrimitive() && counterElement.getAsJsonPrimitive().isNumber()) {
-                Channel.updateDemoCounterFromClient(ctx.getSender(), counterElement.getAsInt());
-            }
+        if (ctx.getDirection() != null && ctx.getDirection().getReceptionSide().isClient()) {
+            SharedData.setDimension(dimension);
+            SharedData.setCoordinatesList(entityList);
+            SharedData.setSyncedVariables(variables);
         }
         if (SYNC_DEBUG_LOG) {
             String side = ctx.getDirection() == null ? "unknown" : String.valueOf(ctx.getDirection().getReceptionSide());

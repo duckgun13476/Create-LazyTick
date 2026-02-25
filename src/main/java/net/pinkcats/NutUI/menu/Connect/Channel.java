@@ -14,8 +14,6 @@ import net.pinkcats.NutUI.menu.architect.data.SharedData;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.BuildDefine;
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
@@ -26,8 +24,8 @@ public class Channel {
 
     private static final String PROTOCOL_VERSION = "2";
     private static final boolean SYNC_DEBUG_LOG = true;
+    private static final int DEFAULT_SYNC_INTERVAL_TICKS = 20;
     private static boolean PACKETS_REGISTERED = false;
-    private static final Map<UUID, Integer> DEMO_COUNTER_BY_PLAYER = new ConcurrentHashMap<>();
 
     public static final SimpleChannel INSTANCE_TO_SERVER = NetworkRegistry.newSimpleChannel(
             BuildDefine(MODID, "nutui_sync_to_server"),
@@ -88,18 +86,29 @@ public class Channel {
         INSTANCE_TO_SERVER.sendToServer(message);
     }
 
+    public static void sendActionToServer(MenuActionPacket packet) {
+        ensurePacketsRegistered();
+        INSTANCE_TO_SERVER.sendToServer(packet);
+    }
+
     public static void syncMenuDataToPlayer(ServerPlayer player, int dimension, Map<String, ?> variables) {
         Map<String, Object> payload = variables == null ? new HashMap<>() : new HashMap<>(variables);
         payload.putIfAbsent("dimension", dimension);
         payload.put(DataPacket.DEMO_SYNC_KEY, true);
         payload.put(DataPacket.DEMO_SYNC_VERSION_KEY, "v1");
         payload.put(DataPacket.DEMO_SYNC_TICK_KEY, player.level().getGameTime());
-        payload.put(DataPacket.DEMO_SERVER_COUNTER_KEY, DEMO_COUNTER_BY_PLAYER.getOrDefault(player.getUUID(), 0));
         if (SYNC_DEBUG_LOG) {
             LOGGER.info("[NutUI Sync][SEND][Server->Client] player={} dimension={} keys={} payload={}",
                     player.getGameProfile().getName(), dimension, payload.keySet(), payload);
         }
         sendToPlayer(new DataPacket(dimension, SharedData.getCoordinatesList(), payload), player);
+    }
+
+    public static void syncOpenedMenuNow(ServerPlayer player, NutKineticMenu.NutItemMenu menu) {
+        if (player == null || menu == null) {
+            return;
+        }
+        syncMenuDataToPlayer(player, menu.count, menu.buildAutoSyncVariables());
     }
 
     @SubscribeEvent
@@ -117,7 +126,7 @@ public class Channel {
             return;
         }
 
-        if (player.level().getGameTime() % 20 != 0) {
+        if (player.level().getGameTime() % DEFAULT_SYNC_INTERVAL_TICKS != 0) {
             return;
         }
 
@@ -135,6 +144,12 @@ public class Channel {
                 .consumerMainThread(DataPacket::handle)
                 .add();
 
+        INSTANCE_TO_SERVER.messageBuilder(MenuActionPacket.class, 4, NetworkDirection.PLAY_TO_SERVER)
+                .decoder(MenuActionPacket::new)
+                .encoder(MenuActionPacket::encode)
+                .consumerMainThread(MenuActionPacket::handle)
+                .add();
+
         MSG_TO_CLIENT.messageBuilder(EntryListPacket.class, 2, NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(EntryListPacket::new)
                 .encoder(EntryListPacket::encode)
@@ -149,15 +164,5 @@ public class Channel {
 
         PACKETS_REGISTERED = true;
         LOGGER.info("[NutUI Sync] Channel packets registered.");
-    }
-
-    public static void updateDemoCounterFromClient(ServerPlayer player, int value) {
-        DEMO_COUNTER_BY_PLAYER.put(player.getUUID(), value);
-        if (SYNC_DEBUG_LOG) {
-            LOGGER.info("[NutUI Sync][RECV][Server] player={} {}={}",
-                    player.getGameProfile().getName(),
-                    DataPacket.DEMO_CLIENT_OPEN_COUNTER_KEY,
-                    value);
-        }
     }
 }
