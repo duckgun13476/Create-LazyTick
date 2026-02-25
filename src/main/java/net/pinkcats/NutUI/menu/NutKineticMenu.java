@@ -15,6 +15,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.pinkcats.NutUI.menu.architect.data.NutMenuInfo;
 import net.pinkcats.NutUI.menu.architect.slots.SlotGhost;
 import net.pinkcats.NutUI.menu.architect.slots._SlotBase;
 import net.pinkcats.createlazytick.Gui.mes;
@@ -60,7 +61,11 @@ public class NutKineticMenu {
 
 
         protected void RenderPlayerInventory(Inventory inventory) {
-          //  addPlayerInventory(inventory, 0, 85 + 35);
+            NutMenuInfo.data data = NutMenuInfo.get(this.menuId);
+            if (data == null || !data.hasPlayerInventory()) {
+                return;
+            }
+            addPlayerInventory(inventory, data.playerInventoryX(), data.playerInventoryY());
         }
 
 
