@@ -5,10 +5,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.pinkcats.NutUI.Lib.mes;
+import net.pinkcats.NutUI.menu.Connect.NutUIClientApi;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.NutUI.menu.NutKineticScreen;
 import net.pinkcats.NutUI.menu.architect.Helper.TextureSize;
+import net.pinkcats.NutUI.menu.architect.data.SharedData;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 
@@ -24,11 +28,19 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
             ResourceLocation.fromNamespaceAndPath(MODID, "gui/button.png");
 
     private static final double FOLLOW_SMOOTHING = 0.22D;
+    private static final int TRACK_MIN_X = -8;
+    private static final int TRACK_MAX_X = 250;
+    private static final int TRACK_Y_DYNAMIC = 1;
+    private static final int TRACK_Y_FORCED = 12;
+    private static final int Y_SWITCH_THRESHOLD = 7;
+    private static final int BUTTON_CHAR_COUNT = 3;
+    private static final int BUTTON_PIXEL_HEIGHT = 14;
     private double buttonPosX;
     private double buttonPosY;
     private boolean buttonPositionInitialized;
     private int buttonDrawWidth = 16;
     private int buttonDrawHeight = 16;
+    private boolean draggingButton = false;
 
     public LazyTickScrollerScreen(NutKineticMenu.NutItemMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -46,11 +58,13 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        syncFromServerState();
+
         if (!buttonPositionInitialized) {
-            buttonPosX = toGuiCenteredX(mouseX, buttonDrawWidth);
-            buttonPosY = toGuiCenteredY(mouseY, buttonDrawHeight);
+            buttonPosX = TRACK_MIN_X;
+            buttonPosY = TRACK_Y_DYNAMIC;
             buttonPositionInitialized = true;
-        } else {
+        } else if (draggingButton) {
             buttonPosX = smoothFollowCenteredX(buttonPosX, mouseX, buttonDrawWidth, FOLLOW_SMOOTHING);
             buttonPosY = smoothFollowCenteredY(buttonPosY, mouseY, buttonDrawHeight, FOLLOW_SMOOTHING);
         }
@@ -65,20 +79,95 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         renderDefaultBg(graphics, partialTick, mouseX, mouseY);
 
 
-        if (buttonPosX<-8) buttonPosX=-8;
-        if (buttonPosX>250) buttonPosX=250;
+        if (buttonPosX < TRACK_MIN_X) buttonPosX = TRACK_MIN_X;
+        if (buttonPosX > TRACK_MAX_X) buttonPosX = TRACK_MAX_X;
 
         int buttonX = (int) Math.round(buttonPosX);
         int buttonY = (int) Math.round(buttonPosY);
 
-        if (buttonY>7) buttonY=12;
-        if (buttonY<=7) buttonY=1;
+        if (buttonY > Y_SWITCH_THRESHOLD) buttonY = TRACK_Y_FORCED;
+        if (buttonY <= Y_SWITCH_THRESHOLD) buttonY = TRACK_Y_DYNAMIC;
 
         mes.warn("{}--{}",buttonPosX,buttonPosY);
 
 
-        RenderButton(graphics, buttonX, buttonY, 3);
+        RenderButton(graphics, buttonX, buttonY, BUTTON_CHAR_COUNT);
 
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            draggingButton = true;
+            applyMouseAndSend((int) Math.round(mouseX), (int) Math.round(mouseY));
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (draggingButton && button == 0) {
+            applyMouseAndSend((int) Math.round(mouseX), (int) Math.round(mouseY));
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            draggingButton = false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private void applyMouseAndSend(int mouseX, int mouseY) {
+        double x = toGuiCenteredX(mouseX, buttonDrawWidth);
+        double y = toGuiCenteredY(mouseY, buttonDrawHeight);
+        if (x < TRACK_MIN_X) x = TRACK_MIN_X;
+        if (x > TRACK_MAX_X) x = TRACK_MAX_X;
+        int rowY = y > Y_SWITCH_THRESHOLD ? TRACK_Y_FORCED : TRACK_Y_DYNAMIC;
+
+        buttonPosX = x;
+        buttonPosY = rowY;
+
+        int percent = mapXToPercent(x);
+        boolean forced = rowY == TRACK_Y_FORCED;
+        NutUIClientApi.sendAction("clt_scroller_set", Map.of(
+                "percent", percent,
+                "forced", forced
+        ));
+    }
+
+    private void syncFromServerState() {
+        int percent = SharedData.getSyncedInt("clt_ui_percent", -1);
+        if (percent < 0) {
+            return;
+        }
+        if (percent > 100) percent = 100;
+        boolean forced = SharedData.getSyncedBoolean("clt_ui_forced", false);
+
+        double targetX = mapPercentToX(percent);
+        double targetY = forced ? TRACK_Y_FORCED : TRACK_Y_DYNAMIC;
+
+        if (!draggingButton) {
+            buttonPosX = targetX;
+            buttonPosY = targetY;
+        }
+    }
+
+    private static int mapXToPercent(double x) {
+        double ratio = (x - TRACK_MIN_X) / (double) (TRACK_MAX_X - TRACK_MIN_X);
+        int percent = (int) Math.round(ratio * 100.0D);
+        if (percent < 0) return 0;
+        if (percent > 100) return 100;
+        return percent;
+    }
+
+    private static double mapPercentToX(int percent) {
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+        double ratio = percent / 100.0D;
+        return TRACK_MIN_X + ratio * (TRACK_MAX_X - TRACK_MIN_X);
     }
 
     private void RenderButton(@NotNull GuiGraphics graphics,int X,int Y,int Char) {
