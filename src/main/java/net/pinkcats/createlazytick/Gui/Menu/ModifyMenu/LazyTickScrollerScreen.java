@@ -39,8 +39,8 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     private static final int BUTTON_PIXEL_HEIGHT = 14;
     private static final int DEFAULT_PERCENT_FALLBACK = 50;
     private static final int BACKGROUND_TILE = 4;
-    private static final int BACKGROUND_ROWS = 15;
-    private static final int BACKGROUND_SPREAD_MAX = 34;
+    private static final int BACKGROUND_ROWS = 16;
+    private static final int BACKGROUND_SPREAD_MAX = 36;
     private double buttonPosX;
     private double buttonPosY;
     private boolean buttonPositionInitialized;
@@ -94,7 +94,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         updateTextureSizeIfNeeded();
 
         // Draw default NutUI background first.
-        RenderBackground(graphics,textCenterX,this.topPos - 20);
+        RenderBackground(graphics,textCenterX+7,this.topPos - 20);
         renderDefaultBg(graphics, partialTick, mouseX, mouseY);
 
         if (buttonPosX < TRACK_MIN_X) buttonPosX = TRACK_MIN_X;
