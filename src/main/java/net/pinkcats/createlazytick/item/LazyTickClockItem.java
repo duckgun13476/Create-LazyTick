@@ -16,6 +16,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 import net.pinkcats.NutUI.menu.Nutprovider;
 import net.pinkcats.createlazytick.Gui.mes;
@@ -23,6 +24,7 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
+import net.pinkcats.createlazytick.helper.LazyTickScrollerOpenHelper;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickMode;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
@@ -70,9 +72,14 @@ public class LazyTickClockItem extends Item {
         BlockEntity be = level.getBlockEntity(pos);
         double localY = context.getClickLocation().y - pos.getY();
 
+        BlockHitResult hitResult = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), pos, false);
+        if (LazyTickScrollerOpenHelper.tryOpen(level, pos, player, context.getHand(), hitResult)) {
+            return InteractionResult.CONSUME;
+        }
+
         // Lower half is reserved for the custom Depot UI path.
         // Original clock interaction should only work on upper half.
-        mes.error(localY);
+
         if (localY < 0.5D) {
             return InteractionResult.PASS;
         }

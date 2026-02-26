@@ -2,7 +2,6 @@ package net.pinkcats.createlazytick.mixin.OptElement.crafter;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
-import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -12,7 +11,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
-import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.util.ScheduleTicker;
 import net.pinkcats.createlazytick.helper.extraDataTool.CrafterExtraDataTool;
@@ -107,11 +105,6 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
                 LazyTickLogic.setIntervalSafe(this, newDelayTick);
             }
         }
-    }
-
-    @Inject(method = "addBehaviours", at = @At("RETURN"), remap = false)
-    private void lazytick$addScrollBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo ci) {
-        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 
     @Inject(method = "tick", at = @At("HEAD"), remap = false)
