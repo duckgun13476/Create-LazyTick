@@ -13,16 +13,27 @@ import org.jetbrains.annotations.Nullable;
 
 public class Nutprovider implements MenuProvider {
 
+    @FunctionalInterface
+    public interface MenuBuilder {
+        AbstractContainerMenu create(int id, @NotNull Inventory inv, @NotNull Player player, BlockPos pos, ResourceLocation menuId);
+    }
+
     private final BlockPos blockPos;
     private final ResourceLocation menuID;
+    private final MenuBuilder menuBuilder;
 
 
     /**
      * Used for provide menu
      */
     public Nutprovider(BlockPos pos, ResourceLocation menuID) {
+        this(pos, menuID, null);
+    }
+
+    public Nutprovider(BlockPos pos, ResourceLocation menuID, @Nullable MenuBuilder menuBuilder) {
         blockPos = pos;
         this.menuID = menuID;
+        this.menuBuilder = menuBuilder;
     }
 
 
@@ -35,9 +46,13 @@ public class Nutprovider implements MenuProvider {
     @Override
     public @Nullable AbstractContainerMenu createMenu(
             int id, @NotNull Inventory inv, @NotNull Player player) {
-        NutKineticMenu.NutItemMenu menu = new NutKineticMenu.NutItemMenu(inv,id,blockPos,menuID);
-        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            Channel.syncOpenedMenuNow(serverPlayer, menu);
+        AbstractContainerMenu menu = menuBuilder != null
+                ? menuBuilder.create(id, inv, player, blockPos, menuID)
+                : new NutKineticMenu.NutItemMenu(inv, id, blockPos, menuID);
+
+        if (menu instanceof NutKineticMenu.NutItemMenu nutMenu
+                && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            Channel.syncOpenedMenuNow(serverPlayer, nutMenu);
         }
         return menu;   //player.getMainHandItem()   Using in Remote future
     }

@@ -158,7 +158,7 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
                 localHit.y >= 0 && localHit.y <= 1 &&
                 localHit.z >= 0 && localHit.z <= 1;
         if (!insideBlock) return false;
-        return localHit.y < 0.3;
+        return localHit.y >= 0.5;
     }
 
     // make value box disappear
