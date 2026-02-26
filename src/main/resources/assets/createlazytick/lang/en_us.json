@@ -140,6 +140,8 @@
   "item.createlazytick.clock.tooltip.line2": "You can also aim at the lower half of a component and hold to perform fine adjustments",
 
   "createlazytick.hud.config": "Config",
-  "createlazytick.hud.click_hold_edit": "Click and hold to edit"
+  "createlazytick.hud.click_hold_edit": "Click and hold to edit",
+  "createlazytick.scroller.target_lazytick_config": "Target LazyTick Config",
+  "createlazytick.scroller.release_right_click_confirm": "Release Right Click to Confirm"
 
 }
