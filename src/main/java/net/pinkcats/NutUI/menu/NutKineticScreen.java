@@ -212,6 +212,24 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         tempAreas.add(new Rect2i(drawX + 5, drawY + 5, EnsurePositive(drawWidth - 10), EnsurePositive(drawHeight - 10)));
     }
 
+    //*
+    // Replace Vanilla interface
+    // */
+    protected void SBlit(
+            @NotNull GuiGraphics graphics, ResourceLocation atlasLocation,
+            int x, int y,
+            float UV_StartPoint_X, float UV_StartPoint_Y,
+            int UV_Width, int UV_Height){
+        TextureSize.Size size = TextureSize.get(atlasLocation);
+        int texWidth = size.w();
+        int texHeight = size.h();
+        graphics.blit(atlasLocation,
+                x, y,
+                UV_StartPoint_X-1, UV_StartPoint_Y-1, // Texture startpoint
+                UV_Width, UV_Height,
+                texWidth, texHeight);
+    }
+
     @Deprecated
     protected void debugWindowArea(GuiGraphics graphics) {
         graphics.fill(leftPos + imageWidth, topPos + imageHeight, leftPos, topPos, 0xD3D3D3D3);
@@ -233,6 +251,29 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
 
     protected void setServerKey(String key, Object value) {
         NutUIClientApi.sendAction("set_key", key, value);
+    }
+
+    // Reusable helpers for cursor-following UI elements
+    protected double toGuiCenteredX(int mouseX, int drawWidth) {
+        return mouseX - this.leftPos - drawWidth / 2.0D;
+    }
+
+    protected double toGuiCenteredY(int mouseY, int drawHeight) {
+        return mouseY - this.topPos - drawHeight / 2.0D;
+    }
+
+    protected double smoothApproach(double current, double target, double smoothing) {
+        return current + (target - current) * smoothing;
+    }
+
+    // Smooth follow only, no clamping.
+    protected double smoothFollowCenteredX(double current, int mouseX, int drawWidth, double smoothing) {
+        return smoothApproach(current, toGuiCenteredX(mouseX, drawWidth), smoothing);
+    }
+
+    // Smooth follow only, no clamping.
+    protected double smoothFollowCenteredY(double current, int mouseY, int drawHeight, double smoothing) {
+        return smoothApproach(current, toGuiCenteredY(mouseY, drawHeight), smoothing);
     }
 
 

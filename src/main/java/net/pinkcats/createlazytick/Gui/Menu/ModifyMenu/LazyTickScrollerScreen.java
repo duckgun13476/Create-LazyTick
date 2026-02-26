@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.util.Mth;
+import net.pinkcats.NutUI.Lib.mes;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.NutUI.menu.NutKineticScreen;
 import net.pinkcats.NutUI.menu.architect.Helper.TextureSize;
@@ -19,6 +19,10 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
 
     private static final ResourceLocation SCROLLER_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(MODID, "gui/scroller.png");
+
+    private static final ResourceLocation SCROLLER_BUTTON =
+            ResourceLocation.fromNamespaceAndPath(MODID, "gui/button.png");
+
     private static final double FOLLOW_SMOOTHING = 0.22D;
     private double buttonPosX;
     private double buttonPosY;
@@ -33,7 +37,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     @Override
     public void init() {
         super.init();
-        TextureSize.Size size = TextureSize.get(SCROLLER_TEXTURE);
+        TextureSize.Size size = TextureSize.get(SCROLLER_BUTTON);
         if (size.w() > 0 && size.h() > 0) {
             buttonDrawWidth = size.w();
             buttonDrawHeight = size.h();
@@ -42,24 +46,13 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Smoothly follow mouse in double precision.
-        double targetX = mouseX - this.leftPos - buttonDrawWidth / 2.0D;
-        double targetY = mouseY - this.topPos - buttonDrawHeight / 2.0D;
-
-        double minX = 0.0D;
-        double minY = 0.0D;
-        double maxX = Math.max(0, this.imageWidth - buttonDrawWidth);
-        double maxY = Math.max(0, this.imageHeight - buttonDrawHeight);
-        targetX = Mth.clamp(targetX, minX, maxX);
-        targetY = Mth.clamp(targetY, minY, maxY);
-
         if (!buttonPositionInitialized) {
-            buttonPosX = targetX;
-            buttonPosY = targetY;
+            buttonPosX = toGuiCenteredX(mouseX, buttonDrawWidth);
+            buttonPosY = toGuiCenteredY(mouseY, buttonDrawHeight);
             buttonPositionInitialized = true;
         } else {
-            buttonPosX += (targetX - buttonPosX) * FOLLOW_SMOOTHING;
-            buttonPosY += (targetY - buttonPosY) * FOLLOW_SMOOTHING;
+            buttonPosX = smoothFollowCenteredX(buttonPosX, mouseX, buttonDrawWidth, FOLLOW_SMOOTHING);
+            buttonPosY = smoothFollowCenteredY(buttonPosY, mouseY, buttonDrawHeight, FOLLOW_SMOOTHING);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -71,12 +64,48 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         updateTextureSizeIfNeeded();
         renderDefaultBg(graphics, partialTick, mouseX, mouseY);
 
+
+        if (buttonPosX<-8) buttonPosX=-8;
+        if (buttonPosX>250) buttonPosX=250;
+
         int buttonX = (int) Math.round(buttonPosX);
         int buttonY = (int) Math.round(buttonPosY);
 
-        FancyRender(graphics, buttonX, buttonY, SCROLLER_TEXTURE);
+        if (buttonY>7) buttonY=12;
+        if (buttonY<=7) buttonY=1;
+
+        mes.warn("{}--{}",buttonPosX,buttonPosY);
+
+
+        RenderButton(graphics, buttonX, buttonY, 3);
 
     }
+
+    private void RenderButton(@NotNull GuiGraphics graphics,int X,int Y,int Char) {
+        int drawX = this.leftPos + X;
+        int drawY = this.topPos + Y;
+
+        //left part
+        SBlit(graphics,SCROLLER_BUTTON, drawX, drawY,
+                2,2,
+                3,14);
+        drawX += 3;
+
+        //middle part
+        for (int i = 0; i < Char; i++) {
+            SBlit(graphics, SCROLLER_BUTTON, drawX, drawY,
+                    6, 2,
+                    5, 14);
+            drawX += 5;
+        }
+
+        //right part
+        SBlit(graphics,SCROLLER_BUTTON, drawX, drawY,
+                12,2,
+                3,14);
+    }
+
+
 
     @Override
     protected void renderLabels(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
