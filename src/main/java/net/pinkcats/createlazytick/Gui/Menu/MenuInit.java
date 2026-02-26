@@ -25,10 +25,9 @@ public final class MenuInit {
 
         NutMenuExtensionRegistry.registerEasyMenu(
                 LazyTickScrollerBase,
-                Nut_Texture("gui/scrollerbase.png"),
-                0, 0,
-                0, 85,
-                (id, inv, player, pos, menuId) -> new LazyTickScrollerMenu(inv, id, pos, menuId),
+                Nut_Texture("gui/scrollerbase.png"), 0, 0,
+                (id, inv, player, pos, menuId) ->
+                        new LazyTickScrollerMenu(inv, id, pos, menuId),
                 LazyTickScrollerScreen::new
         );
 
