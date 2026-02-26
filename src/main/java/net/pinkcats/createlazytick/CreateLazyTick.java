@@ -6,7 +6,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,6 +21,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
+import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
 import org.slf4j.Logger;
@@ -61,7 +64,6 @@ public class CreateLazyTick {
         // From UI Lib
         NutKineticMenu.init(modEventBus);
 
-
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
 
@@ -84,6 +86,16 @@ public class CreateLazyTick {
 
     }
 
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
+        BasinRecipeIndex.rebuild(event.getServer().getRecipeManager());
+    }
+
+    @SubscribeEvent
+    public void onDatapackSync(OnDatapackSyncEvent event) {
+        if (event.getPlayer() != null) return; // 忽略单个玩家的数据包同步，仅在全局重载之后触发全部配方索引重构
+        BasinRecipeIndex.rebuild(event.getPlayerList().getServer().getRecipeManager());
+    }
 
     @SubscribeEvent
     public void onCommandRegister(RegisterCommandsEvent event) {
