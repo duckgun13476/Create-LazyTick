@@ -33,7 +33,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     private static final int TRACK_Y_DYNAMIC = 1;
     private static final int TRACK_Y_FORCED = 12;
     private static final int Y_SWITCH_THRESHOLD = 7;
-    private static final int BUTTON_CHAR_COUNT = 3;
+    private static final int BUTTON_CHAR_COUNT = 4;
     private static final int BUTTON_PIXEL_HEIGHT = 14;
     private double buttonPosX;
     private double buttonPosY;
@@ -91,7 +91,8 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         mes.warn("{}--{}",buttonPosX,buttonPosY);
 
 
-        RenderButton(graphics, buttonX, buttonY, BUTTON_CHAR_COUNT);
+        int percent = mapXToPercent(buttonPosX);
+        RenderButton(graphics, buttonX, buttonY, percent);
 
     }
 
@@ -170,9 +171,10 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         return TRACK_MIN_X + ratio * (TRACK_MAX_X - TRACK_MIN_X);
     }
 
-    private void RenderButton(@NotNull GuiGraphics graphics,int X,int Y,int Char) {
+    private void RenderButton(@NotNull GuiGraphics graphics, int X, int Y, int percent) {
         int drawX = this.leftPos + X;
         int drawY = this.topPos + Y;
+        int buttonStartX = drawX;
 
         //left part
         SBlit(graphics,SCROLLER_BUTTON, drawX, drawY,
@@ -181,7 +183,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         drawX += 3;
 
         //middle part
-        for (int i = 0; i < Char; i++) {
+        for (int i = 0; i < LazyTickScrollerScreen.BUTTON_CHAR_COUNT; i++) {
             SBlit(graphics, SCROLLER_BUTTON, drawX, drawY,
                     6, 2,
                     5, 14);
@@ -192,6 +194,12 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         SBlit(graphics,SCROLLER_BUTTON, drawX, drawY,
                 12,2,
                 3,14);
+
+        String percentText = percent + "%";
+        int buttonWidth = 3 + (LazyTickScrollerScreen.BUTTON_CHAR_COUNT * 5) + 3;
+        int textX = buttonStartX + (buttonWidth - this.font.width(percentText)) / 2 ;
+        int textY = drawY + (BUTTON_PIXEL_HEIGHT - 8) / 2;
+        graphics.drawString(this.font, percentText, textX+1, textY+1, 0x704630, false);
     }
 
 
