@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraftforge.network.NetworkHooks;
 import net.pinkcats.NutUI.menu.Nutprovider;
+import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -67,16 +68,24 @@ public class LazyTickClockItem extends Item {
 
         BlockPos pos = context.getClickedPos();
         BlockEntity be = level.getBlockEntity(pos);
+        double localY = context.getClickLocation().y - pos.getY();
 
-        if (be != null){
-            CreateNutMenu(player,pos,WhatIsThis);
+        // Lower half is reserved for the custom Depot UI path.
+        // Original clock interaction should only work on upper half.
+        mes.error(localY);
+        if (localY < 0.5D) {
+            return InteractionResult.PASS;
+        }
+
+        //if (be != null){
+        //    CreateNutMenu(player,pos,WhatIsThis);
 
             //CreateNutMenu(player,pos,LazyTickMenu);
-            return InteractionResult.CONSUME;
-        } else if (be == null) {
-            CreateNutMenu(player,pos,LazyTickMenuScroller);
-            return InteractionResult.CONSUME;
-        }
+        //    return InteractionResult.CONSUME;
+        //} else if (be == null) {
+        //    CreateNutMenu(player,pos,LazyTickMenuScroller);
+        //    return InteractionResult.CONSUME;
+        //}
 
         if (be instanceof ISmartBlockEntityControl control) {
 

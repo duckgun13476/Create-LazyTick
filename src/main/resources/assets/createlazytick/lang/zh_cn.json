@@ -129,6 +129,9 @@
   "createlazytick.export.success_with_path": "导出成功! 文件已保存至 %s",
 
   "item.createlazytick.clock.tooltip.line1": "当佩戴护目镜的时候，使用此物品可调节机械动力元件工作状态",
-  "item.createlazytick.clock.tooltip.line2": "也可以对准元件下半部分长按以进行细微控制"
+  "item.createlazytick.clock.tooltip.line2": "也可以对准元件下半部分长按以进行细微控制",
+
+  "createlazytick.hud.config": "懒惰刻配置",
+  "createlazytick.hud.click_hold_edit": "点击并按住以编辑"
 }
 

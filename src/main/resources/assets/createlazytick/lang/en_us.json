@@ -137,6 +137,9 @@
   "createlazytick.export.no_records_cancelled": "No records match the current filter. Export cancelled.",
   "createlazytick.export.success_with_path": "Export successful! File saved to %s",
   "item.createlazytick.clock.tooltip.line1": "While wearing goggles, use this item to adjust the operating state of Create components",
-  "item.createlazytick.clock.tooltip.line2": "You can also aim at the lower half of a component and hold to perform fine adjustments"
+  "item.createlazytick.clock.tooltip.line2": "You can also aim at the lower half of a component and hold to perform fine adjustments",
+
+  "createlazytick.hud.config": "Config",
+  "createlazytick.hud.click_hold_edit": "Click and hold to edit"
 
 }

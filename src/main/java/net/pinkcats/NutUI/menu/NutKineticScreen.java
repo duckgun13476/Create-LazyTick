@@ -31,7 +31,7 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
 
 
     //private final TransferBoxEntity transferEntity;
-    private final NutKineticMenu.NutItemMenu out_menu; // 添加成员变量
+    protected final NutKineticMenu.NutItemMenu out_menu; // 娣诲姞鎴愬憳鍙橀噺
 
     private int ScreenWidth;
     private int ScreenHeight;
@@ -61,14 +61,21 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      */
     @Override
     protected void renderBg(@NotNull GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
-
         //Sync size
         updateTextureSizeIfNeeded();
+
+        renderDefaultBg(pGuiGraphics, pPartialTick, pMouseX, pMouseY);
+    }
+
+    /**
+     * Default background pipeline.
+     * Subclasses can call this and then add custom rendering.
+     */
+    protected void renderDefaultBg(@NotNull GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
 
         //Define pos
         int MenuStartPosX = this.leftPos;
         int MenuStartPosY = this.topPos;
-
 
         //Show Box
         FancyRender(pGuiGraphics, MenuStartPosX, MenuStartPosY);
@@ -119,7 +126,7 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         return Math.max(Length, 1);
     }
 
-    private void updateTextureSizeIfNeeded() {
+    protected void updateTextureSizeIfNeeded() {
         if (out_menu == null) {
             return;
         }
@@ -197,3 +204,4 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
 
 
 }
+

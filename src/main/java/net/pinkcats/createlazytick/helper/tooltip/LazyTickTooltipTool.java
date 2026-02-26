@@ -1,15 +1,27 @@
 package net.pinkcats.createlazytick.helper.tooltip;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.pinkcats.createlazytick.config.ClientConfig;
 import net.pinkcats.createlazytick.item.LazyTickClockItem;
 
 public class LazyTickTooltipTool {
     public static boolean shouldRender(Minecraft mc) {
-        if (mc.player != null && mc.player.getMainHandItem().getItem() instanceof LazyTickClockItem) {
-            return ClientConfig.showModeTooltip() || ClientConfig.showTierTooltip();
+        if (mc.player == null || !(mc.player.getMainHandItem().getItem() instanceof LazyTickClockItem)) {
+            return false;
         }
-        return false;
+
+        if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) {
+            return false;
+        }
+
+        double localY = hit.getLocation().y - hit.getBlockPos().getY();
+        if (localY < 0.5D) {
+            return false;
+        }
+
+        return ClientConfig.showModeTooltip() || ClientConfig.showTierTooltip();
     }
 
     public static String formatTime(int ticks) {
