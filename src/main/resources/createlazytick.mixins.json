@@ -8,8 +8,10 @@
     "compat.createenchantment.OpenEndedPipeMixin",
     "Create.SmartBlockEntityControlMixin",
     "Minecraft.CacheLabel",
-    "OptElement.ArmLazyTickMixin",
-    "OptElement.ChuteLazyTickMixin",
+    "OptElement.arm.ArmLazyTickMixin",
+    "OptElement.arm.ArmBlockUseMixin",
+    "OptElement.chute.ChuteLazyTickMixin",
+    "OptElement.chute.AbstractChuteBlockUseMixin",
     "OptElement.DeployerRecipeMixin",
     "OptElement.SpoutRecipeMixin",
     "OptElement.basin.BasinLazyTickMixin",
@@ -20,15 +22,19 @@
     "OptElement.crafter.CrafterAccessor",
     "OptElement.crafter.CrafterRecipeMixin",
     "OptElement.crafter.CrafterRedstoneLazyTickMixin",
+    "OptElement.crafter.MechanicalCrafterBlockUseMixin",
     "OptElement.depot.DepotBlockEntityMixin",
     "OptElement.depot.DepotBlockUseMixin",
     "OptElement.depot.DepotLazyTickMixin",
     "OptElement.fluid.FluidLazyTickMixin",
     "OptElement.fluid.FluidNetworkTransferSpeedMixin",
     "OptElement.funnel.FunnelLazyTickMixin",
+    "OptElement.funnel.FunnelBlockUseMixin",
     "OptElement.itemdrain.ItemDrainAccessor",
     "OptElement.itemdrain.ItemDrainLazyTickMixin",
+    "OptElement.itemdrain.ItemDrainBlockUseMixin",
     "OptElement.saw.SawLazyTickMixin",
+    "OptElement.saw.SawBlockUseMixin",
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
@@ -41,3 +47,4 @@
     "defaultRequire": 1
   }
 }
+

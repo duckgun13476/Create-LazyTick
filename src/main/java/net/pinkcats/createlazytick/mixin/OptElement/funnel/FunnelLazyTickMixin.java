@@ -28,7 +28,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Mixin;
@@ -384,7 +383,6 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         behaviours.add(new DirectBeltInputBehaviour(this).onlyInsertWhen(this::supportsDirectBeltInput)
                 .setInsertionHandler(this::handleDirectBeltInput));
         registerAwardables(behaviours, AllAdvancements.FUNNEL);
-        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 
 
