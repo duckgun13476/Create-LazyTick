@@ -41,6 +41,10 @@ public final class NutMenuExtensionRegistry {
         }
     }
 
+
+    /**
+     * Register an easy menu with player inventory.
+     */
     public static void registerEasyMenu(ResourceLocation menuId, ResourceLocation texture,
                                         int x, int y, Integer playerInventoryX, Integer playerInventoryY,
                                         Nutprovider.MenuBuilder menuBuilder, ScreenBuilder screenBuilder) {
@@ -51,6 +55,15 @@ public final class NutMenuExtensionRegistry {
             MENU_DEFINITIONS.put(menuId, NutMenuInfo.data.EasyMenu(menuId, texture, x, y, playerInventoryX, playerInventoryY));
         }
         register(menuId, menuBuilder, screenBuilder);
+    }
+
+    /**
+     * Register an easy menu with no player inventory.
+     */
+    public static void registerEasyMenu(ResourceLocation menuId, ResourceLocation texture,
+                                        int x, int y,
+                                        Nutprovider.MenuBuilder menuBuilder, ScreenBuilder screenBuilder) {
+        registerEasyMenu(menuId, texture, x, y, null, null, menuBuilder, screenBuilder);
     }
 
     public static void defineRegisteredMenus() {
