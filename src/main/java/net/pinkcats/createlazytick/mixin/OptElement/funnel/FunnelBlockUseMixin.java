@@ -1,6 +1,6 @@
-package net.pinkcats.createlazytick.mixin.OptElement.depot;
+package net.pinkcats.createlazytick.mixin.OptElement.funnel;
 
-import com.simibubi.create.content.logistics.depot.DepotBlock;
+import com.simibubi.create.content.logistics.funnel.FunnelBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -14,13 +14,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = DepotBlock.class, remap = false)
-public class DepotBlockUseMixin {
+@Mixin(value = FunnelBlock.class, remap = false)
+public class FunnelBlockUseMixin {
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true, remap = false)
-    private void createLazyTick$openTestUiOnLowerHalf(BlockState state, Level level, BlockPos pos, Player player,
-                                                      InteractionHand hand, BlockHitResult hit,
-                                                      CallbackInfoReturnable<InteractionResult> cir) {
+    private void createLazyTick$openScrollerUi(BlockState state, Level level, BlockPos pos, Player player,
+                                                InteractionHand hand, BlockHitResult hit,
+                                                CallbackInfoReturnable<InteractionResult> cir) {
         if (LazyTickScrollerOpenHelper.tryOpen(level, pos, player, hand, hit)) {
             cir.setReturnValue(InteractionResult.CONSUME);
         }

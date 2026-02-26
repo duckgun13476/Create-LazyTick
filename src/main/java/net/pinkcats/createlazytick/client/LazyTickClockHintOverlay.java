@@ -1,6 +1,5 @@
 package net.pinkcats.createlazytick.client;
 
-import com.simibubi.create.content.logistics.depot.DepotBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -12,6 +11,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
+import net.pinkcats.createlazytick.helper.LazyTickScrollerOpenHelper;
+import net.minecraft.world.level.block.Block;
 
 @Mod.EventBusSubscriber(modid = CreateLazyTick.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class LazyTickClockHintOverlay {
@@ -42,13 +43,17 @@ public class LazyTickClockHintOverlay {
         }
 
         boolean shouldShow = false;
+        String targetBlockClassName = "none";
         if (mc.player != null && mc.level != null && !mc.options.hideGui
                 && mc.player.getMainHandItem().getItem() == LazyTickItem.CLOCK.get()
                 && mc.hitResult instanceof BlockHitResult bhr
-                && bhr.getType() == HitResult.Type.BLOCK
-                && mc.level.getBlockState(bhr.getBlockPos()).getBlock() instanceof DepotBlock) {
+                && bhr.getType() == HitResult.Type.BLOCK) {
+            Block block = mc.level.getBlockState(bhr.getBlockPos()).getBlock();
+            targetBlockClassName = block.getClass().getName();
+            if (LazyTickScrollerOpenHelper.isLazyTickScrollerTarget(block)) {
             double localY = bhr.getLocation().y - bhr.getBlockPos().getY();
             shouldShow = localY < 0.5D;
+            }
         }
 
         if (shouldShow) {
@@ -65,18 +70,22 @@ public class LazyTickClockHintOverlay {
         Font font = mc.font;
         Component line1 = Component.translatable("createlazytick.hud.config");
         Component line2 = Component.translatable("createlazytick.hud.click_hold_edit");
+        Component line3 = Component.literal("Target: " + targetBlockClassName);
 
         int centerX = event.getWindow().getGuiScaledWidth() / 2;
         int baseY = event.getWindow().getGuiScaledHeight() / 2 + 14;
 
         int x1 = centerX - font.width(line1) / 2;
         int x2 = centerX - font.width(line2) / 2;
+        int x3 = centerX - font.width(line3) / 2;
 
         int alpha = (alphaByte & 0xFF) << 24;
         int line1Color = alpha | 0xE7CD73;
         int line2Color = alpha | 0xFFFFFF;
+        int line3Color = alpha | 0x9FD3FF;
 
         event.getGuiGraphics().drawString(font, line1, x1, baseY, line1Color, false);
         event.getGuiGraphics().drawString(font, line2, x2, baseY + 11, line2Color, false);
+        event.getGuiGraphics().drawString(font, line3, x3, baseY + 22, line3Color, false);
     }
 }

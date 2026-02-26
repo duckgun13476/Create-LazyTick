@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.OptElement;
+package net.pinkcats.createlazytick.mixin.OptElement.chute;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
@@ -16,7 +16,6 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
-import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -206,6 +205,5 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
         behaviours.add(invVersionTracker = new VersionedInventoryTrackerBehaviour(this));
         registerAwardables(behaviours, AllAdvancements.CHUTE);
         // new ↓
-        LazyTickScrollBehaviour.addTo(this, behaviours);
     }
 }

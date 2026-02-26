@@ -27,6 +27,8 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
         super(label, be, new InvisibleSlot());
     }
 
+
+    @Deprecated
     public static void addTo(SmartBlockEntity be, List<BlockEntityBehaviour> behaviours) {
         // 1. Check safety
         if (!(be instanceof ISmartBlockEntityControl control)) {
