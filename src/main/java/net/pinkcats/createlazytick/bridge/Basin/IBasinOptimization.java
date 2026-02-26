@@ -7,11 +7,11 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 // 工作盆的逻辑部分BasinOperatingBlockEntity和工作盆方块实体部分BasinBlockEntity分开了,导致注入也需要对应的两个类
 // 而这注入的这两个类之间就需要它互通,一个实现一个用
 public interface IBasinOptimization {
-    long clt$getInventoryVersion();
-
     /**
      * 暴露热量等级获取逻辑
      * 实现类中会复刻新版Create的缓存+防空逻辑
      */
     BlazeBurnerBlock.HeatLevel clt$getHeatLevel();
+
+    boolean clt$isOutputBufferEmpty();
 }
