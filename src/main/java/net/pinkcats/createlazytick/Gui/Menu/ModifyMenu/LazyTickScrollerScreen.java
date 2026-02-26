@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 
@@ -160,6 +161,12 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     }
 
     private void initializeFromServerState() {
+        if (!isSyncedStateForCurrentMenu()) {
+            buttonPosX = mapPercentToX(DEFAULT_PERCENT_FALLBACK);
+            buttonPosY = TRACK_Y_DYNAMIC;
+            return;
+        }
+
         int percent = SharedData.getSyncedInt("clt_ui_percent", -1);
         if (percent >= 0) {
             buttonPosX = mapPercentToX(percent);
@@ -170,6 +177,23 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
 
         buttonPosX = mapPercentToX(DEFAULT_PERCENT_FALLBACK);
         buttonPosY = TRACK_Y_DYNAMIC;
+    }
+
+    private boolean isSyncedStateForCurrentMenu() {
+        String syncedMenuId = SharedData.getSyncedString("menuId", "");
+        int[] syncedPos = SharedData.getSyncedObject("pos", int[].class);
+        if (syncedPos == null || syncedPos.length != 3) {
+            return false;
+        }
+
+        String currentMenuId = out_menu.getMenuId().toString();
+        if (!Objects.equals(currentMenuId, syncedMenuId)) {
+            return false;
+        }
+
+        return syncedPos[0] == out_menu.getPos().getX()
+                && syncedPos[1] == out_menu.getPos().getY()
+                && syncedPos[2] == out_menu.getPos().getZ();
     }
 
     private void RenderButton(@NotNull GuiGraphics graphics, int X, int Y, int percent) {
