@@ -35,6 +35,7 @@ public class ServerConfig {
     private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
     private static final ForgeConfigSpec.IntValue SAW_CACHE_MAX;
     private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> EXTRA_BASIN_RELATED_RECIPE_TYPES;
     private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
     private static final ForgeConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
     private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
@@ -184,6 +185,14 @@ public class ServerConfig {
                 .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable basin lazy tick by cached recipes(Influence on mechanical mixer and mechanical press)")
                 .define("enable_lazy_basin", true);
+
+        EXTRA_BASIN_RELATED_RECIPE_TYPES = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Additional recipe type resource locations to include in the basin recipe index.",
+                        "These types will be considered in addition to the default types (BASIN, MIXING, COMPACTING, PRESSING).",
+                        "Example: [\"create:cutting\", \"othermod:mixing\"]")
+                .defineList("extra_basin_related_recipe_types", java.util.Collections.emptyList(), o -> o instanceof String);
 
         // Item Drain
         ENABLE_LAZY_ITEM_DRAIN = BUILDER
@@ -393,6 +402,10 @@ public class ServerConfig {
 
     public static boolean getEnableLazyBasin() {
         return ENABLE_LAZY_BASIN.get();
+    }
+
+    public static List<? extends String> getExtraBasinRelatedRecipeTypes() {
+        return EXTRA_BASIN_RELATED_RECIPE_TYPES.get();
     }
 
     public static boolean getEnableLazyItemDrain() {

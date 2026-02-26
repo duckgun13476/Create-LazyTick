@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex.isBasinOptimizationSafe;
+
 @Mixin(value = BasinOperatingBlockEntity.class)
 public abstract class BasinOperatingLazyTickMixin {
 
@@ -81,7 +83,9 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(remap = false, method = "updateBasin", at = @At("HEAD"), cancellable = true)
     private void clt$onUpdateBasin(CallbackInfoReturnable<Boolean> cir) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBasin()) return;
+        if (!ServerConfig.getEnableLazyTick()
+                || !ServerConfig.getEnableLazyBasin()
+                || !isBasinOptimizationSafe) return;
 
         // 1. 正在加工中,不干预
         if (isRunning()) return;
@@ -144,7 +148,10 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("HEAD"), cancellable = true, remap = false)
     private void clt$onGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyBasin()) return;
+        if (!ServerConfig.getEnableLazyTick()
+                || !ServerConfig.getEnableLazyBasin()
+                || !isBasinOptimizationSafe) return;
+
         if (currentRecipe == null) return;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();

@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import java.lang.reflect.Field;
 
 import static net.pinkcats.createlazytick.Register.LazyTickCommand.RegisterCLTCommand;
+import static net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex.isBasinOptimizationSafe;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(CreateLazyTick.MODID)
@@ -94,6 +95,7 @@ public class CreateLazyTick {
     @SubscribeEvent
     public void onDatapackSync(OnDatapackSyncEvent event) {
         if (event.getPlayer() != null) return; // 忽略单个玩家的数据包同步，仅在全局重载之后触发全部配方索引重构
+        isBasinOptimizationSafe = true;
         BasinRecipeIndex.rebuild(event.getPlayerList().getServer().getRecipeManager());
     }
 
