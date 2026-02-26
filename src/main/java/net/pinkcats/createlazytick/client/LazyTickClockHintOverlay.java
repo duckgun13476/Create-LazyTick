@@ -10,6 +10,7 @@ import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.Gui.Menu.ModifyMenu.LazyTickScrollerScreen;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.helper.LazyTickScrollerOpenHelper;
 import net.minecraft.world.level.block.Block;
@@ -44,7 +45,8 @@ public class LazyTickClockHintOverlay {
 
         boolean shouldShow = false;
         String targetBlockClassName = "none";
-        if (mc.player != null && mc.level != null && !mc.options.hideGui
+        if (!(mc.screen instanceof LazyTickScrollerScreen)
+                && mc.player != null && mc.level != null && !mc.options.hideGui
                 && mc.player.getMainHandItem().getItem() == LazyTickItem.CLOCK.get()
                 && mc.hitResult instanceof BlockHitResult bhr
                 && bhr.getType() == HitResult.Type.BLOCK) {
