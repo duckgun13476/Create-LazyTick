@@ -5,6 +5,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.pinkcats.NutUI.menu.extensions.NutMenuScreenRouter;
 
 import static net.pinkcats.NutUI.menu.NutKineticMenu.ItemMenuRegiste;
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
@@ -15,7 +16,7 @@ public class ClientScreen {
 
     @SubscribeEvent
     public static void registerScreen(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> MenuScreens.register(ItemMenuRegiste.get(), NutKineticScreen::new));
+        event.enqueueWork(() -> MenuScreens.register(ItemMenuRegiste.get(), NutMenuScreenRouter::create));
     }
 
 

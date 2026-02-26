@@ -6,7 +6,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,6 +22,7 @@ public abstract class DepotBlockEntityMixin extends SmartBlockEntity {
 
     @Inject(method = "addBehaviours", at = @At("RETURN"), remap = false)
     private void lazytick$addScrollBehaviour(List<BlockEntityBehaviour> behaviours, CallbackInfo ci) {
-        LazyTickScrollBehaviour.addTo(this, behaviours);
+        // Disabled for Depot: avoid Create ValueSettings UI channel path in mixin.
+        // Custom Nut UI is opened from LazyTickClockItem.useOn().
     }
 }

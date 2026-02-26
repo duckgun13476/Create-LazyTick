@@ -13,9 +13,13 @@ public class MenuHelper {
 
     // Auto Create Menu and Sync
     public static void CreateNutMenu(Player player, BlockPos pos,ResourceLocation MenuID){
+        CreateNutMenu(player, pos, MenuID, null);
+    }
+
+    public static void CreateNutMenu(Player player, BlockPos pos, ResourceLocation MenuID, Nutprovider.MenuBuilder menuBuilder) {
         NetworkHooks.openScreen(
                 (ServerPlayer) player,
-                new Nutprovider(pos, MenuID),
+                new Nutprovider(pos, MenuID, menuBuilder),
                 buf -> {
                     buf.writeBlockPos(pos);
                     buf.writeResourceLocation(MenuID);

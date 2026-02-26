@@ -21,6 +21,7 @@
     "OptElement.crafter.CrafterRecipeMixin",
     "OptElement.crafter.CrafterRedstoneLazyTickMixin",
     "OptElement.depot.DepotBlockEntityMixin",
+    "OptElement.depot.DepotBlockUseMixin",
     "OptElement.depot.DepotLazyTickMixin",
     "OptElement.fluid.FluidLazyTickMixin",
     "OptElement.fluid.FluidNetworkTransferSpeedMixin",

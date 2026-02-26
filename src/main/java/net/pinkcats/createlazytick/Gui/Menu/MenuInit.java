@@ -1,7 +1,10 @@
 package net.pinkcats.createlazytick.Gui.Menu;
 
 import net.minecraft.resources.ResourceLocation;
+import net.pinkcats.NutUI.menu.extensions.NutMenuExtensionRegistry;
 import net.pinkcats.NutUI.menu.architect.data.NutMenuInfo;
+import net.pinkcats.createlazytick.Gui.Menu.ModifyMenu.LazyTickScrollerScreen;
+import net.pinkcats.createlazytick.Gui.Menu.ModifyMenu.LazyTickScrollerMenu;
 
 import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.*;
 
@@ -13,10 +16,22 @@ public final class MenuInit {
     public static final ResourceLocation LazyTickMenuScroller = Nut_Menu_ID("LazyTickScroller");
     public static final ResourceLocation DemoRegionMenu = Nut_Menu_ID("demo_region_menu");
 
-    public static final ResourceLocation WhatIsThis = Nut_Menu_ID("whatisthis");
+    public static final ResourceLocation LazyTickScrollerBase = Nut_Menu_ID("whatisthis_modify");
 
 
     public static void init() {
+
+
+
+        NutMenuExtensionRegistry.registerEasyMenu(
+                LazyTickScrollerBase,
+                Nut_Texture("gui/scrollerbase.png"),
+                0, 0,
+                0, 85,
+                (id, inv, player, pos, menuId) -> new LazyTickScrollerMenu(inv, id, pos, menuId),
+                LazyTickScrollerScreen::new
+        );
+
 
 
         //lazytick menu
@@ -37,22 +52,6 @@ public final class MenuInit {
                 0, 0
         ));
 
-        //what is this
-        NutMenuInfo.define(NutMenuInfo.data.EasyMenu(
-                WhatIsThis,
-                Nut_Texture("gui/whatisthis.png"),
-                0,0,
-                0,85
-        ));
-
-
-
-
-
-
-
-
-
 
 
 
@@ -72,6 +71,9 @@ public final class MenuInit {
         );
 
 
+
+        //auto-defined statement (Do not change!)
+        NutMenuExtensionRegistry.defineRegisteredMenus();
     }
 
 
