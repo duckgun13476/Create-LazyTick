@@ -167,16 +167,49 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      *  Fancy Render for add Menu With box
      */
     protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY) {
-        int I_WIDTH = this.ScreenWidth;
-        int I_HEIGHT = this.ScreenHeight;
-
         NutMenuInfo.data info = NutMenuInfo.require(out_menu.getMenuId());
-        ResourceLocation texture = info.texture();
-        mes.warn("{}{}{}{}{}{}{}",texture,MSX, MSY, 0, 0, this.imageWidth,this.imageHeight);
-        pGuiGraphics.blit(texture, MSX, MSY, info.textureStartX(), info.textureStartY(),
-                I_WIDTH, I_HEIGHT, this.TextureWidth, this.TextureHeight);
+        fancyRenderAbsolute(
+                pGuiGraphics,
+                MSX, MSY,
+                info.texture(),
+                info.textureStartX(), info.textureStartY(),
+                this.ScreenWidth, this.ScreenHeight,
+                this.TextureWidth, this.TextureHeight
+        );
+    }
+
+    /**
+     *  Fancy Render Add new UI
+     */
+    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY, ResourceLocation texture) {
+        // Default aligns with parent start point, convenient for later position tuning.
+        NutMenuInfo.data info = NutMenuInfo.require(out_menu.getMenuId());
+        FancyRender(pGuiGraphics, MSX, MSY, texture, info.textureStartX(), info.textureStartY());
+    }
+
+    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY, ResourceLocation texture, int u, int v) {
+        TextureSize.Size size = TextureSize.get(texture);
+        int texWidth = size.w() > 0 ? size.w() : this.ScreenWidth;
+        int texHeight = size.h() > 0 ? size.h() : this.ScreenHeight;
+
+        // Standalone layer mode: draw at texture's own size (1:1) by default.
+        FancyRender(pGuiGraphics, MSX, MSY, texture, u, v, texWidth, texHeight, texWidth, texHeight);
+    }
+
+    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY, ResourceLocation texture,
+                               int u, int v, int drawWidth, int drawHeight, int textureWidth, int textureHeight) {
+        // Custom-layer coordinates are relative to the parent UI top-left.
+        int drawX = this.leftPos + MSX;
+        int drawY = this.topPos + MSY;
+        fancyRenderAbsolute(pGuiGraphics, drawX, drawY, texture, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
+    }
+
+    private void fancyRenderAbsolute(GuiGraphics pGuiGraphics, int drawX, int drawY, ResourceLocation texture,
+                                     int u, int v, int drawWidth, int drawHeight, int textureWidth, int textureHeight) {
+        //mes.warn("{}{}{}{}{}{}{}",texture,drawX, drawY, 0, 0, this.imageWidth,this.imageHeight);
+        pGuiGraphics.blit(texture, drawX, drawY, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
         //PlaceStrip JEI block
-        tempAreas.add(new Rect2i(MSX+5, MSY+5, EnsurePositive(I_WIDTH-10), EnsurePositive(I_HEIGHT-10)));
+        tempAreas.add(new Rect2i(drawX + 5, drawY + 5, EnsurePositive(drawWidth - 10), EnsurePositive(drawHeight - 10)));
     }
 
     @Deprecated
