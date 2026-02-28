@@ -14,10 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = DepotBlock.class, remap = false)
+@Mixin(DepotBlock.class)
 public class DepotBlockUseMixin {
 
-    @Inject(method = "use", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void createLazyTick$openTestUiOnLowerHalf(BlockState state, Level level, BlockPos pos, Player player,
                                                       InteractionHand hand, BlockHitResult hit,
                                                       CallbackInfoReturnable<InteractionResult> cir) {
