@@ -12,7 +12,7 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(MenuInit::init);
+        event.enqueueWork(MenuClientInit::registerScreens);
     }
 
 }
