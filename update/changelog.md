@@ -1,4 +1,26 @@
+### 2.4.6-beta
+#### Fix
+1. Add server support Fix class leak.
 
+
+---
+### 2.4.5-beta
+#### Fix
+1. Fix a Create crash related to scroll option behavior handling.
+
+---
+### 2.4.4-hotfix-beta
+#### Fix
+1. Fix basin recipe processing issue.
+2. Fix UI config adjustment becoming unavailable when tick time is greater than 50ms.
+
+---
+### 2.4.3-beta
+#### Emergency Fix
+1. Fix external launcher crash caused by `use` method mixins not remapping correctly in production jars.
+2. Fix loading failure on Create interaction blocks such as Depot, Arm, Item Drain, Funnel, Saw, Chute and Mechanical Crafter.
+
+---
 ### 2.4.2-beta
 #### Feature
 1. New scroller UI with slide interaction for LazyTick adjustment.

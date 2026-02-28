@@ -275,6 +275,10 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         int percent = mapXToPercent(x);
         boolean forced = rowY == TRACK_Y_FORCED;
         NutUIClientApi.sendAction("clt_scroller_set", Map.of(
+                "menu_id", out_menu.getMenuId().toString(),
+                "pos_x", out_menu.getPos().getX(),
+                "pos_y", out_menu.getPos().getY(),
+                "pos_z", out_menu.getPos().getZ(),
                 "percent", percent,
                 "forced", forced
         ));

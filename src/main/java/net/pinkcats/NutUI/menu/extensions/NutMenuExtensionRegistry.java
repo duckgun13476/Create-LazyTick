@@ -1,12 +1,10 @@
 package net.pinkcats.NutUI.menu.extensions;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
-import net.pinkcats.NutUI.menu.NutKineticScreen;
 import net.pinkcats.NutUI.menu.Nutprovider;
 import net.pinkcats.NutUI.menu.architect.data.NutMenuInfo;
 
@@ -28,10 +26,10 @@ public final class NutMenuExtensionRegistry {
     }
 
     public static void register(ResourceLocation menuId, Nutprovider.MenuBuilder menuBuilder) {
-        register(menuId, menuBuilder, (menu, inv, title) -> new NutKineticScreen(menu, inv, title));
+        register(menuId, menuBuilder, null);
     }
 
-    public static void register(ResourceLocation menuId, Nutprovider.MenuBuilder menuBuilder, ScreenBuilder screenBuilder) {
+    public static void register(ResourceLocation menuId, Nutprovider.MenuBuilder menuBuilder, ScreenBuilder<?> screenBuilder) {
         if (menuId == null || menuBuilder == null) {
             return;
         }
@@ -47,7 +45,7 @@ public final class NutMenuExtensionRegistry {
      */
     public static void registerEasyMenu(ResourceLocation menuId, ResourceLocation texture,
                                         int x, int y, Integer playerInventoryX, Integer playerInventoryY,
-                                        Nutprovider.MenuBuilder menuBuilder, ScreenBuilder screenBuilder) {
+                                        Nutprovider.MenuBuilder menuBuilder, ScreenBuilder<?> screenBuilder) {
         menusDefined = false;
         if (playerInventoryX == null || playerInventoryY == null) {
             MENU_DEFINITIONS.put(menuId, NutMenuInfo.data.EasyMenu(menuId, texture, x, y));
@@ -62,7 +60,7 @@ public final class NutMenuExtensionRegistry {
      */
     public static void registerEasyMenu(ResourceLocation menuId, ResourceLocation texture,
                                         int x, int y,
-                                        Nutprovider.MenuBuilder menuBuilder, ScreenBuilder screenBuilder) {
+                                        Nutprovider.MenuBuilder menuBuilder, ScreenBuilder<?> screenBuilder) {
         registerEasyMenu(menuId, texture, x, y, null, null, menuBuilder, screenBuilder);
     }
 
@@ -85,16 +83,12 @@ public final class NutMenuExtensionRegistry {
         return new NutKineticMenu.NutItemMenu(inventory, containerId, pos, menuId);
     }
 
-    public static NutKineticScreen createScreen(NutKineticMenu.NutItemMenu menu, Inventory inventory, Component title) {
-        ScreenBuilder screenBuilder = SCREEN_FACTORIES.get(menu.getMenuId());
-        if (screenBuilder != null) {
-            return screenBuilder.create(menu, inventory, title);
-        }
-        return new NutKineticScreen(menu, inventory, title);
+    public static ScreenBuilder<?> getScreenBuilder(ResourceLocation menuId) {
+        return SCREEN_FACTORIES.get(menuId);
     }
 
     @FunctionalInterface
-    public interface ScreenBuilder {
-        NutKineticScreen create(NutKineticMenu.NutItemMenu menu, Inventory inventory, Component title);
+    public interface ScreenBuilder<T> {
+        T create(NutKineticMenu.NutItemMenu menu, Inventory inventory, net.minecraft.network.chat.Component title);
     }
 }

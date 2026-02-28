@@ -3,7 +3,6 @@ package net.pinkcats.createlazytick.Gui.Menu;
 import net.minecraft.resources.ResourceLocation;
 import net.pinkcats.NutUI.menu.extensions.NutMenuExtensionRegistry;
 import net.pinkcats.NutUI.menu.architect.data.NutMenuInfo;
-import net.pinkcats.createlazytick.Gui.Menu.ModifyMenu.LazyTickScrollerScreen;
 import net.pinkcats.createlazytick.Gui.Menu.ModifyMenu.LazyTickScrollerMenu;
 
 import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.*;
@@ -19,20 +18,14 @@ public final class MenuInit {
     public static final ResourceLocation LazyTickScrollerBase = Nut_Menu_ID("whatisthis_modify");
 
 
-    public static void init() {
-
-
-
+    public static void registerCommon() {
         NutMenuExtensionRegistry.registerEasyMenu(
                 LazyTickScrollerBase,
                 Nut_Texture("gui/scrollerbase.png"), 0, 0,
                 (id, inv, player, pos, menuId) ->
                         new LazyTickScrollerMenu(inv, id, pos, menuId),
-                LazyTickScrollerScreen::new
+                null
         );
-
-
-
         //lazytick menu
 
         //This definition additionally has a user inventory render
@@ -74,7 +67,4 @@ public final class MenuInit {
         //auto-defined statement (Do not change!)
         NutMenuExtensionRegistry.defineRegisteredMenus();
     }
-
-
-
 }

@@ -14,10 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = AbstractChuteBlock.class, remap = false)
+@Mixin(AbstractChuteBlock.class)
 public class AbstractChuteBlockUseMixin {
 
-    @Inject(method = "use", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void createLazyTick$openScrollerUi(BlockState state, Level level, BlockPos pos, Player player,
                                                 InteractionHand hand, BlockHitResult hit,
                                                 CallbackInfoReturnable<InteractionResult> cir) {
