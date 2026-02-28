@@ -6,8 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.pinkcats.createlazytick.CreateLazyTick;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.pinkcats.createlazytick.Gui.mes;
 
 import java.text.SimpleDateFormat;
@@ -54,9 +53,9 @@ public class LazyTickStatCache {
             ResourceLocation rl = ResourceLocation.tryParse(this.blockId);
             if (rl != null) {
                 // 从注册表中查找方块
-                Block block = ForgeRegistries.BLOCKS.getValue(rl);
+                Block block = BuiltInRegistries.BLOCK.get(rl);
                 // 如果方块存在且不是空气
-                if (block != null && block != Blocks.AIR) {
+                if (block != Blocks.AIR) {
                     // 返回名称(可翻译组件)
                     return block.getName();
                 }
