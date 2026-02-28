@@ -29,6 +29,9 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     private static final ResourceLocation SCROLLER_BUTTON =
             ResourceLocation.fromNamespaceAndPath(MODID, "gui/button.png");
 
+    private static final ResourceLocation SCROLLER_TABLE =
+            ResourceLocation.fromNamespaceAndPath(MODID, "gui/table.png");
+
     private static final double FOLLOW_SMOOTHING = 0.22D;
     private static final int TRACK_MIN_X = -8;
     private static final int TRACK_MAX_X = 250;
@@ -82,6 +85,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
+
     @Override
     protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 
@@ -130,6 +134,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         }
     }
 
+
     private void drawBackgroundColumn(@NotNull GuiGraphics graphics, int x, int y) {
         int drawY = y;
         for (int i = 0; i < BACKGROUND_ROWS; i++) {
@@ -139,6 +144,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
             drawY += BACKGROUND_TILE;
         }
     }
+
 
     private void RenderButton(@NotNull GuiGraphics graphics, int X, int Y, int percent) {
         int drawX = this.leftPos + X;
