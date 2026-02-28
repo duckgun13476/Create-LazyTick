@@ -6,7 +6,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTank
 import com.simibubi.create.foundation.item.SmartInventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -35,7 +35,7 @@ public final class BasinRecipeCacheKey {
                 ItemStack stack = inputInventory.getStackInSlot(i);
                 if (stack.isEmpty()) continue;
                 inputItems.add(stack.getItem());
-                if (stack.hasTag() && BasinRecipeIndex.isNbtSensitive(stack.getItem())) {
+                if (!stack.getComponentsPatch().isEmpty() && BasinRecipeIndex.isNbtSensitive(stack.getItem())) {
                     nbtSensitive = true;
                 }
             }
@@ -50,7 +50,7 @@ public final class BasinRecipeCacheKey {
                     FluidStack fs = tankBehaviour.getPrimaryHandler().getFluidInTank(i);
                     if (fs.isEmpty()) continue;
                     int typeHash = fs.getFluid().hashCode();
-                    int tagHash = fs.hasTag() ? fs.getTag().hashCode() : 0;
+                    int tagHash = !fs.getComponentsPatch().isEmpty() ? fs.getComponentsPatch().hashCode() : 0;
                     hash = 31 * hash + typeHash * 31 + tagHash;
                 }
             }
@@ -65,7 +65,7 @@ public final class BasinRecipeCacheKey {
         if (hasNbtSensitiveItems != that.hasNbtSensitiveItems) return false;
         if (fluidHash != that.fluidHash) return false;
         if (heatLevel != that.heatLevel) return false;
-        if (!ItemStack.matches(filterSnapshot, that.filterSnapshot)) return false;
+        if (!ItemStack.isSameItemSameComponents(filterSnapshot, that.filterSnapshot)) return false;
         return Objects.equals(inputItems, that.inputItems);
     }
 
@@ -83,7 +83,7 @@ public final class BasinRecipeCacheKey {
         if (stack == null || stack.isEmpty()) return 0;
         int result = Item.getId(stack.getItem());
         result = 31 * result + stack.getCount();
-        result = 31 * result + (stack.hasTag() ? stack.getTag().hashCode() : 0);
+        result = 31 * result + (!stack.getComponentsPatch().isEmpty() ? stack.getComponentsPatch().hashCode() : 0);
         return result;
     }
 }

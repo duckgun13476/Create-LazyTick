@@ -11,7 +11,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ServerConfig;
 
@@ -41,7 +42,8 @@ public class BasinRecipeIndex {
         Map<Item, IntSet> newThresholds = new HashMap<>();
         Set<Item> newNbtSensitive = new HashSet<>();
 
-        for (Recipe<?> recipe : recipeManager.getRecipes()) {
+        for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+            Recipe<?> recipe = holder.value();
             if (!relevantTypes.contains(recipe.getType())) continue;
 
             Map<Item, Integer> recipeItemCounts = new HashMap<>();
@@ -56,7 +58,7 @@ public class BasinRecipeIndex {
 
                     recipeItemCounts.put(item, recipeItemCounts.getOrDefault(item, 0) + 1);
 
-                    if (stack.hasTag()) {
+                    if (!stack.getComponentsPatch().isEmpty()) {
                         newNbtSensitive.add(item);
                     }
                 }
@@ -94,7 +96,7 @@ public class BasinRecipeIndex {
                 mes.warn("Invalid recipe type resource location: " + typeStr);
                 continue;
             }
-            RecipeType<?> type = ForgeRegistries.RECIPE_TYPES.getValue(id);
+            RecipeType<?> type = BuiltInRegistries.RECIPE_TYPE.get(id);
             if (type == null) {
                 mes.warn("Unknown recipe type: " + typeStr);
                 continue;

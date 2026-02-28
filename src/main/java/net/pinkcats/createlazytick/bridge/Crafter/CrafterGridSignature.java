@@ -34,7 +34,7 @@ public class CrafterGridSignature {
             ItemStack stack = entry.getValue();
             if (stack.isEmpty()) continue;
 
-            if (stack.hasTag()) {
+            if (!stack.getComponentsPatch().isEmpty()) {
                 safe = false;
                 // 记录物品名称 (例如 "minecraft:diamond_sword")
                 culprit = stack.getItem().getDescriptionId();
