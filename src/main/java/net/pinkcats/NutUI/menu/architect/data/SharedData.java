@@ -124,7 +124,19 @@ public class SharedData {
     public static List<CoordinateData> deserializeCoordinateDataList(byte[] data) throws IOException, ClassNotFoundException {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ObjectInputStream ois = new ObjectInputStream(bis)) {
-            return (List<CoordinateData>) ois.readObject();
+            Object decoded = ois.readObject();
+            if (!(decoded instanceof List<?> rawList)) {
+                return List.of();
+            }
+
+            List<CoordinateData> result = new ArrayList<>(rawList.size());
+            for (Object entry : rawList) {
+                if (!(entry instanceof CoordinateData coordinateData)) {
+                    return List.of();
+                }
+                result.add(coordinateData);
+            }
+            return result;
         } catch (ClassNotFoundException e) {
         }
         return List.of();

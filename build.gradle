@@ -202,14 +202,11 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     //minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-common-api:${jei_version}")
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
-    // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
+
+
     modImplementation("curse.maven:observable-509575:5643037")
 
-   modImplementation("curse.maven:spark-361579:4738952")
+    modImplementation("curse.maven:spark-361579:4738952")
 
 
     modImplementation("curse.maven:kubejs-238086:5853326")
@@ -226,9 +223,9 @@ dependencies {
     //runtimeOnly fg.deobf("curse.maven:create-328085:5838779")
 
     //JEI
-    //compileOnly("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
-    //compileOnly("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
-    //runtimeOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
+    modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-forge-api:${jei_version}")
+    modRuntimeOnly("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
 
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository

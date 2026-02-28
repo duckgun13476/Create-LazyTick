@@ -142,6 +142,8 @@
   "createlazytick.hud.config": "Config",
   "createlazytick.hud.click_hold_edit": "Click and hold to edit",
   "createlazytick.scroller.target_lazytick_config": "Target LazyTick Config",
-  "createlazytick.scroller.release_right_click_confirm": "Release Right Click to Confirm"
+  "createlazytick.scroller.release_right_click_confirm": "Release Right Click to Confirm",
+  "createlazytick.scroller.dynamic_adjust": "Dynamic",
+  "createlazytick.scroller.locked_frequency": "Locked"
 
 }

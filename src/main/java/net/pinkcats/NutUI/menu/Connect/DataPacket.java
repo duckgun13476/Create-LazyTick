@@ -20,7 +20,7 @@ import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 public class DataPacket {
 
     private static final Gson GSON = new Gson();
-    private static final boolean SYNC_DEBUG_LOG = true;
+    private static final boolean SYNC_DEBUG_LOG = false;
     public static final String DEMO_SYNC_KEY = "nutui_sync_demo";
     public static final String DEMO_SYNC_VERSION_KEY = "nutui_sync_version";
     public static final String DEMO_SYNC_TICK_KEY = "nutui_sync_server_tick";

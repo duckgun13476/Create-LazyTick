@@ -72,22 +72,22 @@ public class LazyTickClockHintOverlay {
         Font font = mc.font;
         Component line1 = Component.translatable("createlazytick.hud.config");
         Component line2 = Component.translatable("createlazytick.hud.click_hold_edit");
-        Component line3 = Component.literal("Target: " + targetBlockClassName);
+       // Component line3 = Component.literal("Target: " + targetBlockClassName);
 
         int centerX = event.getWindow().getGuiScaledWidth() / 2;
         int baseY = event.getWindow().getGuiScaledHeight() / 2 + 14;
 
         int x1 = centerX - font.width(line1) / 2;
         int x2 = centerX - font.width(line2) / 2;
-        int x3 = centerX - font.width(line3) / 2;
+       // int x3 = centerX - font.width(line3) / 2;
 
         int alpha = (alphaByte & 0xFF) << 24;
         int line1Color = alpha | 0xE7CD73;
         int line2Color = alpha | 0xFFFFFF;
-        int line3Color = alpha | 0x9FD3FF;
+       // int line3Color = alpha | 0x9FD3FF;
 
         event.getGuiGraphics().drawString(font, line1, x1, baseY, line1Color, false);
         event.getGuiGraphics().drawString(font, line2, x2, baseY + 11, line2Color, false);
-        event.getGuiGraphics().drawString(font, line3, x3, baseY + 22, line3Color, false);
+       // event.getGuiGraphics().drawString(font, line3, x3, baseY + 22, line3Color, false);
     }
 }

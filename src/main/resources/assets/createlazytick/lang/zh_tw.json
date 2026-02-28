@@ -129,5 +129,11 @@
   "createlazytick.export.success_with_path": "匯出成功! 檔案已儲存至 %s",
 
   "item.createlazytick.clock.tooltip.line1": "當配戴護目鏡時，使用此物品可調整機械動力元件的運作狀態",
-  "item.createlazytick.clock.tooltip.line2": "也可對準元件下半部長按以進行精細控制"
+  "item.createlazytick.clock.tooltip.line2": "也可對準元件下半部長按以進行精細控制",
+  "createlazytick.hud.config": "設定",
+  "createlazytick.hud.click_hold_edit": "點擊並按住以編輯",
+  "createlazytick.scroller.target_lazytick_config": "目標 LazyTick 設定",
+  "createlazytick.scroller.release_right_click_confirm": "鬆開滑鼠右鍵以確認",
+  "createlazytick.scroller.dynamic_adjust": "動態",
+  "createlazytick.scroller.locked_frequency": "鎖定"
 }
