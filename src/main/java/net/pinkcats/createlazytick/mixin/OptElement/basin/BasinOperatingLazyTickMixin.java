@@ -9,6 +9,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeCacheEntry;
+import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeCacheKey;
 import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex;
 import net.pinkcats.createlazytick.bridge.Basin.BasinStateSnapshot;
 import net.pinkcats.createlazytick.bridge.Basin.IBasinOptimization;
@@ -20,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +31,10 @@ import static net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex.isBasinO
 
 @Mixin(value = BasinOperatingBlockEntity.class)
 public abstract class BasinOperatingLazyTickMixin {
+    @Unique
+    private static final int clt$MAX_RECIPE_CACHE = 5;
+    @Unique
+    private static final int clt$MAX_CANDIDATES_PER_KEY = 5;
 
     @Shadow(remap = false) protected abstract Optional<BasinBlockEntity> getBasin();
     @Shadow(remap = false) protected abstract boolean isRunning();
@@ -36,23 +43,113 @@ public abstract class BasinOperatingLazyTickMixin {
     @Shadow(remap = false) public abstract void startProcessingBasin();
 
     @Unique
+    private BasinStateSnapshot clt$cachedSnapshot;
+
+    @Unique
+    private final List<BasinRecipeCacheEntry> clt$recipeCache = new ArrayList<>(clt$MAX_RECIPE_CACHE);
+
+    @Unique
     private void clt$sendData() {
-        ((SyncedBlockEntity)(Object)this).sendData();
+        ((SyncedBlockEntity) (Object) this).sendData();
     }
 
-    @Unique private BasinStateSnapshot clt$cachedSnapshot;
+    @Unique
+    private void clt$rememberRecipe(BasinRecipeCacheKey key, Recipe<?> recipe) {
+        if (key == null || recipe == null) return;
+
+        for (int i = 0; i < clt$recipeCache.size(); i++) {
+            BasinRecipeCacheEntry entry = clt$recipeCache.get(i);
+            if (!entry.matches(key)) continue;
+
+            List<Recipe<?>> recipes = new ArrayList<>(entry.recipes());
+            recipes.remove(recipe);
+            recipes.add(0, recipe);
+            while (recipes.size() > clt$MAX_CANDIDATES_PER_KEY) {
+                recipes.remove(recipes.size() - 1);
+            }
+
+            clt$recipeCache.remove(i);
+            clt$recipeCache.add(0, new BasinRecipeCacheEntry(key, recipes));
+            while (clt$recipeCache.size() > clt$MAX_RECIPE_CACHE) {
+                clt$recipeCache.remove(clt$recipeCache.size() - 1);
+            }
+            return;
+        }
+
+        clt$recipeCache.add(0, new BasinRecipeCacheEntry(key, Collections.singletonList(recipe)));
+        while (clt$recipeCache.size() > clt$MAX_RECIPE_CACHE) {
+            clt$recipeCache.remove(clt$recipeCache.size() - 1);
+        }
+    }
+
+    @Unique
+    private void clt$rememberRecipes(BasinRecipeCacheKey key, List<Recipe<?>> recipes) {
+        if (key == null || recipes == null || recipes.isEmpty()) return;
+        int limit = Math.min(recipes.size(), clt$MAX_CANDIDATES_PER_KEY);
+        for (int i = limit - 1; i >= 0; i--) {
+            clt$rememberRecipe(key, recipes.get(i));
+        }
+    }
+
+    @Unique
+    private Recipe<?> clt$getCachedRecipe(BasinBlockEntity basin, BasinRecipeCacheKey key) {
+        for (int i = 0; i < clt$recipeCache.size(); i++) {
+            BasinRecipeCacheEntry entry = clt$recipeCache.get(i);
+            if (!entry.matches(key)) continue;
+
+            List<Recipe<?>> recipes = new ArrayList<>(entry.recipes());
+            for (int recipeIndex = 0; recipeIndex < recipes.size(); recipeIndex++) {
+                Recipe<?> recipe = recipes.get(recipeIndex);
+                if (!BasinRecipe.match(basin, recipe)) continue;
+
+                recipes.remove(recipeIndex);
+                recipes.add(0, recipe);
+                clt$recipeCache.remove(i);
+                clt$recipeCache.add(0, new BasinRecipeCacheEntry(key, recipes));
+                return recipe;
+            }
+
+            clt$recipeCache.remove(i);
+            clt$recipeCache.add(0, new BasinRecipeCacheEntry(entry.key(), recipes));
+            return null;
+        }
+        return null;
+    }
+
+    @Unique
+    private boolean clt$recipeMayUseItem(Recipe<?> recipe, Item item) {
+        if (recipe == null) return false;
+        for (var ingredient : recipe.getIngredients()) {
+            for (ItemStack stack : ingredient.getItems()) {
+                if (!stack.isEmpty() && stack.getItem() == item) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Unique
+    private boolean clt$cacheMayUseItem(Item item) {
+        if (currentRecipe != null && clt$recipeMayUseItem(currentRecipe, item)) {
+            return true;
+        }
+        for (BasinRecipeCacheEntry entry : clt$recipeCache) {
+            for (Recipe<?> recipe : entry.recipes()) {
+                if (clt$recipeMayUseItem(recipe, item)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     @Unique
     private boolean clt$couldTriggerNewRecipe(BasinStateSnapshot oldFp, BasinStateSnapshot newFp) {
-        // 检查输出缓冲区变化
         if (oldFp.isOutputBufferEmpty() != newFp.isOutputBufferEmpty()) return true;
-        // 检查热量变化
         if (oldFp.getHeatLevel() != newFp.getHeatLevel()) return true;
-        // 检查是否有含NBT物品(且有NBT配方)进入
         if (newFp.hasNbtSensitiveItems()) return true;
-        // 对比快照
         if (!ItemStack.matches(oldFp.getFilterSnapshot(), newFp.getFilterSnapshot())) return true;
-        // 对比流体
         if (oldFp.getFluidHash() != newFp.getFluidHash()) return true;
 
         Object2IntMap<Item> oldItems = oldFp.getItemQuantities();
@@ -63,19 +160,29 @@ public abstract class BasinOperatingLazyTickMixin {
             int newQty = entry.getIntValue();
             int oldQty = oldItems.getInt(item);
 
-            // 如果增加超过阈值,唤醒
             if (newQty > oldQty) {
+                // Bootstrap phase: we do not know any basin recipe yet, so any input growth
+                // should get one chance to build the local recipe cache.
+                if (currentRecipe == null && clt$recipeCache.isEmpty()) {
+                    return true;
+                }
+
                 IntSet thresholds = BasinRecipeIndex.getThresholds(item);
-                boolean crossedThreshold = false;
                 for (int threshold : thresholds) {
                     if (oldQty < threshold && newQty >= threshold) {
-                        crossedThreshold = true;
-                        break;
+                        return true;
                     }
                 }
-                if (crossedThreshold) return true;
+
+                // Basin recipe thresholds are not always recoverable from the global index
+                // (for example, some processing recipes encode counts in custom data rather
+                // than as repeated vanilla ingredients). If a cached recipe may use this item,
+                // any increase can make a previously invalid recipe become valid.
+                if (clt$cacheMayUseItem(item)) {
+                    return true;
+                }
             } else if (newQty < oldQty) {
-                return true; // 物品少了也醒
+                return true;
             }
         }
         return false;
@@ -87,64 +194,56 @@ public abstract class BasinOperatingLazyTickMixin {
                 || !ServerConfig.getEnableLazyBasin()
                 || !isBasinOptimizationSafe) return;
 
-        // 1. 正在加工中,不干预
         if (isRunning()) return;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
         if (basinOpt.isEmpty()) return;
         BasinBlockEntity basin = basinOpt.get();
 
-        // 2. 有东西要排,且为排出模式,但输出阻塞,则交给原版(尝试排出)
         if (!((IBasinOptimization) basin).clt$isOutputBufferEmpty()) {
+            clt$cachedSnapshot = null;
             return;
         }
 
-        //System.out.println("[" + basin.getBlockPos() + "] " + currentRecipe);
-        //System.out.println(currentRecipe);
-
-        // 3. 先复用老配方
-        // ignore useless-check warning
-        if (currentRecipe != null && BasinRecipe.match(basin, currentRecipe)) {
-            // 复用老配方成功,直接启动处理并返回
-            //System.out.println("ok");
-            startProcessingBasin();
-            clt$sendData();
-            cir.setReturnValue(true); // 跳过原方法
+        if (!basin.canContinueProcessing()) {
+            clt$cachedSnapshot = null;
             return;
         }
-        //System.out.println("FAIL");
 
-        // 4. 创建快照,并对比快照状态
         BasinStateSnapshot currentSnapshot = new BasinStateSnapshot(basin);
+        BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basin);
+        boolean staleCachedRecipe = false;
 
-        if (this.clt$cachedSnapshot != null) {
-            if (this.clt$cachedSnapshot.equals(currentSnapshot)) {
-                //System.out.println("[BOBE-DEBUG] SLEEPING (Snapshots Match). OutHash: " + currentSnapshot.isOutputBufferEmpty());
-                cir.setReturnValue(true); // 休眠
-                return;
-            }
-
-            // 检查是否需要唤醒 (策略预判)
-            boolean shouldWake = clt$couldTriggerNewRecipe(this.clt$cachedSnapshot, currentSnapshot);
-
-            if (!shouldWake) {
-                //System.out.println("[BOBE-DEBUG] SLEEPING (Prediction said No). \n   Old: " + clt$cachedSnapshot + "\n   New: " + currentSnapshot);
-                this.clt$cachedSnapshot = currentSnapshot;
+        if (currentRecipe != null) {
+            if (BasinRecipe.match(basin, currentRecipe)) {
+                clt$rememberRecipe(currentKey, currentRecipe);
+                clt$cachedSnapshot = null;
+                startProcessingBasin();
+                clt$sendData();
                 cir.setReturnValue(true);
                 return;
             }
 
-            // [DEBUG] 正常唤醒
-            //System.out.println("[BOBE-DEBUG] WAKING UP! \n   Old: " + clt$cachedSnapshot + "\n   New: " + currentSnapshot);
-
+            staleCachedRecipe = true;
+            currentRecipe = null;
         }
-        //System.out.println("[BOBE-DEBUG] First Run / Reset.");
 
+        if (clt$cachedSnapshot != null) {
+            if (!staleCachedRecipe && clt$cachedSnapshot.equals(currentSnapshot)) {
+                cir.setReturnValue(true);
+                return;
+            }
 
-        // 允许执行，更新缓存
-        this.clt$cachedSnapshot = currentSnapshot;
+            boolean shouldWake = clt$couldTriggerNewRecipe(clt$cachedSnapshot, currentSnapshot);
+            if (!staleCachedRecipe && !shouldWake) {
+                clt$cachedSnapshot = currentSnapshot;
+                cir.setReturnValue(true);
+                return;
+            }
+        }
+
+        clt$cachedSnapshot = currentSnapshot;
     }
-
 
     @Inject(method = "getMatchingRecipes", at = @At("HEAD"), cancellable = true, remap = false)
     private void clt$onGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
@@ -152,16 +251,41 @@ public abstract class BasinOperatingLazyTickMixin {
                 || !ServerConfig.getEnableLazyBasin()
                 || !isBasinOptimizationSafe) return;
 
-        if (currentRecipe == null) return;
-
         Optional<BasinBlockEntity> basinOpt = getBasin();
         if (basinOpt.isEmpty()) return;
         BasinBlockEntity basin = basinOpt.get();
 
-        // 尝试复用老配方
-        if (BasinRecipe.match(basin, currentRecipe)) {
-            // 直接返回当前配方
+        BasinStateSnapshot currentSnapshot = new BasinStateSnapshot(basin);
+        BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basin);
+
+        if (currentRecipe != null && BasinRecipe.match(basin, currentRecipe)) {
+            clt$rememberRecipe(currentKey, currentRecipe);
             cir.setReturnValue(Collections.singletonList(currentRecipe));
+            return;
         }
+
+        Recipe<?> cachedRecipe = clt$getCachedRecipe(basin, currentKey);
+        if (cachedRecipe != null) {
+            currentRecipe = cachedRecipe;
+            cir.setReturnValue(Collections.singletonList(cachedRecipe));
+        }
+    }
+
+    @Inject(method = "getMatchingRecipes", at = @At("RETURN"), remap = false)
+    private void clt$afterGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
+        if (!ServerConfig.getEnableLazyTick()
+                || !ServerConfig.getEnableLazyBasin()
+                || !isBasinOptimizationSafe) return;
+
+        List<Recipe<?>> recipes = cir.getReturnValue();
+        if (recipes == null || recipes.isEmpty()) return;
+
+        Optional<BasinBlockEntity> basinOpt = getBasin();
+        if (basinOpt.isEmpty()) return;
+
+        BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basinOpt.get());
+        Recipe<?> recipe = recipes.get(0);
+        currentRecipe = recipe;
+        clt$rememberRecipes(currentKey, recipes);
     }
 }
