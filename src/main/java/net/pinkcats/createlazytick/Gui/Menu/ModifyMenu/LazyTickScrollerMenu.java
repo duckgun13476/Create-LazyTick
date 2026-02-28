@@ -85,8 +85,7 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
 
     private static int clampPercent(int value) {
         if (value < 0) return 0;
-        if (value > 100) return 100;
-        return value;
+        return Math.min(value, 100);
     }
 
     private static int asInt(Object value, int fallback) {

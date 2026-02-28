@@ -178,6 +178,9 @@ public class NutKineticMenu {
             this.broadcastChanges();
         }
 
+
+
+
         private static int asInt(Object value, int fallback) {
             if (value instanceof Number number) {
                 return number.intValue();
@@ -191,6 +194,9 @@ public class NutKineticMenu {
             return fallback;
         }
 
+
+
+
         private static boolean asBoolean(Object value, boolean fallback) {
             if (value instanceof Boolean bool) {
                 return bool;
@@ -200,5 +206,8 @@ public class NutKineticMenu {
             }
             return fallback;
         }
+
+
+
     }
 }
