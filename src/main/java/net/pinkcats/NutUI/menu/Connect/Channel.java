@@ -108,7 +108,7 @@ public class Channel {
         if (player == null || menu == null) {
             return;
         }
-        syncMenuDataToPlayer(player, menu.count, menu.buildAutoSyncVariables());
+        syncMenuDataToPlayer(player, currentDimensionId(player), menu.buildAutoSyncVariables());
     }
 
     @SubscribeEvent
@@ -130,7 +130,14 @@ public class Channel {
             return;
         }
 
-        syncMenuDataToPlayer(player, menu.count, menu.buildAutoSyncVariables());
+        syncMenuDataToPlayer(player, currentDimensionId(player), menu.buildAutoSyncVariables());
+    }
+
+    public static int currentDimensionId(ServerPlayer player) {
+        if (player == null) {
+            return 0;
+        }
+        return player.level().dimension().location().hashCode();
     }
 
     public static synchronized void ensurePacketsRegistered() {
