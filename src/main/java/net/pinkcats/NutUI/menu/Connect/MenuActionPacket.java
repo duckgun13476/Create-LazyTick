@@ -3,10 +3,13 @@ package net.pinkcats.NutUI.menu.Connect;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
+import net.pinkcats.NutUI.menu.extensions.NutMenuExtensionRegistry;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,15 +53,62 @@ public class MenuActionPacket {
             if (sender == null) {
                 return;
             }
-            if (!(sender.containerMenu instanceof NutKineticMenu.NutItemMenu menu)) {
+
+            Map<String, Object> decodedVariables = decodeVariables(variables);
+            NutKineticMenu.NutItemMenu menu = resolveTargetMenu(sender, decodedVariables);
+            if (menu == null) {
                 return;
             }
 
-            menu.handleClientAction(sender, action, decodeVariables(variables));
-            Channel.syncMenuDataToPlayer(sender, menu.count, menu.buildAutoSyncVariables());
+            menu.handleClientAction(sender, action, decodedVariables);
+            Channel.syncMenuDataToPlayer(sender, Channel.currentDimensionId(sender), menu.buildAutoSyncVariables());
         });
         ctx.setPacketHandled(true);
         return true;
+    }
+
+    private static NutKineticMenu.NutItemMenu resolveTargetMenu(ServerPlayer sender, Map<String, Object> variables) {
+        if (sender.containerMenu instanceof NutKineticMenu.NutItemMenu openMenu) {
+            return openMenu;
+        }
+
+        ResourceLocation menuId = readMenuId(variables.get("menu_id"));
+        BlockPos pos = readBlockPos(variables);
+        if (menuId == null || pos == null) {
+            return null;
+        }
+
+        return NutMenuExtensionRegistry.createMenu(sender.getInventory(), sender.containerMenu.containerId, sender, pos, menuId);
+    }
+
+    private static ResourceLocation readMenuId(Object value) {
+        if (!(value instanceof String menuId) || menuId.isBlank()) {
+            return null;
+        }
+        return ResourceLocation.tryParse(menuId);
+    }
+
+    private static BlockPos readBlockPos(Map<String, Object> variables) {
+        Integer x = asInt(variables.get("pos_x"));
+        Integer y = asInt(variables.get("pos_y"));
+        Integer z = asInt(variables.get("pos_z"));
+        if (x == null || y == null || z == null) {
+            return null;
+        }
+        return new BlockPos(x, y, z);
+    }
+
+    private static Integer asInt(Object value) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String string) {
+            try {
+                return Integer.parseInt(string);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return null;
     }
 
     private static Map<String, String> encodeVariables(Map<String, ?> source) {
