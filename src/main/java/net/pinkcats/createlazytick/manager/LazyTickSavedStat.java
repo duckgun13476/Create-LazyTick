@@ -1,6 +1,7 @@
 package net.pinkcats.createlazytick.manager;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -21,7 +22,7 @@ public class LazyTickSavedStat extends SavedData {
     private final Map<BlockPos, LazyTickStatCache> forcedMachines = new ConcurrentHashMap<>();
 
     // 从NBT读取 (加载用)
-    public static LazyTickSavedStat load(CompoundTag nbt) {
+    public static LazyTickSavedStat load(CompoundTag nbt, HolderLookup.Provider provider) {
         LazyTickSavedStat data = new LazyTickSavedStat();
         if (nbt.contains("Machines", Tag.TAG_LIST)) {
             ListTag list = nbt.getList("Machines", Tag.TAG_COMPOUND);
@@ -39,7 +40,7 @@ public class LazyTickSavedStat extends SavedData {
 
     // 写入Nbt(保存用)
     @Override
-    public @NotNull CompoundTag save(@NotNull CompoundTag nbt) {
+    public @NotNull CompoundTag save(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
         ListTag list = new ListTag();
         forcedMachines.forEach((pos, info) -> {
             CompoundTag entry = new CompoundTag();
@@ -84,11 +85,12 @@ public class LazyTickSavedStat extends SavedData {
 
     //获取指定世界的存储实例
     public static LazyTickSavedStat get(ServerLevel level) {
-        // computeIfAbsent 自动处理加载或新建
-        return level.getDataStorage().computeIfAbsent(
-                LazyTickSavedStat::load,
+        SavedData.Factory<LazyTickSavedStat> factory = new SavedData.Factory<>(
                 LazyTickSavedStat::new,
-                DATA_FILE_NAME
+                LazyTickSavedStat::load,
+                null
         );
+        // computeIfAbsent 自动处理加载或新建
+        return level.getDataStorage().computeIfAbsent(factory, DATA_FILE_NAME);
     }
 }
