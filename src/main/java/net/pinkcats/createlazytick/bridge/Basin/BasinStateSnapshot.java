@@ -8,7 +8,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 public class BasinStateSnapshot {
     private final Object2IntMap<Item> itemQuantities;
@@ -55,7 +55,7 @@ public class BasinStateSnapshot {
             Item item = stack.getItem();
             this.itemQuantities.put(item, this.itemQuantities.getInt(item) + stack.getCount());
 
-            if (stack.hasTag() && BasinRecipeIndex.isNbtSensitive(item)) {
+            if (!stack.getComponentsPatch().isEmpty() && BasinRecipeIndex.isNbtSensitive(item)) {//<-
                 this.hasNbtSensitiveItems = true;
             }
         }
@@ -67,7 +67,7 @@ public class BasinStateSnapshot {
             FluidStack fs = tankBehaviour.getPrimaryHandler().getFluidInTank(i);
             if (!fs.isEmpty()) {
                 int typeHash = fs.getFluid().hashCode();
-                int tagHash = fs.hasTag() ? fs.getTag().hashCode() : 0;
+                int tagHash = !fs.getComponentsPatch().isEmpty() ? fs.getComponentsPatch().hashCode() : 0;
                 this.fluidHash = 31 * this.fluidHash + typeHash * 31 + fs.getAmount() + tagHash;
             }
         }
@@ -92,7 +92,7 @@ public class BasinStateSnapshot {
         if (outputBufferEmpty != that.outputBufferEmpty) return false; // 比较输出
         if (heatLevel != that.heatLevel) return false;               // 比较热量
         if (hasNbtSensitiveItems != that.hasNbtSensitiveItems) return false;
-        if (!ItemStack.matches(filterSnapshot, that.filterSnapshot)) return false;
+        if (!ItemStack.isSameItemSameComponents(filterSnapshot, that.filterSnapshot)) return false;
         return itemQuantities.equals(that.itemQuantities);
     }
 
