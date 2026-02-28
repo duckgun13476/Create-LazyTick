@@ -14,6 +14,7 @@ plugins {
 apply from: "./gradle/java.gradle"
 apply from: "gradle/property_loader.gradle"
 
+ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
 
 
 group = mod_group_id
@@ -272,9 +273,8 @@ jar {
 tasks.register('PublishInfo') {
     doLast {
         println "Reobfuscated JAR file path: ${reobfJar.archiveFile.get().asFile.absolutePath}"
-        def versionParts = mod_version.split("-")
         println "version = \"$minecraft_version-$mod_version\"\n" +
-                "    displayName = \"${display_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}\""
+                "    displayName = \"${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}\""
         def propertiesFile = file('api.properties')
         if (propertiesFile.exists()) {
             def properties = new Properties()
@@ -319,7 +319,6 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
 
     var cfToken = properties.getProperty("CF_TOKEN")
     apiToken = cfToken
-    def versionParts = mod_version.split("-")
 
     def mainFile = upload(curseforge_id, new File(
             "./build/libs/${package_name}-${mod_version}-forge-${minecraft_version}.jar"))
@@ -330,7 +329,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     mainFile.addRequirement("create")
 
 
-    mainFile.displayName = "${display_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}"
+    mainFile.displayName = "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}"
 
     mainFile.addOptional(
             "jei",
@@ -346,13 +345,12 @@ publishMods {
     def properties = new Properties()
     properties.load(new FileInputStream(propertiesFile))
     def modrinthTokenGet = properties.getProperty("MODRINTH_TOKEN")
-    def versionParts = mod_version.split("-")
 
     file = reobfJar.archiveFile
     changelog = rootProject.file("./update/changelog.md").text
     type = STABLE
     version = "$minecraft_version-$mod_version"
-    displayName = "${display_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}"
+    displayName = "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}"
 
     modLoaders.add("forge")
     modLoaders.add("neoforge")
