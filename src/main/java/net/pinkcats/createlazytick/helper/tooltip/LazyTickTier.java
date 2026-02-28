@@ -8,7 +8,6 @@ import net.pinkcats.createlazytick.config.ClientConfig;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 //需要秒和tick(转换)
 public enum LazyTickTier {
