@@ -155,5 +155,11 @@
   "createlazytick.reset.no_records": "リセットできる記録がありません。",
 
   "item.createlazytick.clock.tooltip.line1": "ゴーグル装着時、このアイテムを使用すると Create の機械部品の動作状態を調整できます",
-  "item.createlazytick.clock.tooltip.line2": "部品の下半分に向けて長押しすると、より細かな制御が可能です"
+  "item.createlazytick.clock.tooltip.line2": "部品の下半分に向けて長押しすると、より細かな制御が可能です",
+  "createlazytick.hud.config": "設定",
+  "createlazytick.hud.click_hold_edit": "クリック長押しで編集",
+  "createlazytick.scroller.target_lazytick_config": "LazyTick設定対象",
+  "createlazytick.scroller.release_right_click_confirm": "右クリックを離して確定",
+  "createlazytick.scroller.dynamic_adjust": "動的",
+  "createlazytick.scroller.locked_frequency": "固定"
 }

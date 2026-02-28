@@ -98,11 +98,11 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         pGuiGraphics.drawString(this.font, requireTitle,  this.inventoryLabelX-56, this.inventoryLabelY+32, 0x714A40, false);
 
 
-        //Show parameter
-        String syncState = SharedData.getSyncedBoolean(DataPacket.DEMO_SYNC_KEY, false) ? "OK" : "WAIT";
-        long syncTick = SharedData.getSyncedInt(DataPacket.DEMO_SYNC_TICK_KEY, -1);
-        String demoLine = "SyncDemo [" + syncState + "] tick=" + syncTick;
-        pGuiGraphics.drawString(this.font, demoLine, this.inventoryLabelX-56, this.inventoryLabelY+44, 0x3F6E5E, false);
+//        //Show parameter
+//        String syncState = SharedData.getSyncedBoolean(DataPacket.DEMO_SYNC_KEY, false) ? "OK" : "WAIT";
+//        long syncTick = SharedData.getSyncedInt(DataPacket.DEMO_SYNC_TICK_KEY, -1);
+//        String demoLine = "SyncDemo [" + syncState + "] tick=" + syncTick;
+//        pGuiGraphics.drawString(this.font, demoLine, this.inventoryLabelX-56, this.inventoryLabelY+44, 0x3F6E5E, false);
 
     }
 
@@ -138,7 +138,7 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         }
 
         TextureSize.Size s = TextureSize.get(tex);
-        mes.info("[TextureSize] tex=" + tex + " size=" + s.w() + "x" + s.h());
+        // mes.info("[TextureSize] tex=" + tex + " size=" + s.w() + "x" + s.h());
 
         this.lastTexture = tex;
         this.TextureWidth = s.w();
