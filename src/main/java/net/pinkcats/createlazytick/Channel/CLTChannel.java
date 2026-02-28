@@ -1,34 +1,32 @@
 package net.pinkcats.createlazytick.Channel;
 
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-import static net.pinkcats.createlazytick.CreateLazyTick.DropResourceLocation;
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 
+@EventBusSubscriber(modid = MODID)
 public class CLTChannel {
 
     private static final String PROTOCOL_VERSION = "1";
 
+    @SubscribeEvent
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar(MODID)
+                .versioned(PROTOCOL_VERSION);
 
-    public static final SimpleChannel INSTANCE_TO_SERVER = NetworkRegistry.newSimpleChannel(
-            DropResourceLocation(MODID,"dimension_to_server"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            s -> true
-    );
-    public static void register_to_server() {
-        INSTANCE_TO_SERVER.messageBuilder(ClockSyncPacket.class,1, NetworkDirection.PLAY_TO_SERVER)
-                .decoder(ClockSyncPacket::new)
-                .encoder(ClockSyncPacket::encode)
-                .consumerMainThread(ClockSyncPacket::handle)
-                .add();
+        registrar.playToServer(
+                ClockSyncPacket.TYPE,
+                ClockSyncPacket.STREAM_CODEC,
+                ClockSyncPacket::handle
+        );
     }
 
-    public static <MSG> void sendToServer(MSG message) {
-        INSTANCE_TO_SERVER.sendToServer(message);
+    public static <MSG extends CustomPacketPayload> void sendToServer(MSG message) {
+        PacketDistributor.sendToServer(message);
     }
-
-
 }

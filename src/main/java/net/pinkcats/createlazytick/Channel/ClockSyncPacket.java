@@ -3,16 +3,26 @@ package net.pinkcats.createlazytick.Channel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
-public class ClockSyncPacket {
+public class ClockSyncPacket implements CustomPacketPayload {
+
+    public static final CustomPacketPayload.Type<ClockSyncPacket> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath("createlazytick", "clock_sync"));
+
+    public static final StreamCodec<FriendlyByteBuf, ClockSyncPacket> STREAM_CODEC =
+            CustomPacketPayload.codec(ClockSyncPacket::encode, ClockSyncPacket::new);
 
     private final BlockPos pos;
     private final String dimension;
@@ -51,19 +61,21 @@ public class ClockSyncPacket {
         buf.writeBoolean(isQuery);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context ctx = supplier.get();
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
 
-        ctx.setPacketHandled(true);
+    public void handle(IPayloadContext ctx) {
 
-        ServerPlayer player = ctx.getSender();
-        if (player == null) return;
+        Player player = ctx.player();//<-
+        if (!(player instanceof ServerPlayer serverPlayer)) return;
 
         // Move to Main loop
         ctx.enqueueWork(() -> {
             // 查询模式
             if (isQuery) {
-                Level level = player.level();
+                Level level = serverPlayer.level();
                 if (level.isLoaded(pos)) {
                     if (level.getBlockEntity(pos) instanceof ISmartBlockEntityControl control) {
                         control.createLazyTick$sendBlockUpdated();
