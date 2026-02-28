@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
+import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import java.util.Map;
 
@@ -70,6 +71,10 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
 
         BlockEntity be = player.level().getBlockEntity(getPos());
         if (!(be instanceof ISmartBlockEntityControl control)) {
+            return;
+        }
+        if (!ForcedActiveManager.canPlayerActivate(be, player)) {
+            syncFromBlockEntity(player.getInventory());
             return;
         }
 
