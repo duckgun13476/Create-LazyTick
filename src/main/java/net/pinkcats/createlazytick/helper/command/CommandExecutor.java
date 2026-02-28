@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickSavedLimitList;
@@ -63,10 +63,10 @@ public class CommandExecutor {
         ResourceLocation rl = ctx.getArgument("block_name", ResourceLocation.class);
         String id = rl.toString();
 
-        Block block = ForgeRegistries.BLOCKS.getValue(rl);
+        Block block = BuiltInRegistries.BLOCK.get(rl);
 
         Component nameComponent;
-        if (block != null && block != Blocks.AIR) {
+        if (block != Blocks.AIR) {
             nameComponent = block.getName(); // 获取翻译组件
         } else {
             nameComponent = mes.Char(id); // 降级为 ID

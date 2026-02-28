@@ -3,7 +3,6 @@ package net.pinkcats.createlazytick.helper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.pinkcats.createlazytick.Channel.ClientData;
-import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 

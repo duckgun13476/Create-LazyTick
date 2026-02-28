@@ -15,6 +15,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.fml.loading.FMLPaths;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
@@ -241,7 +242,7 @@ public class CommandHelper {
         List<Map.Entry<BlockPos, LazyTickStatCache>> rawDataSnapshot = new ArrayList<>(forcedMachines.entrySet());
 
         // 准备文件路径  // 需要确认是放在config里合适还是单开dump文件夹合适,修改此处请同事修改Line 333的输出信息
-        Path serverRoot = source.getServer().getServerDirectory().toPath();
+        Path serverRoot = FMLPaths.GAMEDIR.get();
         Path dumpDir = serverRoot.resolve("dumps").resolve("createlazytick");
 
         // ----------------------------------------从这里往下到方法末尾都可以异步

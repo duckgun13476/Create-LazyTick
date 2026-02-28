@@ -5,8 +5,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
+//import net.minecraft.resources.ResourceLocation;
+//import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -15,11 +15,11 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
+//import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
-import net.pinkcats.NutUI.menu.Nutprovider;
-import net.pinkcats.createlazytick.Gui.mes;
+//import net.minecraftforge.network.NetworkHooks;
+//import net.pinkcats.NutUI.menu.Nutprovider;
+//import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -30,15 +30,14 @@ import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static net.pinkcats.NutUI.menu.architect.Helper.MenuHelper.CreateNutMenu;
+/*import static net.pinkcats.NutUI.menu.architect.Helper.MenuHelper.CreateNutMenu;
 import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.Nut_Menu_ID;
 import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenu;
-import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenuScroller;
+import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenuScroller;*/
 
 //需要翻译文本
 public class LazyTickClockItem extends Item {
@@ -49,7 +48,8 @@ public class LazyTickClockItem extends Item {
 
 
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(@NotNull ItemStack stack, Item.@NotNull TooltipContext context, List<Component> tooltip,
+                                @NotNull TooltipFlag flag) {
         tooltip.add(Component.translatable("item.createlazytick.clock.tooltip.line1")
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("item.createlazytick.clock.tooltip.line2")
@@ -139,7 +139,7 @@ public class LazyTickClockItem extends Item {
             int nextPercentage;
             if (typeMismatch) {
                 // 如果模式错位 -> 强制归位到列表起点
-                nextPercentage = sequence.get(0);
+                nextPercentage = sequence.getFirst();
             } else {
                 // 模式正确 -> 寻找下一个更大的值 (吸附/循环)
                 nextPercentage = getNextPercentage(sequence, currentPercentage);
@@ -221,7 +221,7 @@ public class LazyTickClockItem extends Item {
             if (val > current) return val;
         }
         // 没找到更大的 -> 回到起点 (Wrap around)
-        return sequence.get(0);
+        return sequence.getFirst();
     }
 
     /**
