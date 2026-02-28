@@ -1,4 +1,23 @@
 
+### 2.4.2-beta
+#### Feature
+1. New scroller UI with slide interaction for LazyTick adjustment.
+2. Added a new modified menu/screen pipeline with simpler menu definition.
+3. Added synced UI state flow and auto-close behavior for the new config screen.
+4. Improved UI presentation with animated background, percent render and JEI-friendly layout.
+
+#### Optimize
+1. Completely rewrote basin optimization logic and fixed a hidden deadlock issue. (PR #14)
+2. Added a new NutUI menu library foundation and improved automatic channel/data flow.
+
+#### Fix
+1. Fix global UI/menu problems for the new screen flow.
+2. Fix portable storage interface extraction issue on funnel-related transfer.
+3. Fix client-only class loading on dedicated server.
+4. Fix general loading issues on the 1.20.1-6.0.x-forge branch.
+5. Fix Gradle/build configuration issues for current development branch.
+
+---
 ### 2.3.2-beta
 1. Fix funnel sync problem.
 2. Fix mixer stuck when only process once.(#12/1000mb)
