@@ -1,13 +1,17 @@
 import net.darkhax.curseforgegradle.TaskPublishCurseForge
 //2025 copyright some gradle setting from Create : https://github.com/Creators-of-Create/Create
 
+
 plugins {
 
-    id "net.neoforged.moddev.legacyforge" version "2.0.74"
+    id 'net.neoforged.moddev' version '2.0.107'
+    id 'java-library'
+    id 'maven-publish'
     id 'net.darkhax.curseforgegradle' version '[1.1.24,)'
     id "dev.ithundxr.silk" version "0.11.15"
-    id "me.modmuss50.mod-publish-plugin" version "0.8.3"
+    id "me.modmuss50.mod-publish-plugin" version "1.0.0"
     id "idea"
+
 }
 
 
@@ -29,141 +33,63 @@ idea {
     }
 }
 
-
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-
-    config "${mod_id}.mixins.json"
-}
-
-
-
-//maven plugin
-repositories {
-    maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
-    maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // ForgeConfigAPIPort
-    maven { url = "https://maven.tterrag.com" } // Registrate
-    maven { url = "https://maven.blamejared.com" } // JEI, Vazkii's Mods
-
-    maven {//create
-        name = 'tterrag maven'
-        url = 'https://maven.tterrag.com/'
-    }
-
-    maven {
-        // location of the maven for Curios API
-        url = "https://maven.theillusivec4.top/"
-    }
-    maven {
-        // location of maven for CC: Tweaked
-        name = "squiddev"
-        url = "https://squiddev.cc/maven/"
-    }
-
-    maven {
-        url = 'https://www.cursemaven.com'
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
-        content {
-            includeGroup "maven.modrinth"
-        }
-    }
-    maven {
-        url "https://jitpack.io"
-        content {
-            includeGroup "com.github.llamalad7.mixinextras"
-        }
-    }
-
-    maven {
-        url "https://maven.saps.dev/minecraft"
-        content {
-            includeGroup "dev.latvian.mods"
-            includeGroup "dev.ftb.mods"
-        }
-    }
-    maven {
-        url "https://maven.architectury.dev/"
-        content {
-            includeGroup "dev.architectury"
-        }
-    }
-    mavenLocal()
-    flatDir {
-        dirs 'libs'
-    }
-}
-
-
-
 //apply plugin: 'org.spongepowered.mixin'
-
-
-
 
 
 base {
     archivesName = mod_id
 }
 
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+repositories {
+    mavenLocal()
 }
 
-legacyForge {
-    version = "$minecraft_version-$forge_version"
-    validateAccessTransformers = false
-    if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
-        accessTransformers.from "src/main/resources/META-INF/accesstransformer.cfg"
-    }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
+
+neoForge {
+    version = project.neo_version   // 在 gradle.properties 中定义
 
     parchment {
-        minecraftVersion = minecraft_version
-        mappingsVersion = parchment_version
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
     }
-    mods {
-        "$mod_id" {
-            sourceSet sourceSets.main
-        }
-    }
-    runs {
-        // applies to all the run configs below
-        configureEach {
-            systemProperty 'forge.logging.markers', ''
-            systemProperty 'forge.logging.console.level', 'info'
-            jvmArguments = ["-XX:+IgnoreUnrecognizedVMOptions", "-XX:+AllowEnhancedClassRedefinition"]
-            systemProperty 'mixin.debug.export', 'true'
-            systemProperty 'mixin.debug.verbose', 'true'
-            programArgument '-mixin.config=create.mixins.json'
-        }
 
+    runs {
         client {
             client()
-            gameDirectory = project.file('run')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         server {
             server()
-            gameDirectory = project.file('run/server')
-        }
-
-        data {
-            data()
-            gameDirectory = project.file('run')
-            systemProperty 'forge.logging.markers', 'REGISTRIES,REGISTRYDUMP'
-            systemProperty 'forge.logging.console.level', 'debug'
-            programArguments.addAll("--mod", mod_id as String, "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources").getAbsolutePath())
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         gameTestServer {
             type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
 
-            gameDirectory = project.file('run/gametest')
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+
+            // 如果您使用了 Mixin，请添加以下参数（配置文件名与清单中的一致）
+            programArgument '-mixin.config=createlazytick.mixins.json'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
         }
     }
 }
@@ -176,6 +102,33 @@ tasks.withType(Copy).configureEach {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    mavenLocal()
+    maven { url = "https://maven.neoforged.net/releases" }
+    maven { url = "https://maven.createmod.net" }          // Create, Ponder, Flywheel
+    maven { url = "https://mvn.devos.one/snapshots" }      // Registrate
+    maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // ForgeConfigAPIPort
+    maven {
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"               // JEI
+    }
+    maven {
+        name = "ModMaven"
+        url = "https://modmaven.dev"
+    }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
     // Put repositories for dependencies here
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
@@ -190,8 +143,8 @@ dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' //Mixin注解处理器(记得开)
     //Create
-    modImplementation("curse.maven:create-328085:7178761")
-    modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
+    implementation("curse.maven:create-328085:7408951")
+    implementation("com.tterrag.registrate:Registrate:${registrate_version}")
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
 
     //implementation 'com.google.code.gson:gson:2.8.9' // 更新版本
@@ -205,28 +158,28 @@ dependencies {
 
 
 
-    modImplementation("curse.maven:observable-509575:5643037")
+    implementation("curse.maven:observable-509575:6697124")
 
-    modImplementation("curse.maven:spark-361579:4738952")
+    implementation("curse.maven:spark-361579:6225208")
 
 
-    modImplementation("curse.maven:kubejs-238086:5853326")
-    modImplementation("curse.maven:rhino-416294:6186971")
+    implementation("curse.maven:kubejs-238086:7278501")
+    implementation("curse.maven:rhino-416294:7104526")
 
-    modImplementation("curse.maven:architectury-api-419699:5137938")
-    modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
-    modImplementation("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")
+    implementation("curse.maven:architectury-api-419699:5786327")
+    implementation("curse.maven:kotlin-for-forge-351264:6994056")
+    implementation("net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}")
 
-    modImplementation("curse.maven:create-enchantment-industry-688768:6652836")
+    implementation("curse.maven:create-enchantment-industry-688768:7656384")
     //modImplementation("curse.maven:lionfish-api-1001614:5922047")
     //modImplementation("curse.maven:lendercataclysm-551586:6906993")
     //create
     //runtimeOnly fg.deobf("curse.maven:create-328085:5838779")
 
     //JEI
-    modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
-    modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-forge-api:${jei_version}")
-    modRuntimeOnly("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
+    compileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
+    compileOnly("mezz.jei:jei-${jei_minecraft_version}-neoforge-api:${jei_version}")
+    runtimeOnly("mezz.jei:jei-${jei_minecraft_version}-neoforge:${jei_version}")
 
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
@@ -243,22 +196,34 @@ dependencies {
     //}
 }
 
-processResources {
-    def buildProps = project.properties.clone()
-
-    // Replaces FML's magic file.jarVersion string with the correct version at build time.
-    buildProps.put('file', [jarVersion: project.version])
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand buildProps
-    }
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
 }
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
 
 compileJava {
     options.compilerArgs = ['-Xdiags:verbose']
 }
 
 jar {
+    archiveFileName = "${mod_id}-${mod_version}-neoforge-${minecraft_version}.jar"
     from('LICENSE.txt') {
         rename { "${it}_${archivesBaseName}" }
 
@@ -291,12 +256,6 @@ tasks.register('PublishInfo') {
     group = 'Publishing'
 }
 
-reobfJar {
-    archiveFileName = "${package_name}-${mod_version}-forge-${minecraft_version}.jar"
-}
-
-
-
 tasks.register('publishAll') {
     dependsOn 'publishCurseForge'
     dependsOn 'publishMods'
@@ -311,8 +270,8 @@ tasks.register('publishAll') {
 
 
 
-tasks.register('publishCurseForge', TaskPublishCurseForge) {
-    dependsOn 'reobfJar'
+/*tasks.register('publishCurseForge', TaskPublishCurseForge) {
+    dependsOn jar
     def propertiesFile = file('api.properties')
     def properties = new Properties()
     properties.load(new FileInputStream(propertiesFile))
@@ -321,7 +280,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     apiToken = cfToken
 
     def mainFile = upload(curseforge_id, new File(
-            "./build/libs/${package_name}-${mod_version}-forge-${minecraft_version}.jar"))
+            "./build/libs/${package_name}-${mod_version}-neoforge-${minecraft_version}.jar"))
     mainFile.changelog = new File("./update/changelog.md").text.split("\n\n\n")[0]
     mainFile.addEnvironment("Client", "Server")
     mainFile.addGameVersion("${minecraft_version}")
@@ -336,17 +295,17 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
             "observable")
     mainFile.releaseType = publish_version //beta release. is alpha.
     disableVersionDetection()
-}
+}*/
 
 
 
-publishMods {
+/*publishMods {
     def propertiesFile = file('api.properties')
     def properties = new Properties()
     properties.load(new FileInputStream(propertiesFile))
     def modrinthTokenGet = properties.getProperty("MODRINTH_TOKEN")
 
-    file = reobfJar.archiveFile
+//    file = reobfJar.archiveFile
     changelog = rootProject.file("./update/changelog.md").text
     type = STABLE
     version = "$minecraft_version-$mod_version"
@@ -365,7 +324,7 @@ publishMods {
             optional("jei","observable")
         }
     }
-}
+}*/
 
 String calculateGitHash() {
     try {
