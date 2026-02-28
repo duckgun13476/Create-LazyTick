@@ -1,65 +1,65 @@
 
 package net.pinkcats.createlazytick.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.List;
 
 public class ServerConfig {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SPEC;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec SPEC;
 
     // ==========================================
     // ServerConfig Spec Objects (Private)
     // ==========================================
 
     // General
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_TICK;
-    private static final ForgeConfigSpec.IntValue GLOBAL_CACHE_RECORD_DELAY;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_TICK;
+    private static final ModConfigSpec.IntValue GLOBAL_CACHE_RECORD_DELAY;
 
     // Fluids
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FLUID;
-    private static final ForgeConfigSpec.IntValue FLUID_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_FLUID;
+    private static final ModConfigSpec.IntValue FLUID_DELAY_MAX;
 
     // Logistics (Funnel, Chute, Belt)
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FUNNEL;
-    private static final ForgeConfigSpec.IntValue FUNNEL_DELAY_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CHUTE;
-    private static final ForgeConfigSpec.IntValue CHUTE_DELAY_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT;
-    private static final ForgeConfigSpec.IntValue BELT_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_FUNNEL;
+    private static final ModConfigSpec.IntValue FUNNEL_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_CHUTE;
+    private static final ModConfigSpec.IntValue CHUTE_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_BELT;
+    private static final ModConfigSpec.IntValue BELT_DELAY_MAX;
 
     // Processing (Depot, Saw, Basin, Item Drain, Deployer, Spout)
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
-    private static final ForgeConfigSpec.IntValue DEPOT_DELAY_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_SAW;
-    private static final ForgeConfigSpec.IntValue SAW_DELAY_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SAW;
-    private static final ForgeConfigSpec.IntValue SAW_CACHE_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> EXTRA_BASIN_RELATED_RECIPE_TYPES;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
-    private static final ForgeConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_SPOUT;
-    private static final ForgeConfigSpec.IntValue SPOUT_CACHE_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
+    private static final ModConfigSpec.IntValue DEPOT_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_SAW;
+    private static final ModConfigSpec.IntValue SAW_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_CACHE_SAW;
+    private static final ModConfigSpec.IntValue SAW_CACHE_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_BASIN;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> EXTRA_BASIN_RELATED_RECIPE_TYPES;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_ITEM_DRAIN;
+    private static final ModConfigSpec.IntValue ITEM_DRAIN_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_CACHE_DEPLOYER;
+    private static final ModConfigSpec.BooleanValue ENABLE_CACHE_SPOUT;
+    private static final ModConfigSpec.IntValue SPOUT_CACHE_MAX;
 
     // Crafter
-    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER_DEBUGGER;
-    private static final ForgeConfigSpec.IntValue CRAFTER_GLOBAL_CACHE_MAX;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
-    private static final ForgeConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER;
+    private static final ModConfigSpec.BooleanValue ENABLE_CACHE_CRAFTER_DEBUGGER;
+    private static final ModConfigSpec.IntValue CRAFTER_GLOBAL_CACHE_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
+    private static final ModConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
 
     // Mechanical Arm
-    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ARM;
-    private static final ForgeConfigSpec.IntValue ARM_DELAY_MAX;
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_IGNORE_LAZYTICK_LIST;
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ARM_WEAK_LAZYTICK_LIST;
-    private static final ForgeConfigSpec.IntValue ARM_WEAK_DELAY_MAX;
+    private static final ModConfigSpec.BooleanValue ENABLE_LAZY_ARM;
+    private static final ModConfigSpec.IntValue ARM_DELAY_MAX;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ARM_IGNORE_LAZYTICK_LIST;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ARM_WEAK_LAZYTICK_LIST;
+    private static final ModConfigSpec.IntValue ARM_WEAK_DELAY_MAX;
 
     // LazyTick-Clock
-    private static final ForgeConfigSpec.ConfigValue<List<? extends Integer>> CLOCK_MODE_SEQUENCE;
-    private static final ForgeConfigSpec.BooleanValue CLOCK_MODE_DEFAULT_DYNAMIC;
+    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> CLOCK_MODE_SEQUENCE;
+    private static final ModConfigSpec.BooleanValue CLOCK_MODE_DEFAULT_DYNAMIC;
 
     // ==========================================
     // Initialization Block
@@ -193,7 +193,8 @@ public class ServerConfig {
                 .comment("Additional recipe type resource locations to include in the basin recipe index.",
                         "These types will be considered in addition to the default types (BASIN, MIXING, COMPACTING, PRESSING).",
                         "Example: [\"create:cutting\", \"othermod:mixing\"]")
-                .defineList("extra_basin_related_recipe_types", java.util.Collections.emptyList(), o -> o instanceof String);
+                .defineListAllowEmpty("extra_basin_related_recipe_types", java.util.Collections.emptyList(),
+                        () -> "" ,o -> o instanceof String);
 
         // Item Drain
         ENABLE_LAZY_ITEM_DRAIN = BUILDER
@@ -283,8 +284,9 @@ public class ServerConfig {
                 .comment("--------------------------------------------------------------------------")
                 .comment("List of blocks that force the arm to work at full speed (Disable Lazy Tick).",
                         "Use this for fast-moving inputs like belts.")
-                .defineList("arm_ignore_lazytick_list",
+                .defineListAllowEmpty("arm_ignore_lazytick_list",
                         java.util.List.of("create:belt"), // 默认传送带全速
+                        () -> "",
                         o -> o instanceof String);
 
         ARM_WEAK_LAZYTICK_LIST = BUILDER
@@ -292,8 +294,9 @@ public class ServerConfig {
                 .comment("--------------------------------------------------------------------------")
                 .comment("List of blocks that allow lazy ticking but with a reduced max delay (Weak Lazy).",
                         "Use this for time-sensitive outputs like blaze burners.")
-                .defineList("arm_weak_lazytick_list",
+                .defineListAllowEmpty("arm_weak_lazytick_list",
                         java.util.List.of("create:blaze_burner"), // 默认燃烧室浅睡眠
+                        () -> "",
                         o -> o instanceof String);
 
         ARM_WEAK_DELAY_MAX = BUILDER
@@ -315,8 +318,9 @@ public class ServerConfig {
                 .comment("   0   = Disable Optimization (Run at full speed)")
                 .comment("   100 = Maximum Effect (Represents Max Dynamic Limit % or Max Forced Interval %, depending on the mode)")
                 .comment(" Default: [0, 25, 50, 75, 100]")
-                .defineList("clock_mode_sequence",
+                .defineListAllowEmpty("clock_mode_sequence",
                         List.of(0, 25, 50, 75, 100),
+                        () -> 50,
                         obj -> obj instanceof Integer && (Integer) obj >= 0 && (Integer) obj <= 100);
 
         CLOCK_MODE_DEFAULT_DYNAMIC = BUILDER
