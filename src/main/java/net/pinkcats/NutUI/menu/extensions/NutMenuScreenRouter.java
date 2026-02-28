@@ -14,6 +14,11 @@ public final class NutMenuScreenRouter {
     }
 
     public static NutKineticScreen create(NutKineticMenu.NutItemMenu menu, Inventory inventory, Component title) {
-        return NutMenuExtensionRegistry.createScreen(menu, inventory, title);
+        NutMenuExtensionRegistry.ScreenBuilder<?> screenBuilder =
+                NutMenuExtensionRegistry.getScreenBuilder(menu.getMenuId());
+        if (screenBuilder != null) {
+            return (NutKineticScreen) screenBuilder.create(menu, inventory, title);
+        }
+        return new NutKineticScreen(menu, inventory, title);
     }
 }
