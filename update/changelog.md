@@ -1,4 +1,10 @@
 
+### 2.4.4-hotfix-beta
+#### Fix
+1. Fix basin recipe processing issue.
+2. Fix UI config adjustment becoming unavailable when tick time is greater than 50ms.
+
+---
 ### 2.4.3-beta
 #### Emergency Fix
 1. Fix external launcher crash caused by `use` method mixins not remapping correctly in production jars.
