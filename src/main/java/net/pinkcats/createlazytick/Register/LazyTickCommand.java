@@ -12,7 +12,10 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.helper.command.CommandExecutor;
 import net.pinkcats.createlazytick.helper.command.CommandHelper;
 import net.pinkcats.createlazytick.helper.command.FilterParser;
@@ -22,6 +25,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@EventBusSubscriber(modid = CreateLazyTick.MODID)
 public class LazyTickCommand {
     // 静态常量定义
     // =========================================================
@@ -264,6 +268,7 @@ public class LazyTickCommand {
         return finalBuilder.buildFuture();
     };
 
+    @SubscribeEvent
     public static void RegisterCLTCommand(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 

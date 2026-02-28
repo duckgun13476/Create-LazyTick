@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.Register;
+/*package net.pinkcats.createlazytick.Register;
 
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -14,4 +14,5 @@ public class AllChannel {
     public static void registerChannel(FMLCommonSetupEvent event) {
         CLTChannel.register_to_server();
     }
-}
+}*/
+// 应该不再需要

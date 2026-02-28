@@ -5,17 +5,17 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Gui.Menu.ModifyMenu.LazyTickScrollerScreen;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.helper.LazyTickScrollerOpenHelper;
 import net.minecraft.world.level.block.Block;
 
-@Mod.EventBusSubscriber(modid = CreateLazyTick.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@EventBusSubscriber(modid = CreateLazyTick.MODID, value = Dist.CLIENT)
 public class LazyTickClockHintOverlay {
     private static final float FADE_DURATION_SECONDS = 0.6F;
     // Font renderer may treat extremely low alpha as opaque; skip those tail frames.
@@ -24,8 +24,8 @@ public class LazyTickClockHintOverlay {
     private static long lastFrameTimeMs = -1L;
 
     @SubscribeEvent
-    public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
-        if (!"hotbar".equals(event.getOverlay().id().getPath())) {
+    public static void onRenderOverlay(RenderGuiLayerEvent.Post event) {
+        if (!"hotbar".equals(event.getName().getPath())) {
             return;
         }
 
@@ -74,8 +74,8 @@ public class LazyTickClockHintOverlay {
         Component line2 = Component.translatable("createlazytick.hud.click_hold_edit");
        // Component line3 = Component.literal("Target: " + targetBlockClassName);
 
-        int centerX = event.getWindow().getGuiScaledWidth() / 2;
-        int baseY = event.getWindow().getGuiScaledHeight() / 2 + 14;
+        int centerX = event.getGuiGraphics().guiWidth() / 2;
+        int baseY = event.getGuiGraphics().guiHeight() / 2 + 14;
 
         int x1 = centerX - font.width(line1) / 2;
         int x2 = centerX - font.width(line2) / 2;

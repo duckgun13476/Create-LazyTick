@@ -1,10 +1,10 @@
 package net.pinkcats.createlazytick.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ClientConfig {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SPEC;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec SPEC;
 
     // 时间显示格式枚举
     public enum TimeFormat {
@@ -25,13 +25,13 @@ public class ClientConfig {
         BOTH    // 同时显示: (1st line)[bar] (2nd line)number
     }
 
-    private static final ForgeConfigSpec.EnumValue<TimeFormat> TIME_FORMAT;
-    private static final ForgeConfigSpec.EnumValue<ModeFormat> MODE_FORMAT;
-    private static final ForgeConfigSpec.EnumValue<TierFormat> TIER_FORMAT;
+    private static final ModConfigSpec.EnumValue<TimeFormat> TIME_FORMAT;
+    private static final ModConfigSpec.EnumValue<ModeFormat> MODE_FORMAT;
+    private static final ModConfigSpec.EnumValue<TierFormat> TIER_FORMAT;
 
-    private static final ForgeConfigSpec.BooleanValue SHOW_MODE_TOOLTIP;
-    private static final ForgeConfigSpec.BooleanValue SHOW_TIER_TOOLTIP;
-    private static final ForgeConfigSpec.BooleanValue SHOW_DESCRIPTION_TOOLTIP;
+    private static final ModConfigSpec.BooleanValue SHOW_MODE_TOOLTIP;
+    private static final ModConfigSpec.BooleanValue SHOW_TIER_TOOLTIP;
+    private static final ModConfigSpec.BooleanValue SHOW_DESCRIPTION_TOOLTIP;
 
     static {
         BUILDER.comment("Client-side Visual Settings").push("ui-visual");
