@@ -134,6 +134,8 @@
   "createlazytick.hud.config": "懒惰刻配置",
   "createlazytick.hud.click_hold_edit": "点击并按住以编辑",
   "createlazytick.scroller.target_lazytick_config": "目标的懒惰刻配置",
-  "createlazytick.scroller.release_right_click_confirm": "松开 右键 以确认"
+  "createlazytick.scroller.release_right_click_confirm": "松开 右键 以确认",
+  "createlazytick.scroller.dynamic_adjust": "动态调整",
+  "createlazytick.scroller.locked_frequency": "锁定频率"
 }
 

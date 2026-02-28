@@ -13,7 +13,7 @@ public final class MenuInit {
 
 
     public static final ResourceLocation LazyTickMenu = Nut_Menu_ID("transfer_menu");
-    public static final ResourceLocation LazyTickMenuScroller = Nut_Menu_ID("LazyTickScroller");
+    public static final ResourceLocation LazyTickMenuScroller = Nut_Menu_ID("lazytickscroller");
     public static final ResourceLocation DemoRegionMenu = Nut_Menu_ID("demo_region_menu");
 
     public static final ResourceLocation LazyTickScrollerBase = Nut_Menu_ID("whatisthis_modify");

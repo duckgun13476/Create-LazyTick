@@ -23,7 +23,7 @@ import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 public class Channel {
 
     private static final String PROTOCOL_VERSION = "2";
-    private static final boolean SYNC_DEBUG_LOG = true;
+    private static final boolean SYNC_DEBUG_LOG = false;
     private static final int DEFAULT_SYNC_INTERVAL_TICKS = 20;
     private static boolean PACKETS_REGISTERED = false;
 
@@ -163,6 +163,6 @@ public class Channel {
                 .add();
 
         PACKETS_REGISTERED = true;
-        LOGGER.info("[NutUI Sync] Channel packets registered.");
+        // LOGGER.info("[NutUI Sync] Channel packets registered.");
     }
 }
