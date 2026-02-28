@@ -6,6 +6,7 @@
   "refmap": "createlazytick.refmap.json",
   "mixins": [
     "compat.createenchantment.OpenEndedPipeMixin",
+    "Create.ScrollOptionBehaviourGuardMixin",
     "Create.SmartBlockEntityControlMixin",
     "Minecraft.CacheLabel",
     "OptElement.arm.ArmLazyTickMixin",
