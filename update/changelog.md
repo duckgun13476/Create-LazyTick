@@ -1,4 +1,4 @@
-### 2.4.5-beta
+### 2.4.6-beta
 #### Fix
 1. Add server support Fix class leak.
 
