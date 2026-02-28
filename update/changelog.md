@@ -1,4 +1,9 @@
 
+### 2.4.5-beta
+#### Fix
+1. Fix a Create crash related to scroll option behavior handling.
+
+---
 ### 2.4.4-hotfix-beta
 #### Fix
 1. Fix basin recipe processing issue.
