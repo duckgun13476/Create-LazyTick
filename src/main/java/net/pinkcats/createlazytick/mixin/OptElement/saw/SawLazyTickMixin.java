@@ -17,8 +17,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
 @Mixin(value = SawBlockEntity.class, remap = false)
 public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISmartBlockEntityControl {
 
