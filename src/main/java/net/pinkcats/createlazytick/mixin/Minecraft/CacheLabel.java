@@ -18,6 +18,7 @@ import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 import static net.pinkcats.createlazytick.helper.RecipeCacheTool.*;
 
+// 逻辑需要迁移到主类
 @Mixin(MinecraftServer.class)
 public class CacheLabel {
 
