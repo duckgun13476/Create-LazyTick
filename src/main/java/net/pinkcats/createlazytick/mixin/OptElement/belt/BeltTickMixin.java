@@ -308,7 +308,7 @@ public class BeltTickMixin {
                     continue;
 
                 ItemStack remainder = inputBehaviour.handleInsertion(currentItem, movementFacing, false);
-                if (remainder.equals(currentItem.stack, false))
+                if (ItemStack.matches(currentItem.stack, remainder))
                     continue;
 
                 currentItem.stack = remainder;
