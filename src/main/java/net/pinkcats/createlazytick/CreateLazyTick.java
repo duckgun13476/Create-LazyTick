@@ -3,28 +3,33 @@ package net.pinkcats.createlazytick;
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.AllCreativeModeTabs;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.pinkcats.createlazytick.Channel.ClockSyncPacket;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.Gui.Menu.MenuInit;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
+
 import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
@@ -55,13 +60,38 @@ public class CreateLazyTick {
      * Especially for LazyTickScrollBehaviour.addTo()
      * **/
     public static boolean isClient() {
-        return net.minecraftforge.fml.loading.FMLEnvironment.dist == net.minecraftforge.api.distmarker.Dist.CLIENT;
+        return FMLEnvironment.dist == Dist.CLIENT;
     }
 
 
+    /*public CreateLazyTick(IEventBus modEventBus, ModContainer modContainer) {
+
+
+        LazyTickItem.register(modEventBus);
+
+        // From UI Lib
+        NutKineticMenu.init(modEventBus);
+        MenuInit.registerCommon();
+
+        modEventBus.addListener(this::commonSetup);
+        // [新增] 将网络注册监听器直接写在主类中
+        modEventBus.addListener(this::registerNetwork);
+
+        // [修改] MinecraftForge.EVENT_BUS 变更为 NeoForge.EVENT_BUS
+        NeoForge.EVENT_BUS.register(this);
+
+        // [修改] 直接通过 modContainer 注册 Config
+        modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+
+        if (isClient()) {
+            ClientBootstrap.init();
+        }
+    }*/
+
     public CreateLazyTick() {
 
-        // Only for 1.20.1 forge
+        // Only for 1.21.1 NeoForge
         ModLoadingContext modLoadingContext = getModLoadingContextViaReflection();
         FMLJavaModLoadingContext modContext = modLoadingContext.extension();
         IEventBus modEventBus = modContext.getModEventBus();

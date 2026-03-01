@@ -18,6 +18,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,14 +58,14 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
     @Unique private Item lazytick$lastInputItem = null;
 
-    @Unique private List<? extends Recipe<?>> lazytick$lastFilteredResult = null;
+    @Unique private List lazytick$lastFilteredResult = null;
 
     public SawRecipeMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
     @Inject(method = "getRecipes",at=@At("HEAD" ),cancellable = true,remap = false)
-    private void getRecipes(CallbackInfoReturnable<List<? extends Recipe<?>>> cir) {
+    private void getRecipes(CallbackInfoReturnable<List<RecipeHolder<?>>> cir) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheSaw()) {
             return;
         }
