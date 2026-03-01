@@ -19,7 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
@@ -214,7 +214,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             return;
         }
         heldItem.locked = result == BeltProcessingBehaviour.ProcessingResult.HOLD;
-        if (heldItem.locked != wasLocked || !previousItem.equals(heldItem.stack, false)) {
+        if (heldItem.locked != wasLocked || !ItemStack.matches(heldItem.stack, previousItem)) {
             blockEntity.sendData();
         }
         ci.cancel();

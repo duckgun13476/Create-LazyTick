@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -65,8 +65,8 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
 
     // 静态存储解析后的 Block 对象，所有机械臂实例共享。
     // 相比存储 String，这消除了运行时的 ForgeRegistries.getKey() 反查和 res.toString() 开销。
-    @Unique private static Set<Block> createLazyTick$cachedIgnoreBlocks = null;
-    @Unique private static Set<Block> createLazyTick$cachedWeakBlocks = null;
+    @Unique private static Set<ResourceLocation> createLazyTick$cachedIgnoreBlocks = null;
+    @Unique private static Set<ResourceLocation> createLazyTick$cachedWeakBlocks = null;
 
     public ArmLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -83,16 +83,16 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         // 解析忽略列表
         for (String id : ServerConfig.getArmIgnoreLazytickList()) {
             ResourceLocation loc = DropResourceLocation(id);
-            if (ForgeRegistries.BLOCKS.containsKey(loc)) {
-                createLazyTick$cachedIgnoreBlocks.add(ForgeRegistries.BLOCKS.getValue(loc));
+            if (BuiltInRegistries.BLOCK.containsKey(loc)) {
+                createLazyTick$cachedIgnoreBlocks.add(loc);
             }
         }
 
         // 解析弱懒加载列表
         for (String id : ServerConfig.getArmWeakLazytickList()) {
             ResourceLocation loc = DropResourceLocation(id);
-            if (ForgeRegistries.BLOCKS.containsKey(loc)) {
-                createLazyTick$cachedWeakBlocks.add(ForgeRegistries.BLOCKS.getValue(loc));
+            if (BuiltInRegistries.BLOCK.containsKey(loc)) {
+                createLazyTick$cachedWeakBlocks.add(loc);
             }
         }
 
@@ -116,9 +116,10 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     // 判断方块是否在配置列表中
     // 直接对比 Block 对象的引用 (HashSet.contains),避免字符串类转换又查询的操作
     @Unique
-    private boolean createLazyTick$isBlockInConfig(Block block, Set<Block> configSet) {
+    private boolean createLazyTick$isBlockInConfig(Block block, Set<ResourceLocation> configSet) {
         if (block == null || configSet == null || configSet.isEmpty()) return false;
-        return configSet.contains(block);
+        ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
+        return configSet.contains(blockId);
     }
 
     // 扫描逻辑
