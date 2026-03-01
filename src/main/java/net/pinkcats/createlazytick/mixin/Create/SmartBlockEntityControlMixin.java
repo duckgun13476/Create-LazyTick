@@ -3,6 +3,7 @@ package net.pinkcats.createlazytick.mixin.Create;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -69,7 +70,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     // Server -> disk
     @Inject(method = "write", at = @At("RETURN"))
-    private void lazytick$writeNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
+    private void lazytick$writeNBT(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
         LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(this);
         if (whiteItem == null) return;
 
@@ -106,7 +107,7 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
 
     // disk -> Client
     @Inject(method = "read", at = @At("RETURN"))
-    private void lazytick$readNBT(CompoundTag tag, boolean clientPacket, CallbackInfo ci) {
+    private void lazytick$readNBT(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
         //System.out.println("data read");
 
         if (tag.hasUUID("cltUUID")) {
