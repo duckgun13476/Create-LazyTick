@@ -4,20 +4,23 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.pinkcats.NutUI.menu.architect.data.CoordinateData;
 import net.pinkcats.NutUI.menu.architect.data.SharedData;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 
-public class DataPacket {
+public class DataPacket implements CustomPacketPayload {
 
     private static final Gson GSON = new Gson();
     private static final boolean SYNC_DEBUG_LOG = false;
@@ -31,6 +34,13 @@ public class DataPacket {
      * key -> json value string
      */
     private final Map<String, String> variables;
+
+    public static final Type<DataPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("createlazytick", "data"));
+
+    public static final StreamCodec<FriendlyByteBuf, DataPacket> STREAM_CODEC = StreamCodec.ofMember(
+            DataPacket::encode,
+            DataPacket::new
+    );
 
     public DataPacket(int dimension, List<CoordinateData> entityList) {
         this(dimension, entityList, Collections.emptyMap());
@@ -73,27 +83,29 @@ public class DataPacket {
         }
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        var ctx = supplier.get();
-        if (ctx.getDirection() != null && ctx.getDirection().getReceptionSide().isClient()) {
-            SharedData.setDimension(dimension);
-            SharedData.setCoordinatesList(entityList);
-            SharedData.setSyncedVariables(variables);
+    public void handle(IPayloadContext ctx) {
+        if (ctx.flow().isClientbound()) {
+            ctx.enqueueWork(() -> {
+                SharedData.setDimension(dimension);
+                SharedData.setCoordinatesList(entityList);
+                SharedData.setSyncedVariables(variables);
+            });
         }
         if (SYNC_DEBUG_LOG) {
-            String side = ctx.getDirection() == null ? "unknown" : String.valueOf(ctx.getDirection().getReceptionSide());
-            LOGGER.info("[NutUI Sync][RECV][{}] dimension={} entityCount={} keys={} demo={} version={} tick={} payload={}",
-                    side,
-                    dimension,
-                    entityList.size(),
-                    variables.keySet(),
-                    variables.get(DEMO_SYNC_KEY),
-                    variables.get(DEMO_SYNC_VERSION_KEY),
-                    variables.get(DEMO_SYNC_TICK_KEY),
-                    variables);
+            ctx.enqueueWork(() -> {
+                String side = ctx.flow().isClientbound() ? "client" : "server";
+                LOGGER.info("[NutUI Sync][RECV][{}] dimension={} entityCount={} keys={} demo={} version={} tick={} payload={}",
+                        side,
+                        dimension,
+                        entityList.size(),
+                        variables.keySet(),
+                        variables.get(DEMO_SYNC_KEY),
+                        variables.get(DEMO_SYNC_VERSION_KEY),
+                        variables.get(DEMO_SYNC_TICK_KEY),
+                        variables);
+            });
+
         }
-        ctx.setPacketHandled(true);
-        return true;
     }
 
     public int getDimension() {
@@ -132,6 +144,12 @@ public class DataPacket {
         }
         return out;
     }
+
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
 
     @Override
     public String toString() {

@@ -5,22 +5,31 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.NutUI.menu.extensions.NutMenuExtensionRegistry;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
-public class MenuActionPacket {
+public class MenuActionPacket implements CustomPacketPayload {
     private static final Gson GSON = new Gson();
 
     private final String action;
     private final Map<String, String> variables;
+
+    public static final Type<MenuActionPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("createlazytick", "menu_action"));
+
+    public static final StreamCodec<FriendlyByteBuf, MenuActionPacket> STREAM_CODEC = StreamCodec.ofMember(
+            MenuActionPacket::encode,
+            MenuActionPacket::new
+    );
 
     public MenuActionPacket(String action, Map<String, ?> variables) {
         this.action = action == null ? "" : action;
@@ -46,25 +55,23 @@ public class MenuActionPacket {
         }
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context ctx = supplier.get();
-        ctx.enqueueWork(() -> {
-            ServerPlayer sender = ctx.getSender();
-            if (sender == null) {
-                return;
-            }
+    public void handle(IPayloadContext ctx) {
+        if (ctx.flow().isServerbound()) {
+            ctx.enqueueWork(() -> {
+                if (!(ctx.player() instanceof ServerPlayer sender)) {
+                    return;
+                }
 
-            Map<String, Object> decodedVariables = decodeVariables(variables);
-            NutKineticMenu.NutItemMenu menu = resolveTargetMenu(sender, decodedVariables);
-            if (menu == null) {
-                return;
-            }
+                Map<String, Object> decodedVariables = decodeVariables(variables);
+                NutKineticMenu.NutItemMenu menu = resolveTargetMenu(sender, decodedVariables);
+                if (menu == null) {
+                    return;
+                }
 
-            menu.handleClientAction(sender, action, decodedVariables);
-            Channel.syncMenuDataToPlayer(sender, Channel.currentDimensionId(sender), menu.buildAutoSyncVariables());
-        });
-        ctx.setPacketHandled(true);
-        return true;
+                menu.handleClientAction(sender, action, decodedVariables);
+                Channel.syncMenuDataToPlayer(sender, Channel.currentDimensionId(sender), menu.buildAutoSyncVariables());
+            });
+        }
     }
 
     private static NutKineticMenu.NutItemMenu resolveTargetMenu(ServerPlayer sender, Map<String, Object> variables) {
@@ -133,5 +140,10 @@ public class MenuActionPacket {
             out.put(entry.getKey(), GSON.fromJson(element, Object.class));
         }
         return out;
+    }
+
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

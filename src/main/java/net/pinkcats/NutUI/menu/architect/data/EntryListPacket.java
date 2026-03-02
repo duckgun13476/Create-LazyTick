@@ -1,13 +1,24 @@
 package net.pinkcats.NutUI.menu.architect.data;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
-public class EntryListPacket {
+public class EntryListPacket implements CustomPacketPayload {
+
+    public static final Type<EntryListPacket> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath("createlazytick", "entry_list"));
+
+    public static final StreamCodec<FriendlyByteBuf, EntryListPacket> STREAM_CODEC = StreamCodec.ofMember(
+            EntryListPacket::encode,
+            EntryListPacket::new
+    );
 
     private final List<Entry> entryList;
 
@@ -33,15 +44,17 @@ public class EntryListPacket {
         }
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        var ctx = supplier.get();
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
+    public void handle(IPayloadContext ctx) {
         // 处理接收到的条目列表，例如存储或打印
-
-        EntryList.set(entryList);
-
-      //  System.out.println("Received entry list: " + entryList);
-        ctx.setPacketHandled(true); // 标记数据包已处理
-        return true;
+        ctx.enqueueWork(() -> {
+            EntryList.set(entryList);
+            //  System.out.println("Received entry list: " + entryList);
+        });
     }
 
     public List<Entry> getEntryList() {
