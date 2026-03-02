@@ -35,6 +35,8 @@ public abstract class BasinOperatingLazyTickMixin {
     private static final int clt$MAX_RECIPE_CACHE = 5;
     @Unique
     private static final int clt$MAX_CANDIDATES_PER_KEY = 5;
+    @Unique
+    private static final int clt$STALE_RETRY_WINDOW = 5;
 
     @Shadow(remap = false) protected abstract Optional<BasinBlockEntity> getBasin();
     @Shadow(remap = false) protected abstract boolean isRunning();
@@ -47,6 +49,10 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Unique
     private final List<BasinRecipeCacheEntry> clt$recipeCache = new ArrayList<>(clt$MAX_RECIPE_CACHE);
+    @Unique
+    private int clt$staleRetryBudget = 0;
+    @Unique
+    private boolean clt$awaitingStaleRetryResult = false;
 
     @Unique
     private void clt$sendData() {
@@ -202,22 +208,29 @@ public abstract class BasinOperatingLazyTickMixin {
 
         if (!((IBasinOptimization) basin).clt$isOutputBufferEmpty()) {
             clt$cachedSnapshot = null;
+            clt$staleRetryBudget = 0;
+            clt$awaitingStaleRetryResult = false;
             return;
         }
 
         if (!basin.canContinueProcessing()) {
             clt$cachedSnapshot = null;
+            clt$staleRetryBudget = 0;
+            clt$awaitingStaleRetryResult = false;
             return;
         }
 
         BasinStateSnapshot currentSnapshot = new BasinStateSnapshot(basin);
         BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basin);
         boolean staleCachedRecipe = false;
+        boolean forceRetryAfterStale = false;
 
         if (currentRecipe != null) {
             if (BasinRecipe.match(basin, currentRecipe)) {
                 clt$rememberRecipe(currentKey, currentRecipe);
                 clt$cachedSnapshot = null;
+                clt$staleRetryBudget = 0;
+                clt$awaitingStaleRetryResult = false;
                 startProcessingBasin();
                 clt$sendData();
                 cir.setReturnValue(true);
@@ -225,23 +238,32 @@ public abstract class BasinOperatingLazyTickMixin {
             }
 
             staleCachedRecipe = true;
+            clt$staleRetryBudget = clt$STALE_RETRY_WINDOW;
+            clt$awaitingStaleRetryResult = true;
             currentRecipe = null;
         }
 
         if (clt$cachedSnapshot != null) {
             if (!staleCachedRecipe && clt$cachedSnapshot.equals(currentSnapshot)) {
-                cir.setReturnValue(true);
-                return;
+                if (clt$staleRetryBudget > 0) {
+                    forceRetryAfterStale = true;
+                } else {
+                    cir.setReturnValue(true);
+                    return;
+                }
             }
 
             boolean shouldWake = clt$couldTriggerNewRecipe(clt$cachedSnapshot, currentSnapshot);
-            if (!staleCachedRecipe && !shouldWake) {
+            if (!staleCachedRecipe && !shouldWake && !forceRetryAfterStale) {
                 clt$cachedSnapshot = currentSnapshot;
                 cir.setReturnValue(true);
                 return;
             }
         }
 
+        if (forceRetryAfterStale && clt$staleRetryBudget > 0) {
+            clt$staleRetryBudget--;
+        }
         clt$cachedSnapshot = currentSnapshot;
     }
 
@@ -259,6 +281,8 @@ public abstract class BasinOperatingLazyTickMixin {
         BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basin);
 
         if (currentRecipe != null && BasinRecipe.match(basin, currentRecipe)) {
+            clt$staleRetryBudget = 0;
+            clt$awaitingStaleRetryResult = false;
             clt$rememberRecipe(currentKey, currentRecipe);
             cir.setReturnValue(Collections.singletonList(currentRecipe));
             return;
@@ -266,8 +290,11 @@ public abstract class BasinOperatingLazyTickMixin {
 
         Recipe<?> cachedRecipe = clt$getCachedRecipe(basin, currentKey);
         if (cachedRecipe != null) {
+            clt$staleRetryBudget = 0;
+            clt$awaitingStaleRetryResult = false;
             currentRecipe = cachedRecipe;
             cir.setReturnValue(Collections.singletonList(cachedRecipe));
+            return;
         }
     }
 
@@ -278,13 +305,18 @@ public abstract class BasinOperatingLazyTickMixin {
                 || !isBasinOptimizationSafe) return;
 
         List<Recipe<?>> recipes = cir.getReturnValue();
-        if (recipes == null || recipes.isEmpty()) return;
+        if (recipes == null || recipes.isEmpty()) {
+            return;
+        }
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
         if (basinOpt.isEmpty()) return;
 
-        BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basinOpt.get());
+        BasinBlockEntity basin = basinOpt.get();
+        BasinRecipeCacheKey currentKey = new BasinRecipeCacheKey(basin);
         Recipe<?> recipe = recipes.get(0);
+        clt$staleRetryBudget = 0;
+        clt$awaitingStaleRetryResult = false;
         currentRecipe = recipe;
         clt$rememberRecipes(currentKey, recipes);
     }
