@@ -5,7 +5,7 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Spout.SpoutCacheKey;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +30,7 @@ public abstract class SpoutRecipeMixin {
     private static void createLazyTick$checkCanFillCache(Level world, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (createLazyTick$NotEnable()) return;
 
-        if (stack.hasTag()) return;
+        if (!stack.getComponentsPatch().isEmpty()) return;
 
         Item item = stack.getItem();
 
@@ -46,7 +46,7 @@ public abstract class SpoutRecipeMixin {
 
         if (createLazyTick$NotEnable()) return;
 
-        if (stack.hasTag()) return;
+        if (!stack.getComponentsPatch().isEmpty()) return;
 
         // Find and save cache.
         CAN_FILL_CACHE.put(stack.getItem(), cir.getReturnValue());
@@ -57,8 +57,8 @@ public abstract class SpoutRecipeMixin {
 
         if (createLazyTick$NotEnable()) return;
 
-        if (stack.hasTag()) return;
-        if (availableFluid.hasTag()) return;
+        if (!stack.getComponentsPatch().isEmpty()) return;
+        if (!availableFluid.getComponentsPatch().isEmpty()) return;
 
         // Acquire cache.
         SpoutCacheKey key = new SpoutCacheKey(stack.getItem(), availableFluid.getFluid());
@@ -74,8 +74,8 @@ public abstract class SpoutRecipeMixin {
 
         if (createLazyTick$NotEnable()) return;
 
-        if (stack.hasTag()) return;
-        if (availableFluid.hasTag()) return;
+        if (!stack.getComponentsPatch().isEmpty()) return;
+        if (!availableFluid.getComponentsPatch().isEmpty()) return;
 
         // 构建缓存(物品 + 流体 做键,流体数量做值)
         // Find and save cache.

@@ -1,15 +1,14 @@
 package net.pinkcats.createlazytick.mixin.OptElement;
 
-import com.simibubi.create.content.equipment.sandPaper.SandPaperItem;
-import com.simibubi.create.content.equipment.sandPaper.SandPaperPolishingRecipe.SandPaperInv;
 import com.simibubi.create.content.kinetics.deployer.DeployerBlockEntity;
 import com.simibubi.create.content.kinetics.deployer.DeployerFakePlayer;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeInput;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.pinkcats.createlazytick.config.ServerConfig;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
 import net.pinkcats.createlazytick.helper.RecipeCacheTool;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,22 +34,19 @@ public abstract class DeployerRecipeMixin {
     public abstract DeployerFakePlayer getPlayer();
 
     @Shadow(remap = false)
-    RecipeWrapper recipeInv;
-
-    @Shadow(remap = false)
-    SandPaperInv sandpaperInv;
+    ItemStackHandler recipeInv;
 
     // --- 缓存相关字段 ---
     @Unique private boolean lazytick$hasCached = false;
     @Unique private Item lazytick$cachedTargetItem = null; // 缓存的目标物品（传送带上的）
     @Unique private Item lazytick$cachedHeldItem = null;   // 缓存的手持物品（机械手里的）
-    @Unique private Recipe<? extends Container> lazytick$cachedRecipe = null; // 缓存的配方结果
+    @Unique private RecipeHolder<? extends Recipe<? extends RecipeInput>> lazytick$cachedRecipe = null; // 缓存的配方结果
     @Unique private boolean lazytick$isBlacklisted = false; // 黑名单标记（熔断开关）
     @Unique private boolean lazytick$cachedTargetItemHasNbt = false;
 
     //注入到 getRecipe 方法头部，尝试直接返回缓存的配方。
     @Inject(method = "getRecipe", at = @At("HEAD"), cancellable = true, remap = false)
-    private void lazytick$checkCache(ItemStack stack, CallbackInfoReturnable<Recipe<? extends Container>> cir) {
+    private void lazytick$checkCache(ItemStack stack, CallbackInfoReturnable<RecipeHolder<? extends Recipe<? extends RecipeInput>>> cir) {
         // 配置检查
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheDeployer()) return;
 
@@ -65,7 +61,8 @@ public abstract class DeployerRecipeMixin {
         // 2. 物品变更检查 (这是缓存逻辑的前提)
         if (stack.getItem() != lazytick$cachedTargetItem) return;
 
-        if (stack.hasTag() != lazytick$cachedTargetItemHasNbt) return;
+        boolean hasTag = !stack.getComponentsPatch().isEmpty();
+        if (hasTag != lazytick$cachedTargetItemHasNbt) return;
 
         // 3. 黑名单检查
         // 如果该物品之前已被判定为导致序列组装的“危险物品”，直接跳过处理，走原版逻辑。
@@ -82,7 +79,8 @@ public abstract class DeployerRecipeMixin {
 
         // 5. 防止之前的缓存中混入了脏数据
         DeployerBlockEntity be = (DeployerBlockEntity)(Object)this;
-        if (RecipeCacheTool.isDangerousSARecipe(stack, lazytick$cachedRecipe, be.getLevel())) {
+        Recipe<?> recipeEntity = lazytick$cachedRecipe == null ? null : lazytick$cachedRecipe.value();
+        if (RecipeCacheTool.isDangerousSARecipe(stack, recipeEntity, be.getLevel())) {
             this.lazytick$clearCache();
             return;
         }
@@ -90,11 +88,8 @@ public abstract class DeployerRecipeMixin {
         // 6. 状态同步
         // 即使直接返回配方，也必须将物品放入容器，否则 Create 后续逻辑（如砂纸打磨）无法正确扣除耐久。
         if (this.recipeInv != null) {
-            this.recipeInv.setItem(0, stack);
-            this.recipeInv.setItem(1, currentHeld);
-        }
-        if (this.sandpaperInv != null && currentHeld.getItem() instanceof SandPaperItem) {
-            this.sandpaperInv.setItem(0, stack);
+            this.recipeInv.setStackInSlot(0, stack);
+            this.recipeInv.setStackInSlot(1, currentHeld);
         }
 
         // 7. 缓存命中，直接返回，跳过原版查找
@@ -106,18 +101,19 @@ public abstract class DeployerRecipeMixin {
      * 注入到 getRecipe 方法尾部，将原版计算出的配方存入缓存。
      */
     @Inject(method = "getRecipe", at = @At("RETURN"), remap = false)
-    private void lazytick$saveCache(ItemStack stack, CallbackInfoReturnable<Recipe<? extends Container>> cir) {
+    private void lazytick$saveCache(ItemStack stack, CallbackInfoReturnable<RecipeHolder<? extends Recipe<? extends RecipeInput>>> cir) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheDeployer()) return;
 
         DeployerFakePlayer player = this.getPlayer();
         if (player == null) return;
 
-        Recipe<? extends Container> result = cir.getReturnValue();
+        RecipeHolder<? extends Recipe<? extends RecipeInput>> result = cir.getReturnValue();
 
         // 配方危险性检查
         // 检查输出是否会导致序列组装
         DeployerBlockEntity be = (DeployerBlockEntity)(Object)this;
-        boolean recipeIsDangerous = RecipeCacheTool.isDangerousSARecipe(stack, result, be.getLevel());
+        Recipe<?> recipeEntity = result == null ? null : result.value();
+        boolean recipeIsDangerous = RecipeCacheTool.isDangerousSARecipe(stack, recipeEntity, be.getLevel());
 
         // --- 黑名单判定 ---
         if (recipeIsDangerous) {
@@ -125,7 +121,7 @@ public abstract class DeployerRecipeMixin {
             this.lazytick$cachedTargetItem = stack.getItem();
             this.lazytick$cachedHeldItem = player.getMainHandItem().getItem();
 
-            this.lazytick$cachedTargetItemHasNbt = true;
+            this.lazytick$cachedTargetItemHasNbt = !stack.getComponentsPatch().isEmpty();
             this.lazytick$isBlacklisted = true; // 标记为黑名单，下次 checkCache 直接熔断
             this.lazytick$cachedRecipe = null;  // 不缓存危险配方
             return;
@@ -136,7 +132,7 @@ public abstract class DeployerRecipeMixin {
         this.lazytick$cachedTargetItem = stack.getItem();
         this.lazytick$cachedHeldItem = player.getMainHandItem().getItem();
 
-        this.lazytick$cachedTargetItemHasNbt = false;
+        this.lazytick$cachedTargetItemHasNbt = !stack.getComponentsPatch().isEmpty();
         this.lazytick$isBlacklisted = false;
         this.lazytick$cachedRecipe = result;
     }
