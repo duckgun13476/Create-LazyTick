@@ -4,23 +4,23 @@ import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.item.SmartInventory;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 public final class BasinRecipeCacheKey {
-    private final Set<Item> inputItems;
+    private final Object2IntMap<Item> inputItemQuantities;
     private final boolean hasNbtSensitiveItems;
     private final int fluidHash;
     private final ItemStack filterSnapshot;
     private final BlazeBurnerBlock.HeatLevel heatLevel;
 
     public BasinRecipeCacheKey(BasinBlockEntity basin) {
-        this.inputItems = new HashSet<>();
+        this.inputItemQuantities = new Object2IntOpenHashMap<>();
         this.filterSnapshot = basin.getFilter() != null && basin.getFilter().getFilter() != null
                 ? basin.getFilter().getFilter().copy()
                 : ItemStack.EMPTY;
@@ -34,8 +34,9 @@ public final class BasinRecipeCacheKey {
             for (int i = 0; i < inputInventory.getSlots(); i++) {
                 ItemStack stack = inputInventory.getStackInSlot(i);
                 if (stack.isEmpty()) continue;
-                inputItems.add(stack.getItem());
-                if (stack.hasTag() && BasinRecipeIndex.isNbtSensitive(stack.getItem())) {
+                Item item = stack.getItem();
+                inputItemQuantities.put(item, inputItemQuantities.getInt(item) + stack.getCount());
+                if (stack.hasTag() && BasinRecipeIndex.isNbtSensitive(item)) {
                     nbtSensitive = true;
                 }
             }
@@ -51,7 +52,7 @@ public final class BasinRecipeCacheKey {
                     if (fs.isEmpty()) continue;
                     int typeHash = fs.getFluid().hashCode();
                     int tagHash = fs.hasTag() ? fs.getTag().hashCode() : 0;
-                    hash = 31 * hash + typeHash * 31 + tagHash;
+                    hash = 31 * hash + typeHash * 31 + fs.getAmount() + tagHash;
                 }
             }
         }
@@ -66,12 +67,12 @@ public final class BasinRecipeCacheKey {
         if (fluidHash != that.fluidHash) return false;
         if (heatLevel != that.heatLevel) return false;
         if (!ItemStack.matches(filterSnapshot, that.filterSnapshot)) return false;
-        return Objects.equals(inputItems, that.inputItems);
+        return Objects.equals(inputItemQuantities, that.inputItemQuantities);
     }
 
     @Override
     public int hashCode() {
-        int result = inputItems.hashCode();
+        int result = inputItemQuantities.hashCode();
         result = 31 * result + Boolean.hashCode(hasNbtSensitiveItems);
         result = 31 * result + fluidHash;
         result = 31 * result + clt$hashItemStack(filterSnapshot);
@@ -85,5 +86,16 @@ public final class BasinRecipeCacheKey {
         result = 31 * result + stack.getCount();
         result = 31 * result + (stack.hasTag() ? stack.getTag().hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Key{" +
+                "items=" + inputItemQuantities +
+                ", nbt=" + hasNbtSensitiveItems +
+                ", fluidHash=" + fluidHash +
+                ", filter=" + filterSnapshot +
+                ", heat=" + heatLevel +
+                '}';
     }
 }
