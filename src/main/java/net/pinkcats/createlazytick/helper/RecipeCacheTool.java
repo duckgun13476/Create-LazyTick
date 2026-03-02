@@ -3,14 +3,15 @@ package net.pinkcats.createlazytick.helper;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Crafter.CrafterGridSignature;
@@ -66,19 +67,34 @@ public class RecipeCacheTool {
     // 预定义 Create 序列组装的注册名常量，用于快速比对
     private static final ResourceLocation CREATE_SEQUENCED_ASSEMBLY = DropResourceLocation("create", "sequenced_assembly");
 
+    public static boolean isSequencedAssemblyItem(ItemStack input) {
+        if (input == null || input.isEmpty()) return false;
+
+        CustomData customData = input.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        if (customData.contains("SequencedAssembly")) {
+            return true;
+        }
+
+        for (net.minecraft.core.component.TypedDataComponent<?> component : input.getComponents()) {
+            if (component.type().toString().toLowerCase().contains("sequenced_assembly")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * 判断配方是否为“危险”的序列组装配方。
      * 序列组装配方通常是单例且有状态的，缓存它们会导致不同机械手之间数据污染（跳步）。
+     * 不要随意更改方法内部的校验排序,哪怕看起来可能会更"高效"
      * * @param recipe 待检查的配方
      * @return true 表示危险（不可缓存），false 表示安全（可缓存）
      */
     public static boolean isDangerousSARecipe(ItemStack input, Recipe<?> recipe, Level level) {
         // 0. 拦截显式半成品
-        if (input.hasTag()) {
-            CompoundTag tag = input.getTag();
-            if (tag != null && tag.contains("SequencedAssembly")) {
-                return true;
-            }
+        if (isSequencedAssemblyItem(input)) {
+            return true;
         }
 
         if (recipe == null) return false;
@@ -101,8 +117,8 @@ public class RecipeCacheTool {
                 }
 
                 // 判定 2: 名字里是否有 "incomplete" (针对自定义半成品,但可能有错杀概率)
-                ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(resultItem);
-                if (itemId != null && itemId.getPath().contains("incomplete")) {
+                ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(resultItem);
+                if (itemId.getPath().contains("incomplete")) {
                     return true;
                 }
             }
@@ -118,7 +134,7 @@ public class RecipeCacheTool {
         // 3. Serializer 引用检查
         try {
             RecipeSerializer<?> serializer = recipe.getSerializer();
-            ResourceLocation serializerId = ForgeRegistries.RECIPE_SERIALIZERS.getKey(serializer);
+            ResourceLocation serializerId = BuiltInRegistries.RECIPE_SERIALIZER.getKey(serializer);
             if (CREATE_SEQUENCED_ASSEMBLY.equals(serializerId)) return true;
         } catch (Exception e) {
             // 获取失败视为危险，宁可不缓存也不要出错
