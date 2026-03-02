@@ -1,3 +1,10 @@
+### 2.4.7-beta
+#### Fix
+1. Fix basin recipe cache key mismatch by making basin cache matching quantity-sensitive for items and fluids.
+2. Fix multiplayer basin getting stuck after temporary recipe invalidation by adding a short retry window before falling back to lazy skip.
+
+
+---
 ### 2.4.6-beta
 #### Fix
 1. Add server support Fix class leak.
