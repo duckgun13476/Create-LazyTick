@@ -9,16 +9,17 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.extensions.IForgeMenuType;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.pinkcats.NutUI.menu.architect.data.NutMenuInfo;
 import net.pinkcats.NutUI.menu.architect.slots.SlotGhost;
 import net.pinkcats.NutUI.menu.architect.slots._SlotBase;
 import net.pinkcats.createlazytick.Gui.mes;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,11 +29,11 @@ import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 public class NutKineticMenu {
 
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(
-            ForgeRegistries.MENU_TYPES, MODID);
+            Registries.MENU, MODID);
 
-    public static final RegistryObject<MenuType<NutItemMenu>> ItemMenuRegiste =
+    public static final DeferredHolder<MenuType<?>, MenuType<NutItemMenu>> ItemMenuRegiste =
             MENU_TYPES.register("nut_item_menu", () ->
-                    IForgeMenuType.create((windowId, inventory, buf) -> {
+                    IMenuTypeExtension.create((windowId, inventory, buf) -> {
                         BlockPos pos = buf.readBlockPos();
                         ResourceLocation menuId = buf.readResourceLocation();
                         return new NutItemMenu(inventory, windowId, pos, menuId);
@@ -74,7 +75,7 @@ public class NutKineticMenu {
         }
 
         @Override
-        public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        public void clicked(int slotId, int button, @NotNull ClickType clickType, @NotNull Player player) {
             if (slotId < 0 || slotId >= this.slots.size()) {
                 super.clicked(slotId, button, clickType, player);
                 return;
