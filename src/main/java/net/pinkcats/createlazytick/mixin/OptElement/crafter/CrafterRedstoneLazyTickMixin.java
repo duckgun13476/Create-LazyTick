@@ -129,7 +129,7 @@ public abstract class CrafterRedstoneLazyTickMixin extends SmartBlockEntity impl
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/Level;hasNeighborSignal(Lnet/minecraft/core/BlockPos;)Z"
             ),
-            remap = true
+            remap = false
     )
     private boolean lazytick$dynamicRedstoneCheck(Level level, BlockPos pos) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyCrafterRedstone() || level.isClientSide) {
