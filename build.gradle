@@ -83,7 +83,7 @@ neoForge {
             logLevel = org.slf4j.event.Level.DEBUG
 
             // 如果您使用了 Mixin，请添加以下参数（配置文件名与清单中的一致）
-            programArgument '-mixin.config=createlazytick.mixins.json'
+            //programArgument '-mixin.config=createlazytick.mixins.json'
         }
     }
 
@@ -163,14 +163,14 @@ dependencies {
     implementation("curse.maven:spark-361579:6225208")
 
 
-    implementation("curse.maven:kubejs-238086:7278501")
+    //implementation("curse.maven:kubejs-238086:7278501")
     implementation("curse.maven:rhino-416294:7104526")
 
     implementation("curse.maven:architectury-api-419699:5786327")
     implementation("curse.maven:kotlin-for-forge-351264:6994056")
-    implementation("net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}")
+    implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
 
-    implementation("curse.maven:create-enchantment-industry-688768:7656384")
+    //implementation("curse.maven:create-enchantment-industry-688768:7656384")
     //modImplementation("curse.maven:lionfish-api-1001614:5922047")
     //modImplementation("curse.maven:lendercataclysm-551586:6906993")
     //create
@@ -363,5 +363,16 @@ allprojects {
 
     tasks.withType(Javadoc) {
         options.encoding = 'UTF-8'
+    }
+}
+
+tasks.register('checkResources') {
+    dependsOn 'processResources'
+    doLast {
+        def resourceDir = file('build/resources/main')
+        println "Checking resources in $resourceDir"
+        fileTree(resourceDir).visit { f ->
+            println "  Found: $f"
+        }
     }
 }
