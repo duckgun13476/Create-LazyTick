@@ -101,6 +101,7 @@ public class SharedData {
     public static String coordinatesListToString(List<CoordinateData> list) {
         StringBuilder sb = new StringBuilder();
         for (CoordinateData coordinateData : list) {
+            // need check
             sb.append(coordinateData.toNBT().toString()).append("\n");
         }
         return sb.toString().trim();
