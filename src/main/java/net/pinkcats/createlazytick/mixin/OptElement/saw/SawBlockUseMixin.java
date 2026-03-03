@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SawBlock.class)
 public class SawBlockUseMixin {
 
-    @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "useItemOn", remap = false, at = @At("HEAD"), cancellable = true)
     private void createLazyTick$openScrollerUi(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
                                                InteractionHand hand, BlockHitResult hit,
                                                CallbackInfoReturnable<ItemInteractionResult> cir) {

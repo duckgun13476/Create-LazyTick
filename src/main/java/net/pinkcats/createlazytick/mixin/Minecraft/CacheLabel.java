@@ -24,7 +24,7 @@ public class CacheLabel {
     @Unique
     private static int createLazyTick$tick = 0;
 
-    @Inject(method = "reloadResources", at = @At("HEAD"))
+    @Inject(method = "reloadResources", at = @At("HEAD"), remap = false)
     private void ReloadLabel(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         IsServerReload = true;
         LOGGER.info("[CreateLazyTick] clearing cache...");
@@ -43,7 +43,7 @@ public class CacheLabel {
     }
 
 
-    @Inject(method = "reloadResources", at = @At("RETURN"))
+    @Inject(method = "reloadResources", at = @At("RETURN"), remap = false)
     private void ReloadEnd(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         IsServerReload = true;
         LOGGER.info("[CreateLazyTick] End cache...");
@@ -51,7 +51,7 @@ public class CacheLabel {
 
     }
 
-    @Inject(method = "tickServer", at = @At("HEAD"))
+    @Inject(method = "tickServer", at = @At("HEAD"), remap = false)
     private void tickServer(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         createLazyTick$tick++;
         if (createLazyTick$tick > ServerConfig.getGlobalCacheRecordDelay()){
