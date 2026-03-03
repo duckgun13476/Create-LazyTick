@@ -5,6 +5,7 @@ import com.simibubi.create.AllCreativeModeTabs;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -15,14 +16,10 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.pinkcats.createlazytick.Channel.ClockSyncPacket;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.Gui.Menu.MenuInit;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
@@ -32,8 +29,6 @@ import net.pinkcats.createlazytick.config.ClientConfig;
 
 import org.slf4j.Logger;
 
-import java.lang.reflect.Field;
-
 import static net.pinkcats.createlazytick.Register.LazyTickCommand.RegisterCLTCommand;
 import static net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex.isBasinOptimizationSafe;
 import static net.pinkcats.createlazytick.helper.RecipeCacheTool.AMOUNT_CACHE;
@@ -41,7 +36,7 @@ import static net.pinkcats.createlazytick.helper.RecipeCacheTool.CAN_FILL_CACHE;
 import static net.pinkcats.createlazytick.helper.RecipeCacheTool.CrafterRecipeCache;
 import static net.pinkcats.createlazytick.helper.RecipeCacheTool.IsCrafterCacheFull;
 
-// The value here should match an entry in the META-INF/mods.toml file
+// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(CreateLazyTick.MODID)
 public class CreateLazyTick {
     public static final String MODID = "createlazytick";
@@ -64,9 +59,7 @@ public class CreateLazyTick {
     }
 
 
-    /*public CreateLazyTick(IEventBus modEventBus, ModContainer modContainer) {
-
-
+    public CreateLazyTick(IEventBus modEventBus, ModContainer modContainer) {
         LazyTickItem.register(modEventBus);
 
         // From UI Lib
@@ -74,46 +67,15 @@ public class CreateLazyTick {
         MenuInit.registerCommon();
 
         modEventBus.addListener(this::commonSetup);
-        // [新增] 将网络注册监听器直接写在主类中
-        modEventBus.addListener(this::registerNetwork);
 
-        // [修改] MinecraftForge.EVENT_BUS 变更为 NeoForge.EVENT_BUS
         NeoForge.EVENT_BUS.register(this);
 
-        // [修改] 直接通过 modContainer 注册 Config
         modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
 
         if (isClient()) {
-            ClientBootstrap.init();
+            ClientBootstrap.init(modContainer);
         }
-    }*/
-
-    public CreateLazyTick() {
-
-        // Only for 1.21.1 NeoForge
-        ModLoadingContext modLoadingContext = getModLoadingContextViaReflection();
-        FMLJavaModLoadingContext modContext = modLoadingContext.extension();
-        IEventBus modEventBus = modContext.getModEventBus();
-
-        LazyTickItem.register(modEventBus);
-
-        // From UI Lib
-        NutKineticMenu.init(modEventBus);
-        MenuInit.registerCommon();
-
-
-        modEventBus.addListener(this::commonSetup);
-        MinecraftForge.EVENT_BUS.register(this);
-
-        modLoadingContext.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
-        modLoadingContext.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
-
-        if (isClient()) {
-            ClientBootstrap.init();
-        }
-
-
     }
 
 
@@ -146,8 +108,8 @@ public class CreateLazyTick {
     }
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || !IsServerReload) {
+    public void onServerTick(ServerTickEvent.Pre event) {
+        if (!IsServerReload) {
             return;
         }
         cacheReloadTick++;
@@ -158,7 +120,7 @@ public class CreateLazyTick {
     }
 
 
-    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
     public static class ClientModEvents {
 
         @SubscribeEvent
@@ -196,10 +158,11 @@ public class CreateLazyTick {
         private ClientBootstrap() {
         }
 
-        static void init() {
+        static void init(ModContainer modContainer) {
             try {
                 Class<?> clientInit = Class.forName("net.pinkcats.createlazytick.Register.ClientInit");
-                clientInit.getMethod("initClient").invoke(null);
+                clientInit.getMethod("initClient", ModContainer.class)
+                        .invoke(null, modContainer);
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException("CreateLazyTick failed to initialize client bootstrap", e);
             }
@@ -207,7 +170,7 @@ public class CreateLazyTick {
     }
 
 
-    @SuppressWarnings("unchecked")
+    /*@SuppressWarnings("unchecked")
     public static ModLoadingContext getModLoadingContextViaReflection() {
         try {
             Field contextField = ModLoadingContext.class.getDeclaredField("context");
@@ -218,5 +181,5 @@ public class CreateLazyTick {
         } catch (Exception e) {
             throw new RuntimeException("CreateLazyTick got ERROR in Init:", e);
         }
-    }
+    }*/
 }
