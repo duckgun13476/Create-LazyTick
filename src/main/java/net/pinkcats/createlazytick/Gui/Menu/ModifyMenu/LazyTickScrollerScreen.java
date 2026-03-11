@@ -24,13 +24,13 @@ import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 public class LazyTickScrollerScreen extends NutKineticScreen {
 
     private static final ResourceLocation BACKGROUND =
-            ResourceLocation.fromNamespaceAndPath(MODID, "gui/background.png");
+            new ResourceLocation(MODID, "gui/background.png");
 
     private static final ResourceLocation SCROLLER_BUTTON =
-            ResourceLocation.fromNamespaceAndPath(MODID, "gui/button.png");
+            new ResourceLocation(MODID, "gui/button.png");
 
     private static final ResourceLocation SCROLLER_TABLE =
-            ResourceLocation.fromNamespaceAndPath(MODID, "gui/table.png");
+            new ResourceLocation(MODID, "gui/table.png");
 
     private static final double FOLLOW_SMOOTHING = 0.22D;
     private static final int TRACK_MIN_X = -8;

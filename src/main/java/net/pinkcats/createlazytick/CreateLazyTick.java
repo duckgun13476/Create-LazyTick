@@ -45,10 +45,11 @@ public class CreateLazyTick {
     private static int cacheReloadTick = 0;
 
     public static ResourceLocation DropResourceLocation(String Location){
-        return ResourceLocation.parse(Location);
+        return new ResourceLocation(Location);
     }
+
     public static ResourceLocation DropResourceLocation(String NameSpace, String Path){
-        return ResourceLocation.fromNamespaceAndPath(NameSpace,Path);
+        return new ResourceLocation(NameSpace,Path);
     }
 
     /** If you can't use level.isClientSide(),use this.</p>

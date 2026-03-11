@@ -190,9 +190,10 @@ dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' //Mixin注解处理器(记得开)
     //Create
-    modImplementation("curse.maven:create-328085:5838779")
+    modImplementation("curse.maven:create-328085:5797604")
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+
 
     //implementation 'com.google.code.gson:gson:2.8.9' // 更新版本
     //modImplementation(jarJar( group: 'com.moandjiezana.toml', name: 'toml4j', version: '0.7.2'))
@@ -205,23 +206,23 @@ dependencies {
 
 
 
-    modImplementation("curse.maven:observable-509575:5643037")
+    //modImplementation("curse.maven:observable-509575:5643037")
 
-    modImplementation("curse.maven:spark-361579:4738952")
+    //modImplementation("curse.maven:spark-361579:4738952")
 
 
-    modImplementation("curse.maven:kubejs-238086:5853326")
-    modImplementation("curse.maven:rhino-416294:6186971")
+    //modImplementation("curse.maven:kubejs-238086:5853326")
+    //modImplementation("curse.maven:rhino-416294:6186971")
 
-    modImplementation("curse.maven:architectury-api-419699:5137938")
-    modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
+    //modImplementation("curse.maven:architectury-api-419699:5137938")
+    //modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
     //create
     //runtimeOnly fg.deobf("curse.maven:create-328085:5838779")
 
     //JEI
-    modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
-    modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-forge-api:${jei_version}")
-    modRuntimeOnly("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
+    //modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
+    //modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-forge-api:${jei_version}")
+    //modRuntimeOnly("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
 
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository

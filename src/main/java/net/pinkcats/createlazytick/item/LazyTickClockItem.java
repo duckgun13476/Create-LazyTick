@@ -5,8 +5,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -15,11 +13,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
-import net.pinkcats.NutUI.menu.Nutprovider;
-import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -34,11 +28,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static net.pinkcats.NutUI.menu.architect.Helper.MenuHelper.CreateNutMenu;
-import static net.pinkcats.NutUI.menu.architect.Helper.ResourceParse.Nut_Menu_ID;
-import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenu;
-import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickMenuScroller;
 
 //需要翻译文本
 public class LazyTickClockItem extends Item {
