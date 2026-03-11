@@ -1,7 +1,7 @@
 package net.pinkcats.NutUI.menu;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -60,25 +60,25 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      * Screen's Render Entrance
      */
     @Override
-    protected void renderBg(@NotNull GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
+    protected void renderBg(@NotNull PoseStack poseStack, float pPartialTick, int pMouseX, int pMouseY) {
         //Sync size
         updateTextureSizeIfNeeded();
 
-        renderDefaultBg(pGuiGraphics, pPartialTick, pMouseX, pMouseY);
+        renderDefaultBg(poseStack, pPartialTick, pMouseX, pMouseY);
     }
 
     /**
      * Default background pipeline.
      * Subclasses can call this and then add custom rendering.
      */
-    protected void renderDefaultBg(@NotNull GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
+    protected void renderDefaultBg(@NotNull PoseStack poseStack, float pPartialTick, int pMouseX, int pMouseY) {
 
         //Define pos
         int MenuStartPosX = this.leftPos;
         int MenuStartPosY = this.topPos;
 
         //Show Box
-        FancyRender(pGuiGraphics, MenuStartPosX, MenuStartPosY);
+        FancyRender(poseStack, MenuStartPosX, MenuStartPosY);
 
         extraAreas = List.of(tempAreas.toArray(new Rect2i[0]));
         tempAreas.clear();
@@ -90,19 +90,19 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      * Title Show Func
      */
     @Override
-    protected void renderLabels(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
+    protected void renderLabels(@NotNull PoseStack poseStack, int pMouseX, int pMouseY) {
         //Show Name
         MutableComponent headerTitle = Component.translatable("menu.transfer_block_container");
         MutableComponent requireTitle = Component.translatable("menu.transfer_block_require");
-        pGuiGraphics.drawString(this.font, headerTitle, this.titleLabelX+50, this.titleLabelY-38, 0x714A40, false);
-        pGuiGraphics.drawString(this.font, requireTitle,  this.inventoryLabelX-56, this.inventoryLabelY+32, 0x714A40, false);
+        this.font.draw(poseStack, headerTitle, this.titleLabelX + 50, this.titleLabelY - 38, 0x714A40);
+        this.font.draw(poseStack, requireTitle, this.inventoryLabelX - 56, this.inventoryLabelY + 32, 0x714A40);
 
 
 //        //Show parameter
 //        String syncState = SharedData.getSyncedBoolean(DataPacket.DEMO_SYNC_KEY, false) ? "OK" : "WAIT";
 //        long syncTick = SharedData.getSyncedInt(DataPacket.DEMO_SYNC_TICK_KEY, -1);
 //        String demoLine = "SyncDemo [" + syncState + "] tick=" + syncTick;
-//        pGuiGraphics.drawString(this.font, demoLine, this.inventoryLabelX-56, this.inventoryLabelY+44, 0x3F6E5E, false);
+//        this.font.draw(poseStack, demoLine, this.inventoryLabelX - 56, this.inventoryLabelY + 44, 0x3F6E5E);
 
     }
 
@@ -114,9 +114,9 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
      * Tool Func
      */
     @Override
-    public void render(@NotNull GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(matrixStack, mouseX, mouseY);
+    public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        super.render(poseStack, mouseX, mouseY, partialTicks);
+        this.renderTooltip(poseStack, mouseX, mouseY);
     }
 
     /**
@@ -166,10 +166,10 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     /**
      *  Fancy Render for add Menu With box
      */
-    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY) {
+    protected void FancyRender(PoseStack poseStack, int MSX, int MSY) {
         NutMenuInfo.data info = NutMenuInfo.require(out_menu.getMenuId());
         fancyRenderAbsolute(
-                pGuiGraphics,
+                poseStack,
                 MSX, MSY,
                 info.texture(),
                 info.textureStartX(), info.textureStartY(),
@@ -181,33 +181,33 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     /**
      *  Fancy Render Add new UI
      */
-    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY, ResourceLocation texture) {
+    protected void FancyRender(PoseStack poseStack, int MSX, int MSY, ResourceLocation texture) {
         // Default aligns with parent start point, convenient for later position tuning.
         NutMenuInfo.data info = NutMenuInfo.require(out_menu.getMenuId());
-        FancyRender(pGuiGraphics, MSX, MSY, texture, info.textureStartX(), info.textureStartY());
+        FancyRender(poseStack, MSX, MSY, texture, info.textureStartX(), info.textureStartY());
     }
 
-    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY, ResourceLocation texture, int u, int v) {
+    protected void FancyRender(PoseStack poseStack, int MSX, int MSY, ResourceLocation texture, int u, int v) {
         TextureSize.Size size = TextureSize.get(texture);
         int texWidth = size.w() > 0 ? size.w() : this.ScreenWidth;
         int texHeight = size.h() > 0 ? size.h() : this.ScreenHeight;
 
         // Standalone layer mode: draw at texture's own size (1:1) by default.
-        FancyRender(pGuiGraphics, MSX, MSY, texture, u, v, texWidth, texHeight, texWidth, texHeight);
+        FancyRender(poseStack, MSX, MSY, texture, u, v, texWidth, texHeight, texWidth, texHeight);
     }
 
-    protected void FancyRender(GuiGraphics pGuiGraphics, int MSX, int MSY, ResourceLocation texture,
+    protected void FancyRender(PoseStack poseStack, int MSX, int MSY, ResourceLocation texture,
                                int u, int v, int drawWidth, int drawHeight, int textureWidth, int textureHeight) {
         // Custom-layer coordinates are relative to the parent UI top-left.
         int drawX = this.leftPos + MSX;
         int drawY = this.topPos + MSY;
-        fancyRenderAbsolute(pGuiGraphics, drawX, drawY, texture, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
+        fancyRenderAbsolute(poseStack, drawX, drawY, texture, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
     }
 
-    private void fancyRenderAbsolute(GuiGraphics pGuiGraphics, int drawX, int drawY, ResourceLocation texture,
+    private void fancyRenderAbsolute(PoseStack poseStack, int drawX, int drawY, ResourceLocation texture,
                                      int u, int v, int drawWidth, int drawHeight, int textureWidth, int textureHeight) {
         //mes.warn("{}{}{}{}{}{}{}",texture,drawX, drawY, 0, 0, this.imageWidth,this.imageHeight);
-        pGuiGraphics.blit(texture, drawX, drawY, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
+        blit(poseStack, drawX, drawY, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
         //PlaceStrip JEI block
         tempAreas.add(new Rect2i(drawX + 5, drawY + 5, EnsurePositive(drawWidth - 10), EnsurePositive(drawHeight - 10)));
     }
@@ -216,14 +216,14 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     // Replace Vanilla interface
     // */
     protected void SBlit(
-            @NotNull GuiGraphics graphics, ResourceLocation atlasLocation,
+            @NotNull PoseStack poseStack, ResourceLocation atlasLocation,
             int x, int y,
             float UV_StartPoint_X, float UV_StartPoint_Y,
             int UV_Width, int UV_Height){
         TextureSize.Size size = TextureSize.get(atlasLocation);
         int texWidth = size.w();
         int texHeight = size.h();
-        graphics.blit(atlasLocation,
+        blit(poseStack,
                 x, y,
                 UV_StartPoint_X-1, UV_StartPoint_Y-1, // Texture startpoint
                 UV_Width, UV_Height,
@@ -231,15 +231,15 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     }
 
     @Deprecated
-    protected void debugWindowArea(GuiGraphics graphics) {
-        graphics.fill(leftPos + imageWidth, topPos + imageHeight, leftPos, topPos, 0xD3D3D3D3);
+    protected void debugWindowArea(PoseStack poseStack) {
+        fill(poseStack, leftPos + imageWidth, topPos + imageHeight, leftPos, topPos, 0xD3D3D3D3);
     }
 
     @Deprecated
-    protected void debugExtraAreas(GuiGraphics graphics) {
+    protected void debugExtraAreas(PoseStack poseStack) {
         mes.warn("debugExtraAreas");
         for (Rect2i area : getExtraAreas()) {
-            graphics.fill(area.getX() + area.getWidth(), area.getY() + area.getHeight(), area.getX(), area.getY(),
+            fill(poseStack, area.getX() + area.getWidth(), area.getY() + area.getHeight(), area.getX(), area.getY(),
                     0xD3D3D3D3);
         }
     }

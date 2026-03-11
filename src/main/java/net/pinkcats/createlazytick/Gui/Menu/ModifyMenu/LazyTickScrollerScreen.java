@@ -1,7 +1,7 @@
 package net.pinkcats.createlazytick.Gui.Menu.ModifyMenu;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -69,7 +69,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         boolean rightMouseDown = isRightMouseDown();
         if (rightMouseDownLastFrame && !rightMouseDown) {
             onClose();
@@ -84,12 +84,12 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
             buttonPosX = smoothFollowCenteredX(buttonPosX, mouseX, buttonDrawWidth, FOLLOW_SMOOTHING);
             buttonPosY = smoothFollowCenteredY(buttonPosY, mouseY, buttonDrawHeight, FOLLOW_SMOOTHING);
         }
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
 
     @Override
-    protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(@NotNull PoseStack poseStack, float partialTick, int mouseX, int mouseY) {
 
         // Init
         Component topHint = Component.translatable("createlazytick.scroller.target_lazytick_config");
@@ -100,9 +100,9 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         updateTextureSizeIfNeeded();
 
         // Draw default NutUI background first.
-        RenderBackground(graphics, textCenterX + 7, this.topPos - 20);
-        renderDefaultBg(graphics, partialTick, mouseX, mouseY);
-        renderTableLabels(graphics);
+        RenderBackground(poseStack, textCenterX + 7, this.topPos - 20);
+        renderDefaultBg(poseStack, partialTick, mouseX, mouseY);
+        renderTableLabels(poseStack);
 
         if (buttonPosX < TRACK_MIN_X) buttonPosX = TRACK_MIN_X;
         if (buttonPosX > TRACK_MAX_X) buttonPosX = TRACK_MAX_X;
@@ -115,12 +115,12 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
 
         int percent = mapXToPercent(buttonPosX);
 
-        RenderButton(graphics, buttonX, buttonY, percent);
-        graphics.drawString(this.font, topHint, topHintX + 6, this.topPos - 10, 0xFFFFFF, false);
-        graphics.drawString(this.font, bottomHint, bottomHintX + 5, this.topPos + 28, 0xFFFFFF, false);
+        RenderButton(poseStack, buttonX, buttonY, percent);
+        this.font.draw(poseStack, topHint, topHintX + 6, this.topPos - 10, 0xFFFFFF);
+        this.font.draw(poseStack, bottomHint, bottomHintX + 5, this.topPos + 28, 0xFFFFFF);
     }
 
-    private void renderTableLabels(@NotNull GuiGraphics graphics) {
+    private void renderTableLabels(@NotNull PoseStack poseStack) {
         TextureSize.Size tableSize = TextureSize.get(SCROLLER_TABLE);
         int tableWidth = tableSize.w();
         int tableHeight = tableSize.h();
@@ -132,41 +132,41 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         int topTableY = this.topPos - tableHeight - TABLE_GAP_Y;
         int bottomTableY = this.topPos + this.imageHeight + TABLE_GAP_Y;
 
-        renderTableLabel(graphics, tableX, topTableY,
+        renderTableLabel(poseStack, tableX, topTableY,
                 Component.translatable("createlazytick.scroller.dynamic_adjust"),
                 tableWidth, tableHeight);
-        renderTableLabel(graphics, tableX, bottomTableY,
+        renderTableLabel(poseStack, tableX, bottomTableY,
                 Component.translatable("createlazytick.scroller.locked_frequency"),
                 tableWidth, tableHeight);
     }
 
-    private void renderTableLabel(@NotNull GuiGraphics graphics, int x, int y, Component label, int tableWidth, int tableHeight) {
-        SBlit(graphics, SCROLLER_TABLE, x, y, 1, 1, tableWidth, tableHeight);
+    private void renderTableLabel(@NotNull PoseStack poseStack, int x, int y, Component label, int tableWidth, int tableHeight) {
+        SBlit(poseStack, SCROLLER_TABLE, x, y, 1, 1, tableWidth, tableHeight);
         int textX = x + (tableWidth - this.font.width(label)) / 2;
         int textY = y + (tableHeight - 8) / 2;
-        graphics.drawString(this.font, label, textX, textY, 0x704630, false);
+        this.font.draw(poseStack, label, textX, textY, 0x704630);
     }
 
     private int BackGroundTick = 0;
 
-    private void RenderBackground(@NotNull GuiGraphics graphics, int X, int Y) {
+    private void RenderBackground(@NotNull PoseStack poseStack, int X, int Y) {
         if (BackGroundTick < BACKGROUND_SPREAD_MAX) {
             BackGroundTick++;
         }
 
-        drawBackgroundColumn(graphics, X, Y);
+        drawBackgroundColumn(poseStack, X, Y);
         for (int i = 1; i <= BackGroundTick; i++) {
             int offset = i * BACKGROUND_TILE;
-            drawBackgroundColumn(graphics, X - offset, Y);
-            drawBackgroundColumn(graphics, X + offset, Y);
+            drawBackgroundColumn(poseStack, X - offset, Y);
+            drawBackgroundColumn(poseStack, X + offset, Y);
         }
     }
 
 
-    private void drawBackgroundColumn(@NotNull GuiGraphics graphics, int x, int y) {
+    private void drawBackgroundColumn(@NotNull PoseStack poseStack, int x, int y) {
         int drawY = y;
         for (int i = 0; i < BACKGROUND_ROWS; i++) {
-            SBlit(graphics, BACKGROUND, x, drawY,
+            SBlit(poseStack, BACKGROUND, x, drawY,
                     1, 1,
                     BACKGROUND_TILE, BACKGROUND_TILE);
             drawY += BACKGROUND_TILE;
@@ -174,27 +174,27 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
     }
 
 
-    private void RenderButton(@NotNull GuiGraphics graphics, int X, int Y, int percent) {
+    private void RenderButton(@NotNull PoseStack poseStack, int X, int Y, int percent) {
         int drawX = this.leftPos + X;
         int drawY = this.topPos + Y;
         int buttonStartX = drawX;
 
         // left part
-        SBlit(graphics, SCROLLER_BUTTON, drawX, drawY,
+        SBlit(poseStack, SCROLLER_BUTTON, drawX, drawY,
                 2, 2,
                 3, 14);
         drawX += 3;
 
         // middle part
         for (int i = 0; i < BUTTON_CHAR_COUNT; i++) {
-            SBlit(graphics, SCROLLER_BUTTON, drawX, drawY,
+            SBlit(poseStack, SCROLLER_BUTTON, drawX, drawY,
                     6, 2,
                     5, 14);
             drawX += 5;
         }
 
         // right part
-        SBlit(graphics, SCROLLER_BUTTON, drawX, drawY,
+        SBlit(poseStack, SCROLLER_BUTTON, drawX, drawY,
                 12, 2,
                 3, 14);
 
@@ -202,7 +202,7 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
         int buttonWidth = 3 + (BUTTON_CHAR_COUNT * 5) + 3;
         int textX = buttonStartX + (buttonWidth - this.font.width(percentText)) / 2;
         int textY = drawY + (BUTTON_PIXEL_HEIGHT - 8) / 2;
-        graphics.drawString(this.font, percentText, textX + 1, textY + 1, 0x704630, false);
+        this.font.draw(poseStack, percentText, textX + 1, textY + 1, 0x704630);
     }
 
 
@@ -292,8 +292,8 @@ public class LazyTickScrollerScreen extends NutKineticScreen {
 
 
     @Override
-    protected void renderLabels(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
-        // super.renderLabels(graphics, mouseX, mouseY);
+    protected void renderLabels(@NotNull PoseStack poseStack, int mouseX, int mouseY) {
+        // super.renderLabels(poseStack, mouseX, mouseY);
     }
 
     @Override
