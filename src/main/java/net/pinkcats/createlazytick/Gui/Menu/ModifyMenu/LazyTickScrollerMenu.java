@@ -45,11 +45,11 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
     }
 
     private void syncFromBlockEntity(Inventory inventory) {
-        if (inventory.player == null || inventory.player.level() == null) {
+        if (inventory.player == null || inventory.player.level == null) {
             return;
         }
 
-        BlockEntity be = inventory.player.level().getBlockEntity(getPos());
+        BlockEntity be = inventory.player.level.getBlockEntity(getPos());
         if (!(be instanceof ISmartBlockEntityControl control)) {
             return;
         }
@@ -65,11 +65,11 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
     }
 
     private void applyToBlockEntity(ServerPlayer player, int percent, boolean forced) {
-        if (player == null || player.level() == null) {
+        if (player == null || player.level == null) {
             return;
         }
 
-        BlockEntity be = player.level().getBlockEntity(getPos());
+        BlockEntity be = player.level.getBlockEntity(getPos());
         if (!(be instanceof ISmartBlockEntityControl control)) {
             return;
         }

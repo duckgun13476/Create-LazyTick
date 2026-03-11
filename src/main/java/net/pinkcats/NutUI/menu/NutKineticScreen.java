@@ -1,7 +1,9 @@
 package net.pinkcats.NutUI.menu;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -207,6 +209,7 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
     private void fancyRenderAbsolute(PoseStack poseStack, int drawX, int drawY, ResourceLocation texture,
                                      int u, int v, int drawWidth, int drawHeight, int textureWidth, int textureHeight) {
         //mes.warn("{}{}{}{}{}{}{}",texture,drawX, drawY, 0, 0, this.imageWidth,this.imageHeight);
+        bindTexture(texture);
         blit(poseStack, drawX, drawY, u, v, drawWidth, drawHeight, textureWidth, textureHeight);
         //PlaceStrip JEI block
         tempAreas.add(new Rect2i(drawX + 5, drawY + 5, EnsurePositive(drawWidth - 10), EnsurePositive(drawHeight - 10)));
@@ -223,11 +226,18 @@ public class NutKineticScreen extends AbstractContainerScreen<NutKineticMenu.Nut
         TextureSize.Size size = TextureSize.get(atlasLocation);
         int texWidth = size.w();
         int texHeight = size.h();
+        bindTexture(atlasLocation);
         blit(poseStack,
                 x, y,
                 UV_StartPoint_X-1, UV_StartPoint_Y-1, // Texture startpoint
                 UV_Width, UV_Height,
                 texWidth, texHeight);
+    }
+
+    private void bindTexture(ResourceLocation texture) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, texture);
     }
 
     @Deprecated

@@ -2,7 +2,6 @@ package net.pinkcats.createlazytick.helper;
 
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -89,8 +88,7 @@ public class RecipeCacheTool {
         try {
             if (level == null) return true;
 
-            RegistryAccess access = level.registryAccess();
-            ItemStack resultStack = recipe.getResultItem(access);
+            ItemStack resultStack = recipe.getResultItem();
 
             if (!resultStack.isEmpty()) {
                 Item resultItem = resultStack.getItem();

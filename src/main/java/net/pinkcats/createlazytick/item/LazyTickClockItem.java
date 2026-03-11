@@ -36,7 +36,6 @@ public class LazyTickClockItem extends Item {
         super(properties);
     }
 
-
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("item.createlazytick.clock.tooltip.line1")

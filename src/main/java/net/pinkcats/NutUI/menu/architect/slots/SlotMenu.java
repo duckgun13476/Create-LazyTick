@@ -67,7 +67,7 @@ public abstract class SlotMenu extends AbstractContainerMenu {
      */
     @Override
     public boolean stillValid(Player pPlayer) {
-        return stillValid(ContainerLevelAccess.create(pPlayer.level(),pos),pPlayer,targetblock);
+        return stillValid(ContainerLevelAccess.create(pPlayer.level,pos),pPlayer,targetblock);
     }
 
 

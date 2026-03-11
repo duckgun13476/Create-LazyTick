@@ -8,15 +8,15 @@ import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 public class ResourceParse {
 
     public static ResourceLocation LoadTexture(String path) {
-        return ResourceLocation.parse(path);
+        return new ResourceLocation(path);
     }
 
     public static ResourceLocation LoadTextureN(String Path){
-        return ResourceLocation.fromNamespaceAndPath(MODID,Path);
+        return new ResourceLocation(MODID,Path);
     }
 
     public static ResourceLocation BuildDefine(String NameSpace, String Path){
-        return ResourceLocation.fromNamespaceAndPath(NameSpace,Path);
+        return new ResourceLocation(NameSpace,Path);
     }
 
 

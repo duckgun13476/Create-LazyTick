@@ -63,7 +63,7 @@ public class ClockSyncPacket {
         ctx.enqueueWork(() -> {
             // 查询模式
             if (isQuery) {
-                Level level = player.level();
+                Level level = player.level;
                 if (level.isLoaded(pos)) {
                     if (level.getBlockEntity(pos) instanceof ISmartBlockEntityControl control) {
                         control.createLazyTick$sendBlockUpdated();

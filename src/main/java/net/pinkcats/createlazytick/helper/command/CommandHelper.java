@@ -202,7 +202,7 @@ public class CommandHelper {
         int count = ForcedActiveManager.executeBatchReset(level, candidates);
 
         if (count > 0) {
-            source.sendSuccess(() -> Component.translatable(
+            source.sendSuccess(Component.translatable(
                             "createlazytick.reset.success_loaded_only",
                             count,
                             description
@@ -354,7 +354,7 @@ public class CommandHelper {
                             net.minecraft.network.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, fileName)));
 
             String path = "dumps/createlazytick/";
-            source.sendSuccess(() -> Component.translatable(
+            source.sendSuccess(Component.translatable(
                     "createlazytick.export.success_with_path",
                     path
             ).append(fileComp), true);

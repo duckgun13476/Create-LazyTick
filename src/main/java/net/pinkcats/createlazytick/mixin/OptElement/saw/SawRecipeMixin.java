@@ -117,7 +117,7 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
                     AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
         }
 
-        if (assemblyRecipe.isPresent() && filtering.test(assemblyRecipe.get().getResultItem(level.registryAccess()))) {
+        if (assemblyRecipe.isPresent() && filtering.test(assemblyRecipe.get().getResultItem())) {
             // 直接返回序列装配配方，不更新任何缓存
             cir.setReturnValue(ImmutableList.of(assemblyRecipe.get()));
             cir.cancel();

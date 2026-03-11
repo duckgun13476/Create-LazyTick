@@ -96,7 +96,7 @@ public class Channel {
         payload.putIfAbsent("dimension", dimension);
         payload.put(DataPacket.DEMO_SYNC_KEY, true);
         payload.put(DataPacket.DEMO_SYNC_VERSION_KEY, "v1");
-        payload.put(DataPacket.DEMO_SYNC_TICK_KEY, player.level().getGameTime());
+        payload.put(DataPacket.DEMO_SYNC_TICK_KEY, player.level.getGameTime());
         if (SYNC_DEBUG_LOG) {
             LOGGER.info("[NutUI Sync][SEND][Server->Client] player={} dimension={} keys={} payload={}",
                     player.getGameProfile().getName(), dimension, payload.keySet(), payload);
@@ -113,7 +113,7 @@ public class Channel {
 
     @SubscribeEvent
     public static void autoSyncMenuData(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide()) {
+        if (event.phase != TickEvent.Phase.END || event.player.level.isClientSide()) {
             return;
         }
 
@@ -126,7 +126,7 @@ public class Channel {
             return;
         }
 
-        if (player.level().getGameTime() % DEFAULT_SYNC_INTERVAL_TICKS != 0) {
+        if (player.level.getGameTime() % DEFAULT_SYNC_INTERVAL_TICKS != 0) {
             return;
         }
 
@@ -137,7 +137,7 @@ public class Channel {
         if (player == null) {
             return 0;
         }
-        return player.level().dimension().location().hashCode();
+        return player.level.dimension().location().hashCode();
     }
 
     public static synchronized void ensurePacketsRegistered() {

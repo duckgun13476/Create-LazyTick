@@ -6,6 +6,7 @@
   "refmap": "createlazytick.refmap.json",
   "mixins": [
     "compat.createenchantment.OpenEndedPipeMixin",
+    "Create.CreateCreativeModeTabMixin",
     "Create.ScrollOptionBehaviourGuardMixin",
     "Create.SmartBlockEntityControlMixin",
     "OptElement.arm.ArmLazyTickMixin",

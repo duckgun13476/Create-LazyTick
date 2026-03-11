@@ -86,8 +86,8 @@ public class LazyTickClockHintOverlay {
         int line2Color = alpha | 0xFFFFFF;
        // int line3Color = alpha | 0x9FD3FF;
 
-        event.getGuiGraphics().drawString(font, line1, x1, baseY, line1Color, false);
-        event.getGuiGraphics().drawString(font, line2, x2, baseY + 11, line2Color, false);
-       // event.getGuiGraphics().drawString(font, line3, x3, baseY + 22, line3Color, false);
+        font.draw(event.getPoseStack(), line1, x1, baseY, line1Color);
+        font.draw(event.getPoseStack(), line2, x2, baseY + 11, line2Color);
+       // font.draw(event.getPoseStack(), line3, x3, baseY + 22, line3Color);
     }
 }

@@ -15,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
@@ -143,7 +144,8 @@ public class CommandExecutor {
 
     public static int onResetByRadius(CommandContext<CommandSourceStack> ctx) {
         int range = IntegerArgumentType.getInteger(ctx, "range");
-        BlockPos center = BlockPos.containing(ctx.getSource().getPosition());
+        Vec3 sourcePos = ctx.getSource().getPosition();
+        BlockPos center = new BlockPos(sourcePos.x, sourcePos.y, sourcePos.z);
         double rangeSqr = range * range;
 
         Component desc = Component.translatable("createlazytick.desc.radius_block", range);
@@ -260,7 +262,7 @@ public class CommandExecutor {
                 limitComp
         );
 
-        ctx.getSource().sendSuccess(() -> successMessage, true);
+        ctx.getSource().sendSuccess(successMessage, true);
         return count;
     }
 
@@ -289,7 +291,7 @@ public class CommandExecutor {
                 count
         );
 
-        ctx.getSource().sendSuccess(() -> successMessage, true);
+        ctx.getSource().sendSuccess(successMessage, true);
         return count;
     }
 
@@ -314,7 +316,7 @@ public class CommandExecutor {
 
             MutableComponent playerName = mes.CharM(profile.getName()).withStyle(ChatFormatting.GOLD);
 
-            ctx.getSource().sendSuccess(() -> Component.translatable(
+            ctx.getSource().sendSuccess(Component.translatable(
                     "createlazytick.stats.player_quota",
                     playerName,
                     usedDisplay,

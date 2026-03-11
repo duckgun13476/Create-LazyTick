@@ -42,7 +42,7 @@ public abstract class _SlotBase extends SlotMenu {
             }
             else if (!this.moveItemStackTo(stack,SlotNormal,SlotNormalCount,true)) return ItemStack.EMPTY;
 
-            if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY);
+            if (stack.isEmpty()) slot.set(ItemStack.EMPTY);
             else slot.setChanged();
             if (stack.getCount() == itemstack.getCount()) return ItemStack.EMPTY;
             slot.onTake(player, stack);

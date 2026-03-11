@@ -1,5 +1,5 @@
 modLoader = "javafml" #mandatory
-loaderVersion = "[47,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+loaderVersion = "[40,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 license = "MIT"
 
 
@@ -30,8 +30,8 @@ license = "MIT"
 [[dependencies."${mod_id}"]]
     modId="create"
     mandatory=true
-    versionRange="[0.5.1.f,0.5.2)"
-    ordering="AFTER"
+    versionRange="[0.5.1.e,0.5.2)"
+    ordering="NONE"
     side="BOTH"
 
 [[mixins]]

@@ -138,9 +138,9 @@ public class ForcedActiveManager {
 
     @SuppressWarnings("resource")
     public static boolean canPlayerActivate(BlockEntity blockEntity, Player player) {
-        if (player.level().isClientSide) return true;
+        if (player.level.isClientSide) return true;
 
-        ServerLevel level = (ServerLevel) player.level();
+        ServerLevel level = (ServerLevel) player.level;
         UUID playerUUID = player.getUUID();
         LazyTickSavedLimitList limitData = LazyTickSavedLimitList.get(level);
         int limit = limitData.getLimit(player.getUUID());
