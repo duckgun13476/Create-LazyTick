@@ -17,14 +17,6 @@ import static net.pinkcats.createlazytick.CreateLazyTick.getModLoadingContextVia
 @Mod.EventBusSubscriber(modid = CreateLazyTick.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientInit {
 
-    @SubscribeEvent
-    public static void onBuildCreativeTab(BuildCreativeModeTabContentsEvent event) {
-
-        if (event.getTab() == AllCreativeModeTabs.BASE_CREATIVE_TAB.get()) {
-            event.accept(LazyTickItem.CLOCK.get());
-        }
-    }
-
     public static void initClient() {
         ModLoadingContext modLoadingContext = getModLoadingContextViaReflection();
         modLoadingContext.registerExtensionPoint(
