@@ -1,11 +1,9 @@
 package net.pinkcats.createlazytick;
 
 import com.mojang.logging.LogUtils;
-import com.simibubi.create.AllCreativeModeTabs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -21,7 +19,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.Gui.Menu.MenuInit;
-import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
@@ -137,13 +134,6 @@ public class CreateLazyTick {
 
         }
 
-
-        @SubscribeEvent
-        public static void addToCreateTabs(BuildCreativeModeTabContentsEvent event) {
-            if (event.getTab() == AllCreativeModeTabs.BASE_CREATIVE_TAB.get()) {
-                event.accept(LazyTickItem.CLOCK.get());
-            }
-        }
     }
 
 

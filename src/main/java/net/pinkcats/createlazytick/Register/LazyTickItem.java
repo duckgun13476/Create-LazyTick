@@ -1,5 +1,6 @@
 package net.pinkcats.createlazytick.Register;
 
+import com.simibubi.create.AllCreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -16,6 +17,7 @@ public class LazyTickItem {
 
     public static final RegistryObject<Item> CLOCK = ITEMS.register("clock",
             () -> new LazyTickClockItem(new Item.Properties()
+                    .tab(AllCreativeModeTabs.BASE_CREATIVE_TAB)
                     .stacksTo(1)
                     .rarity(EPIC)));
 
