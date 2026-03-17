@@ -3,6 +3,7 @@ package net.pinkcats.createlazytick.mixin.OptElement.basin;
 import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinOperatingBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinRecipe;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -53,6 +54,9 @@ public abstract class BasinOperatingLazyTickMixin {
     private int clt$staleRetryBudget = 0;
     @Unique
     private boolean clt$awaitingStaleRetryResult = false;
+
+    @Unique
+    private float clt$lastSpeed = 0f;
 
     @Unique
     private void clt$sendData() {
@@ -201,6 +205,14 @@ public abstract class BasinOperatingLazyTickMixin {
                 || !isBasinOptimizationSafe) return;
 
         if (isRunning()) return;
+
+        float currentSpeed = ((KineticBlockEntity) (Object) this).getSpeed();
+        if (clt$lastSpeed == 0f && currentSpeed != 0f) {
+            clt$cachedSnapshot = null;
+            clt$staleRetryBudget = 0;
+            clt$awaitingStaleRetryResult = false;
+        }
+        clt$lastSpeed = currentSpeed;
 
         Optional<BasinBlockEntity> basinOpt = getBasin();
         if (basinOpt.isEmpty()) return;
