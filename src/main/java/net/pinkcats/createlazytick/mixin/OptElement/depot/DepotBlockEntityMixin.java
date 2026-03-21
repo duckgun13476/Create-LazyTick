@@ -25,4 +25,5 @@ public abstract class DepotBlockEntityMixin extends SmartBlockEntity {
         // Disabled for Depot: avoid Create ValueSettings UI channel path in mixin.
         // Custom Nut UI is opened from LazyTickClockItem.useOn().
     }
+
 }

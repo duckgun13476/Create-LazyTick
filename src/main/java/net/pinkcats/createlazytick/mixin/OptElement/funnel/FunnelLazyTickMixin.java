@@ -5,6 +5,7 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Funnel;
+import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.belt.BeltHelper;
@@ -29,6 +30,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -168,13 +170,23 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             return;
         }
 
-        if (!(this instanceof ISmartBlockEntityControl control)) {
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
             mes.error("BlockEntity is not a SmartBlockEntityControl!");
             return;}
 
 
         super.tick();
         flap.tickChaser();
+
+        NetworkSyncHelper.createLazyTick$syncPacketData(
+                control,
+                this.level,
+                this.worldPosition,
+                control.createLazyTick$getCurrentSuperTick(),
+                ServerConfig.getFunnelDelayMax(),
+                this
+        );
 
         if (level.isClientSide) {
             ci.cancel();
@@ -241,7 +253,8 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             return;
         }
 
-        if (!(this instanceof ISmartBlockEntityControl control)) {
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
             //mes.error("BlockEntity is not a SmartBlockEntityControl!");
             return;}
 

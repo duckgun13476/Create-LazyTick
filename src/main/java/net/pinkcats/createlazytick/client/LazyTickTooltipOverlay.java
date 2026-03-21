@@ -20,12 +20,14 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.pinkcats.createlazytick.Channel.LazyTickClientStateCache;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickDepotDebug;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +109,24 @@ public class LazyTickTooltipOverlay {
             return tooltip;
         }
 
-        if (blockEntity instanceof ISmartBlockEntityControl control) {
+        LazyTickTooltipRenderer.requestState(targetPos);
+
+        CompoundTag syncedTag = LazyTickClientStateCache.get(mc.level.dimension().location().toString(), targetPos);
+        if (syncedTag != null && hasLazyTickState(syncedTag)) {
+            LazyTickTooltipRenderer.appendSnapshotInfo(whiteItem, syncedTag, tooltip, whiteItem.getMaxTick());
+            if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
+                LazyTickDepotDebug.logBlockEntity(mc, "overlay_build", targetPos, blockEntity,
+                        "cache path used, keys=" + syncedTag.getAllKeys() + ", size=" + tooltip.size());
+            }
+            if (!tooltip.isEmpty()) {
+                return tooltip;
+            }
+        }
+
+        ISmartBlockEntityControl control = blockEntity instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control(blockEntity);
+        if (control != null) {
             LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, 0, whiteItem.getMaxTick());
             if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
                 LazyTickDepotDebug.logBlockEntity(mc, "overlay_build", targetPos, blockEntity,
@@ -119,7 +138,7 @@ public class LazyTickTooltipOverlay {
         }
 
         CompoundTag tag = blockEntity.saveWithoutMetadata(mc.level.registryAccess());
-        LazyTickTooltipRenderer.appendSnapshotInfo(tag, tooltip, whiteItem.getMaxTick());
+        LazyTickTooltipRenderer.appendSnapshotInfo(whiteItem, tag, tooltip, whiteItem.getMaxTick());
         if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
             LazyTickDepotDebug.logBlockEntity(mc, "overlay_build", targetPos, blockEntity,
                     "snapshot path used, keys=" + tag.getAllKeys() + ", size=" + tooltip.size());
@@ -206,5 +225,14 @@ public class LazyTickTooltipOverlay {
 
     private static boolean isActuallyWearingGoggles(Minecraft mc) {
         return AllItems.GOGGLES.isIn(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD));
+    }
+
+    private static boolean hasLazyTickState(CompoundTag tag) {
+        return tag.contains("cltCurrentInterval")
+                || tag.contains("cltDynamic")
+                || tag.contains("cltForced")
+                || tag.contains("cltOwner")
+                || tag.contains("cltExtraData")
+                || tag.contains("cltTier");
     }
 }

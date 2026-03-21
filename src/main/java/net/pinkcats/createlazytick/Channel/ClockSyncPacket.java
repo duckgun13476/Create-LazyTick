@@ -1,16 +1,20 @@
 package net.pinkcats.createlazytick.Channel;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -77,8 +81,35 @@ public class ClockSyncPacket implements CustomPacketPayload {
             if (isQuery) {
                 Level level = serverPlayer.level();
                 if (level.isLoaded(pos)) {
-                    if (level.getBlockEntity(pos) instanceof ISmartBlockEntityControl control) {
-                        control.createLazyTick$sendBlockUpdated();
+                    BlockEntity blockEntity = level.getBlockEntity(pos);
+                    if (blockEntity != null) {
+                        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(blockEntity);
+                        CompoundTag state = blockEntity.saveWithoutMetadata(level.registryAccess());
+                        ISmartBlockEntityControl control = blockEntity instanceof ISmartBlockEntityControl smart
+                                ? smart
+                                : SmartLazyTickStateHelper.control(blockEntity);
+                        if (control != null) {
+                            state.putInt("cltCurrentInterval", Math.max(1, control.createLazyTick$getCurrentSuperTick()));
+                            state.putInt("cltDynamic", control.createLazyTick$getDynamicValue());
+                            state.putInt("cltForced", control.createLazyTick$getForcedValue());
+                            state.putInt("cltExtraData", control.lazytick$getExtraData());
+                            state.putInt("cltTier", control.lazytick$getSyncedTier().ordinal());
+                            String owner = control.createLazyTick$getOwnerName();
+                            if (owner != null && !owner.isEmpty()) {
+                                state.putString("cltOwner", owner);
+                            }
+                            control.createLazyTick$sendBlockUpdated();
+                        } else if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
+                            mes.warn("[Network][clock_sync][server] depot query target is not ISmartBlockEntityControl: "
+                                    + blockEntity.getClass().getName());
+                        }
+                        if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
+                            mes.info("[Network][clock_sync][server] sending state for depot keys=" + state.getAllKeys());
+                        }
+                        CLTChannel.sendToPlayer(
+                                new LazyTickStatePacket(level.dimension().location().toString(), pos, state),
+                                serverPlayer
+                        );
                     }
                 }
                 return;

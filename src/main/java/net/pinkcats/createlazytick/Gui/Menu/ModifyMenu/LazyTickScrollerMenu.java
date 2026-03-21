@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import java.util.Map;
@@ -50,7 +51,10 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
         }
 
         BlockEntity be = inventory.player.level().getBlockEntity(getPos());
-        if (!(be instanceof ISmartBlockEntityControl control)) {
+        ISmartBlockEntityControl control = be instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control(be);
+        if (control == null) {
             return;
         }
 
@@ -70,7 +74,10 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
         }
 
         BlockEntity be = player.level().getBlockEntity(getPos());
-        if (!(be instanceof ISmartBlockEntityControl control)) {
+        ISmartBlockEntityControl control = be instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control(be);
+        if (control == null) {
             return;
         }
         if (!ForcedActiveManager.canPlayerActivate(be, player)) {
@@ -82,7 +89,12 @@ public class LazyTickScrollerMenu extends NutKineticMenu.NutItemMenu {
         control.createLazyTick$setOwnerName(player.getName().getString());
         control.createLazyTick$setOwnerUUID(player.getUUID());
         LazyTickLogic.switchMode(control, forced, clamped);
-        LazyTickLogic.updateState(control);
+        if (SmartLazyTickStateHelper.supports(be)) {
+            LazyTickLogic.updateState(control, be);
+            control.createLazyTick$sendBlockUpdated();
+        } else {
+            LazyTickLogic.updateState(control);
+        }
 
         uiPercent = clamped;
         uiForced = forced;

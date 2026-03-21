@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.helper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.pinkcats.createlazytick.Channel.ClientData;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -18,6 +19,17 @@ public class NetworkSyncHelper {
             BlockPos pos,
             int currentDelayTick,
             int maxDelayTick
+    ) {
+        createLazyTick$syncPacketData(control, level, pos, currentDelayTick, maxDelayTick, null);
+    }
+
+    public static void createLazyTick$syncPacketData(
+            ISmartBlockEntityControl control,
+            Level level,
+            BlockPos pos,
+            int currentDelayTick,
+            int maxDelayTick,
+            BlockEntity blockEntity
     ) {
         //mes.error(PacketCache.size());
         if (level == null || level.isClientSide) return;
@@ -41,7 +53,11 @@ public class NetworkSyncHelper {
             control.lazytick$setSyncedTier(currentDelayTick, maxDelayTick);
 
             it.remove();
-            LazyTickLogic.updateState(control);
+            if (blockEntity != null) {
+                LazyTickLogic.updateState(control, blockEntity);
+            } else {
+                LazyTickLogic.updateState(control);
+            }
             break;
         }
             //System.out.println("---");

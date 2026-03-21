@@ -19,6 +19,7 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
 
@@ -510,7 +511,10 @@ public class CommandHelper {
                 BlockEntity be = level.getBlockEntity(pos);
 
                 // BE不存在/不是ISBEControl指定的元件/处于默认状态则清理
-                if (!(be instanceof ISmartBlockEntityControl control) || control.lazytick$isDefaultState()) {
+                ISmartBlockEntityControl control = be instanceof ISmartBlockEntityControl smart
+                        ? smart
+                        : SmartLazyTickStateHelper.control(be);
+                if (control == null || control.lazytick$isDefaultState()) {
                     ForcedActiveManager.unregister(level, pos);
 
                     CreateLazyTick.LOGGER.debug("Cleared invalid lazytick data entries:{}",  pos.toShortString());

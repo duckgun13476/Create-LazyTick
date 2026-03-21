@@ -27,7 +27,9 @@ import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.LazyTickScrollerOpenHelper;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickMode;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
+import net.pinkcats.createlazytick.Gui.mes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -94,7 +96,8 @@ public class LazyTickClockItem extends Item {
         //    return InteractionResult.CONSUME;
         //}
 
-        if (be instanceof ISmartBlockEntityControl control) {
+        ISmartBlockEntityControl control = resolveControl(be);
+        if (control != null) {
 
             LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(be);
 
@@ -150,8 +153,13 @@ public class LazyTickClockItem extends Item {
             control.createLazyTick$setOwnerUUID(player.getUUID());
 
             // 7. 应用新状态 & 触发逻辑更新
-            applyPercentage(control, nextPercentage, targetIsDynamic);
-            LazyTickLogic.updateState(control);
+            applyPercentage(be, control, nextPercentage, targetIsDynamic);
+            if (SmartLazyTickStateHelper.supports(be)) {
+                LazyTickLogic.updateState(control, be);
+                control.createLazyTick$sendBlockUpdated();
+            } else {
+                LazyTickLogic.updateState(control);
+            }
 
             // 8. 反馈消息 & 添加冷却 (0.5秒)
             int maxDelayTick = whiteItem.getMaxTick();
@@ -172,6 +180,11 @@ public class LazyTickClockItem extends Item {
             player.getCooldowns().addCooldown(this, 10);
 
             return InteractionResult.SUCCESS;
+        }
+
+        if (LazyTickTooltipWhiteList.getByEntity(be) == LazyTickTooltipWhiteList.DEPOT) {
+            mes.warn("[Clock][useOn] depot target is not ISmartBlockEntityControl on server: "
+                    + (be == null ? "null" : be.getClass().getName()));
         }
 
         return InteractionResult.PASS;
@@ -227,7 +240,7 @@ public class LazyTickClockItem extends Item {
     /**
      * 将百分比应用到机器
      */
-    private void applyPercentage(ISmartBlockEntityControl control, int percent, boolean isDynamicMode) {
+    private void applyPercentage(BlockEntity blockEntity, ISmartBlockEntityControl control, int percent, boolean isDynamicMode) {
         if (percent == 0) {
             // 0% -> 全速 (关闭优化)
             LazyTickLogic.switchMode(control, true, 0);
@@ -240,7 +253,7 @@ public class LazyTickClockItem extends Item {
         }
 
         // 2. 更新 UI
-        if (control instanceof SmartBlockEntity be) {
+        if (blockEntity instanceof SmartBlockEntity be) {
             LazyTickScrollBehaviour behaviour = LazyTickLogic.getBehaviour(be, LazyTickScrollBehaviour.class);
 
             if (behaviour != null) {
@@ -257,5 +270,12 @@ public class LazyTickClockItem extends Item {
                 behaviour.setValue(targetUiValue);
             }
         }
+    }
+
+    private ISmartBlockEntityControl resolveControl(BlockEntity blockEntity) {
+        if (blockEntity instanceof ISmartBlockEntityControl control) {
+            return control;
+        }
+        return SmartLazyTickStateHelper.control(blockEntity);
     }
 }
