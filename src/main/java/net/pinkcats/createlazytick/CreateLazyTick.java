@@ -20,10 +20,13 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.pinkcats.NutUI.menu.NutKineticMenu;
 import net.pinkcats.createlazytick.Gui.Menu.MenuInit;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex;
+import net.pinkcats.createlazytick.client.LazyTickTooltipOverlay;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.config.ClientConfig;
 
@@ -74,6 +77,7 @@ public class CreateLazyTick {
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
 
         if (isClient()) {
+            LOGGER.info("[CreateLazyTick][ClientBootstrap] client environment detected, starting client bootstrap");
             ClientBootstrap.init(modContainer);
         }
     }
@@ -130,6 +134,14 @@ public class CreateLazyTick {
         }
 
         @SubscribeEvent
+        public static void registerGuiOverlays(RegisterGuiLayersEvent event) {
+            LOGGER.info("[CreateLazyTick][ClientInit] registering independent LazyTick tooltip overlay");
+            event.registerAbove(VanillaGuiLayers.HOTBAR,
+                    CreateLazyTick.DropResourceLocation(MODID, "lazytick_tooltip"),
+                    LazyTickTooltipOverlay.OVERLAY);
+        }
+
+        @SubscribeEvent
         public static void addToCreateTabs(BuildCreativeModeTabContentsEvent event) {
             if (event.getTab() == AllCreativeModeTabs.BASE_CREATIVE_TAB.get()) {
                 event.accept(LazyTickItem.CLOCK.get());
@@ -160,9 +172,11 @@ public class CreateLazyTick {
 
         static void init(ModContainer modContainer) {
             try {
+                LOGGER.info("[CreateLazyTick][ClientBootstrap] loading ClientInit via reflection");
                 Class<?> clientInit = Class.forName("net.pinkcats.createlazytick.Register.ClientInit");
                 clientInit.getMethod("initClient", ModContainer.class)
                         .invoke(null, modContainer);
+                LOGGER.info("[CreateLazyTick][ClientBootstrap] ClientInit.initClient completed");
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException("CreateLazyTick failed to initialize client bootstrap", e);
             }

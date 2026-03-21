@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.helper.tooltip;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.Channel.CLTChannel;
 import net.pinkcats.createlazytick.Channel.ClockSyncPacket;
@@ -91,6 +92,34 @@ public class LazyTickTooltipRenderer {
             }
             tooltip.add(Component.translatable("createlazytick.tooltip.global_config_note")
                     .withStyle(ChatFormatting.DARK_GRAY));
+        }
+    }
+
+    public static void appendSnapshotInfo(CompoundTag tag, List<Component> tooltip, int maxDelayTick) {
+        int dynamicValue = tag.contains("cltDynamic") ? tag.getInt("cltDynamic") : 100;
+        int forcedValue = tag.contains("cltForced") ? tag.getInt("cltForced") : -1;
+        int currentInterval = tag.contains("cltCurrentInterval") ? Math.max(1, tag.getInt("cltCurrentInterval")) : 1;
+        String operator = tag.contains("cltOwner") ? tag.getString("cltOwner") : "";
+
+        ToolTipStatus(tooltip);
+
+        if (ClientConfig.showModeTooltip()) {
+            tooltip.addAll(LazyTickMode.getDisplayComponents(dynamicValue, forcedValue, maxDelayTick));
+        }
+
+        if (ClientConfig.showTierTooltip()) {
+            int limitPercent = forcedValue > 0 ? forcedValue : dynamicValue;
+            tooltip.addAll(LazyTickTier.fromTicks(currentInterval, maxDelayTick)
+                    .getDisplayComponents(currentInterval, maxDelayTick, limitPercent));
+        }
+
+        if (!operator.isEmpty()) {
+            tooltip.add(Component.translatable("createlazytick.tooltip.operator", operator)
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (ClientConfig.showDescriptionTooltip()) {
+            tooltip.add(LazyTickMode.getModeDescription(dynamicValue, forcedValue));
         }
     }
 

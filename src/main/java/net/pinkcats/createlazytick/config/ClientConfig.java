@@ -32,6 +32,7 @@ public class ClientConfig {
     private static final ModConfigSpec.BooleanValue SHOW_MODE_TOOLTIP;
     private static final ModConfigSpec.BooleanValue SHOW_TIER_TOOLTIP;
     private static final ModConfigSpec.BooleanValue SHOW_DESCRIPTION_TOOLTIP;
+    private static final ModConfigSpec.BooleanValue ENABLE_DEPOT_DEBUG;
 
     static {
         BUILDER.comment("Client-side Visual Settings").push("ui-visual");
@@ -68,6 +69,10 @@ public class ClientConfig {
         SHOW_DESCRIPTION_TOOLTIP = BUILDER
                 .comment("Whether to show the detailed description of the Lazy Tick mode.")
                 .define("show_description_tooltip", true);
+
+        ENABLE_DEPOT_DEBUG = BUILDER
+                .comment("Enable focused debug logging for the Depot tooltip/UI path.")
+                .define("enable_depot_debug", false);
 
         BUILDER.pop();
         SPEC = BUILDER.build();
@@ -121,6 +126,15 @@ public class ClientConfig {
     public static boolean showDescriptionTooltip() {
         try {
             return SHOW_DESCRIPTION_TOOLTIP.get();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean enableDepotDebug() {
+        try {
+            return ENABLE_DEPOT_DEBUG.get();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return false;
