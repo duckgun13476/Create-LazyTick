@@ -40,6 +40,8 @@
   ],
   "client": [
     "Create.Client.ChuteGoggleMixin",
+    "Create.Client.DepotGoggleMixin",
+    "Create.Client.GoggleOverlayRendererDebugMixin",
     "Create.Client.ItemDrainGoggleMixin",
     "Create.Client.KineticBlockEntityGoggleMixin",
     "Create.Client.SmartBlockEntityGoggleMixin"
