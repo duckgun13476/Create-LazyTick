@@ -107,17 +107,6 @@ public class LazyTickTooltipOverlay {
             return tooltip;
         }
 
-        if (blockEntity instanceof IHaveGoggleInformation goggleInformation) {
-            boolean added = goggleInformation.addToGoggleTooltip(tooltip, mc.player != null && mc.player.isShiftKeyDown());
-            if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
-                LazyTickDepotDebug.logBlockEntity(mc, "overlay_build", targetPos, blockEntity,
-                        "goggle tooltip path used, added=" + added + ", size=" + tooltip.size());
-            }
-            if (!tooltip.isEmpty()) {
-                return tooltip;
-            }
-        }
-
         if (blockEntity instanceof ISmartBlockEntityControl control) {
             LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, 0, whiteItem.getMaxTick());
             if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
@@ -134,6 +123,17 @@ public class LazyTickTooltipOverlay {
         if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
             LazyTickDepotDebug.logBlockEntity(mc, "overlay_build", targetPos, blockEntity,
                     "snapshot path used, keys=" + tag.getAllKeys() + ", size=" + tooltip.size());
+        }
+        if (!tooltip.isEmpty()) {
+            return tooltip;
+        }
+
+        if (blockEntity instanceof IHaveGoggleInformation goggleInformation) {
+            boolean added = goggleInformation.addToGoggleTooltip(tooltip, mc.player != null && mc.player.isShiftKeyDown());
+            if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
+                LazyTickDepotDebug.logBlockEntity(mc, "overlay_build", targetPos, blockEntity,
+                        "goggle tooltip fallback used, added=" + added + ", size=" + tooltip.size());
+            }
         }
 
         return tooltip;
