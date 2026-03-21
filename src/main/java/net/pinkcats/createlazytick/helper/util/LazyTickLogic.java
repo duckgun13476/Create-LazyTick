@@ -51,7 +51,14 @@ public class LazyTickLogic {
      * @param control 接口实例
      */
     public static void updateState(ISmartBlockEntityControl control) {
-        if (!(control instanceof BlockEntity be) || be.getLevel() == null || be.getLevel().isClientSide) {
+        if (!(control instanceof BlockEntity be)) {
+            return;
+        }
+        updateState(control, be);
+    }
+
+    public static void updateState(ISmartBlockEntityControl control, BlockEntity be) {
+        if (be.getLevel() == null || be.getLevel().isClientSide) {
             return;
         }
 

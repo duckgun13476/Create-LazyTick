@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 
 import java.util.List;
@@ -31,7 +32,10 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
     @Deprecated
     public static void addTo(SmartBlockEntity be, List<BlockEntityBehaviour> behaviours) {
         // 1. Check safety
-        if (!(be instanceof ISmartBlockEntityControl control)) {
+        ISmartBlockEntityControl control = be instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control(be);
+        if (control == null) {
             return;
         }
 
@@ -64,7 +68,12 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
                 // 0:强制活跃 (关闭优化)
                 LazyTickLogic.switchMode(control, true, 0);
             }
-            LazyTickLogic.updateState(control);
+            if (SmartLazyTickStateHelper.supports(be)) {
+                LazyTickLogic.updateState(control, be);
+                control.createLazyTick$sendBlockUpdated();
+            } else {
+                LazyTickLogic.updateState(control);
+            }
         });
 
         // 6. Init ui renderer(value) (value of NBT/Memory -> UI)
@@ -132,7 +141,10 @@ public class LazyTickScrollBehaviour extends ScrollValueBehaviour {
             return; // 不保存数值,不播放音效
         }
 
-        if (blockEntity instanceof ISmartBlockEntityControl control) {
+        ISmartBlockEntityControl control = blockEntity instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control(blockEntity);
+        if (control != null) {
             control.createLazyTick$setOwnerName(player.getName().getString());
             control.createLazyTick$setOwnerUUID(player.getUUID());
         }

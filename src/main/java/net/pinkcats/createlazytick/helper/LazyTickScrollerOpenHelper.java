@@ -20,6 +20,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.pinkcats.NutUI.menu.extensions.NutMenuExtensionRegistry;
 import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 
 import static net.pinkcats.NutUI.menu.architect.Helper.MenuHelper.CreateNutMenu;
 import static net.pinkcats.createlazytick.Gui.Menu.MenuInit.LazyTickScrollerBase;
@@ -43,7 +44,8 @@ public final class LazyTickScrollerOpenHelper {
         if (!isLazyTickScrollerTarget(block)) {
             return false;
         }
-        if (!(level.getBlockEntity(targetPos) instanceof ISmartBlockEntityControl)) {
+        if (!(level.getBlockEntity(targetPos) instanceof ISmartBlockEntityControl)
+                && SmartLazyTickStateHelper.control(level.getBlockEntity(targetPos)) == null) {
             return false;
         }
 

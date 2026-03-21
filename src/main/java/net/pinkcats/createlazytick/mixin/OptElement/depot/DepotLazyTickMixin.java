@@ -25,6 +25,7 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -106,7 +107,8 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
         super.tick();
 
-        if (!(this.blockEntity instanceof ISmartBlockEntityControl control)) {
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this.blockEntity);
+        if (control == null) {
             mes.error("BlockEntity is not a SmartBlockEntityControl!");
             return;
         }
@@ -118,7 +120,8 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
                 this.blockEntity.getLevel(),
                 this.blockEntity.getBlockPos(),
                 control.createLazyTick$getCurrentSuperTick(),
-                ServerConfig.getDepotDelayMax());
+                ServerConfig.getDepotDelayMax(),
+                this.blockEntity);
 
 
         for (Iterator<TransportedItemStack> iterator = incoming.iterator(); iterator.hasNext();) {
@@ -225,7 +228,12 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private void handleBeltFunnelOutput(CallbackInfoReturnable<Boolean> cir) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {return;}
 
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this.blockEntity);
+        if (control == null) {
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
+        }
 
         BlockState funnel = getWorld().getBlockState(getPos().above());
         Direction funnelFacing = AbstractFunnelBlock.getFunnelFacing(funnel);
@@ -297,7 +305,8 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Unique
     public int createLazyTick$getCurrentDelayTick() {
-        return ((ISmartBlockEntityControl) this.blockEntity).createLazyTick$getCurrentSuperTick();
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this.blockEntity);
+        return control == null ? 1 : control.createLazyTick$getCurrentSuperTick();
     }
 
     @Unique

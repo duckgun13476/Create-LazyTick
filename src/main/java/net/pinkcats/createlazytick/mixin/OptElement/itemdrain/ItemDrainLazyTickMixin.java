@@ -20,6 +20,7 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -44,10 +45,14 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
             return;
         }
 
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
+            ci.cancel();
+            return;
+        }
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getCurrentSuperTick(), ServerConfig.getItemDrainDelayMax());
+                this.level, this.worldPosition, control.createLazyTick$getCurrentSuperTick(), ServerConfig.getItemDrainDelayMax(), this);
 
         /*if(!level.isClientSide()) {
             System.out.println("ItemDrain:" + createLazyTick$itemDrainTick + "|" + control.createLazyTick$getLazyTickInterval());
@@ -274,7 +279,10 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
     @Unique
     private void createLazyTick$applyBackoff() {
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
+            return;
+        }
         createLazyTick$itemDrainTick = 0;
 
         int currentInterval = control.createLazyTick$getCurrentSuperTick();
@@ -286,7 +294,10 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
     @Unique
     private void createLazyTick$resetDelayTick() {
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
+            return;
+        }
         createLazyTick$itemDrainTick = 0;
 
         LazyTickLogic.setIntervalSafe(control, 1);

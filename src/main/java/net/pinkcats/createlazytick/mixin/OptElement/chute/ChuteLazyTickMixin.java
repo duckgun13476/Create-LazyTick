@@ -17,6 +17,7 @@ import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -79,7 +80,10 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     @Unique
     private void createLazyTick$LazyTickChute(boolean CanDownload){
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
+            return;
+        }
 
         int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
         if (level != null && !level.isClientSide) {
@@ -104,10 +108,14 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
         super.tick();
 
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this;
+        ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this);
+        if (control == null) {
+            ci.cancel();
+            return;
+        }
 
         NetworkSyncHelper.createLazyTick$syncPacketData(control,
-                this.level, this.worldPosition, control.createLazyTick$getCurrentSuperTick(), ServerConfig.getChuteDelayMax());
+                this.level, this.worldPosition, control.createLazyTick$getCurrentSuperTick(), ServerConfig.getChuteDelayMax(), this);
 
 
         if (level != null && !level.isClientSide) canPickUpItems = canDirectlyInsert();
