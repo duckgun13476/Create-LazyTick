@@ -7,6 +7,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.pinkcats.createlazytick.config.ServerConfig;
 
 import static net.pinkcats.createlazytick.CreateLazyTick.LOGGER;
 import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
@@ -18,7 +19,9 @@ public class CLTChannel {
 
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        LOGGER.info("[CreateLazyTick][Network] registering CLT payload handlers");
+        if (ServerConfig.getEnableInfoLog()) {
+            LOGGER.info("[CreateLazyTick][Network] registering CLT payload handlers");
+        }
         final PayloadRegistrar registrar = event.registrar(MODID)
                 .versioned(PROTOCOL_VERSION);
 

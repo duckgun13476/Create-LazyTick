@@ -52,7 +52,7 @@ public class LazyTickStatePacket implements CustomPacketPayload {
                     || state.contains("cltDynamic")
                     || state.contains("cltForced")
                     || state.contains("cltExtraData")) {
-                mes.info("[Network][lazytick_state][client] received state pos=" + pos + " keys=" + state.getAllKeys());
+                mes.debug("[Network][lazytick_state][client] received state pos=" + pos + " keys=" + state.getAllKeys());
             }
         });
     }

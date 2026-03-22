@@ -14,6 +14,8 @@ public class ServerConfig {
 
     // General
     private static final ModConfigSpec.BooleanValue ENABLE_LAZY_TICK;
+    private static final ModConfigSpec.BooleanValue ENABLE_INFO_LOG;
+    private static final ModConfigSpec.BooleanValue ENABLE_DEBUG_LOG;
     private static final ModConfigSpec.IntValue GLOBAL_CACHE_RECORD_DELAY;
 
     // Fluids
@@ -73,6 +75,18 @@ public class ServerConfig {
                 .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable lazy tick mixin")
                 .define("enable_lazy_tick", true);
+
+        ENABLE_INFO_LOG = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Whether to print CreateLazyTick info/warn logs.")
+                .define("enable_info_log", true);
+
+        ENABLE_DEBUG_LOG = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Whether to print CreateLazyTick debug logs.")
+                .define("enable_debug_log", false);
 
         GLOBAL_CACHE_RECORD_DELAY = BUILDER
                 .comment("")
@@ -347,6 +361,22 @@ public class ServerConfig {
 
     public static int getGlobalCacheRecordDelay() {
         return GLOBAL_CACHE_RECORD_DELAY.get();
+    }
+
+    public static boolean getEnableInfoLog() {
+        try {
+            return ENABLE_INFO_LOG.get();
+        } catch (IllegalStateException ignored) {
+            return true;
+        }
+    }
+
+    public static boolean getEnableDebugLog() {
+        try {
+            return ENABLE_DEBUG_LOG.get();
+        } catch (IllegalStateException ignored) {
+            return false;
+        }
     }
 
     public static boolean getEnableLazyFluid() {

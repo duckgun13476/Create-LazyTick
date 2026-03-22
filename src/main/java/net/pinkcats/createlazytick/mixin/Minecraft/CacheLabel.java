@@ -27,7 +27,9 @@ public class CacheLabel {
     @Inject(method = "reloadResources", at = @At("HEAD"), remap = false)
     private void ReloadLabel(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         IsServerReload = true;
-        LOGGER.info("[CreateLazyTick] clearing cache...");
+        if (ServerConfig.getEnableInfoLog()) {
+            LOGGER.info("[CreateLazyTick] clearing cache...");
+        }
 
         // Clear Spout Cache.
         CAN_FILL_CACHE.clear();
@@ -46,7 +48,9 @@ public class CacheLabel {
     @Inject(method = "reloadResources", at = @At("RETURN"), remap = false)
     private void ReloadEnd(Collection<String> collection, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         IsServerReload = true;
-        LOGGER.info("[CreateLazyTick] End cache...");
+        if (ServerConfig.getEnableInfoLog()) {
+            LOGGER.info("[CreateLazyTick] End cache...");
+        }
 
 
     }

@@ -104,7 +104,7 @@ public class ClockSyncPacket implements CustomPacketPayload {
                                     + blockEntity.getClass().getName());
                         }
                         if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
-                            mes.info("[Network][clock_sync][server] sending state for depot keys=" + state.getAllKeys());
+                            mes.debug("[Network][clock_sync][server] sending state for depot keys=" + state.getAllKeys());
                         }
                         CLTChannel.sendToPlayer(
                                 new LazyTickStatePacket(level.dimension().location().toString(), pos, state),

@@ -19,6 +19,7 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import net.pinkcats.createlazytick.manager.LazyTickStatCache;
@@ -517,7 +518,9 @@ public class CommandHelper {
                 if (control == null || control.lazytick$isDefaultState()) {
                     ForcedActiveManager.unregister(level, pos);
 
-                    CreateLazyTick.LOGGER.debug("Cleared invalid lazytick data entries:{}",  pos.toShortString());
+                    if (ServerConfig.getEnableDebugLog()) {
+                        CreateLazyTick.LOGGER.debug("Cleared invalid lazytick data entries:{}",  pos.toShortString());
+                    }
                     // 跳过本次渲染，不显示在列表里
                     // (注意:会导致当前页显示少一行,但无伤大雅(能跑就行))
                     continue;

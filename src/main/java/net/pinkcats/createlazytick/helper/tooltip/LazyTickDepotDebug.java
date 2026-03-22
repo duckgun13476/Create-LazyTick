@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.config.ClientConfig;
+import net.pinkcats.createlazytick.config.ServerConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,7 @@ public final class LazyTickDepotDebug {
     }
 
     public static void log(Minecraft mc, String stage, String detail) {
-        if (!enabled()) {
+        if (!enabled() || !ServerConfig.getEnableDebugLog()) {
             return;
         }
 
@@ -31,7 +32,7 @@ public final class LazyTickDepotDebug {
             return;
         }
         LAST_LOG_TICKS.put(throttleKey, gameTime);
-        CreateLazyTick.LOGGER.info("[CreateLazyTick][DepotDebug][{}] {}", stage, detail);
+        CreateLazyTick.LOGGER.debug("[CreateLazyTick][DepotDebug][{}] {}", stage, detail);
     }
 
     public static void logBlockEntity(Minecraft mc, String stage, BlockPos pos, BlockEntity blockEntity, String detail) {
