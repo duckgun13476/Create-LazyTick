@@ -5,6 +5,7 @@ import com.simibubi.create.content.logistics.depot.DepotBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickDepotDebug;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
@@ -30,7 +31,10 @@ public class DepotGoggleMixin implements IHaveGoggleInformation {
             return false;
         }
 
-        if ((Object) this instanceof ISmartBlockEntityControl control) {
+        ISmartBlockEntityControl control = (Object) this instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control(depot);
+        if (control != null) {
             int maxDelayTick = LazyTickTooltipWhiteList.DEPOT.getMaxTick();
             LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, 0, maxDelayTick);
             LazyTickDepotDebug.logBlockEntity(mc, "depot_goggle_entry", depot.getBlockPos(), depot,

@@ -10,7 +10,6 @@ license = "MIT"
     displayName = "${mod_name}" #mandatory
     authors = "${mod_authors}" #optional
     description = '''${mod_description}'''
-    mixins = ["${mod_id}.mixins.json"]
 
 [[dependencies."${mod_id}"]]
     modId = "neoforge"
@@ -33,5 +32,5 @@ license = "MIT"
     ordering="NONE"
     side="BOTH"
 
-#[[mixins]]
-#    config = "${mod_id}.mixins.json"
+[[mixins]]
+    config = "${mod_id}.mixins.json"
