@@ -6,7 +6,6 @@
   "refmap": "createlazytick.refmap.json",
   "mixins": [
     "compat.createenchantment.OpenEndedPipeMixin",
-    "Create.DepotStatePersistenceMixin",
     "Create.SmartBlockEntityControlMixin",
     "Create.ScrollOptionBehaviourGuardMixin",
     "Minecraft.CacheLabel",
