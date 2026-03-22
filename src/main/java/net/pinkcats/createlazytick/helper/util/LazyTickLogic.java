@@ -29,7 +29,7 @@ public class LazyTickLogic {
     }
 
     public static void switchMode(ISmartBlockEntityControl control, boolean isForcedMode, int value) {
-        if (isForcedMode) {
+        if (isForcedMode || value == 0) {
             // === 切换到强制模式 ===
             // 1. 设置强制值 (0~100)
             control.createLazyTick$setForcedValue(value);
