@@ -172,8 +172,10 @@ public class LazyTickTooltipOverlay {
 
         int width = guiGraphics.guiWidth();
         int height = guiGraphics.guiHeight();
-        int posX = width / 2 + LazyTickCreateOverlaySuppressor.getOverlayOffsetX();
-        int posY = height / 2 + LazyTickCreateOverlaySuppressor.getOverlayOffsetY();
+        int overlayOffsetX = AllConfigs.client().overlayOffsetX.get();
+        int overlayOffsetY = AllConfigs.client().overlayOffsetY.get();
+        int posX = width / 2 + overlayOffsetX;
+        int posY = height / 2 + overlayOffsetY;
 
         posX = Math.min(posX, width - tooltipTextWidth - 20);
         posY = Math.min(posY, height - tooltipHeight - 20);
@@ -192,7 +194,7 @@ public class LazyTickTooltipOverlay {
 
         guiGraphics.pose().pushPose();
         if (fade < 1) {
-            guiGraphics.pose().translate(Math.pow(1 - fade, 3) * Math.signum(LazyTickCreateOverlaySuppressor.getOverlayOffsetX() + .5f) * 8, 0, 0);
+            guiGraphics.pose().translate(Math.pow(1 - fade, 3) * Math.signum(overlayOffsetX + .5f) * 8, 0, 0);
             colorBackground.scaleAlpha(fade);
             colorBorderTop.scaleAlpha(fade);
             colorBorderBot.scaleAlpha(fade);
