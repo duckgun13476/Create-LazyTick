@@ -40,6 +40,9 @@ public final class SmartLazyTickStateHelper {
         if (!supports(blockEntity)) {
             return null;
         }
+        if (blockEntity instanceof ISmartBlockEntityControl smart) {
+            return smart;
+        }
         return new SmartControlAdapter(blockEntity, getOrCreateState(blockEntity));
     }
 
@@ -73,6 +76,10 @@ public final class SmartLazyTickStateHelper {
         if (!supports(blockEntity)) {
             return;
         }
+        // If block entity already owns lazy-tick fields via mixin, do not shadow-write from helper state.
+        if (blockEntity instanceof ISmartBlockEntityControl) {
+            return;
+        }
 
         State state = getOrCreateState(blockEntity);
         if (!state.ownerUUID.equals(Util.NIL_UUID)) {
@@ -99,6 +106,10 @@ public final class SmartLazyTickStateHelper {
 
     public static void read(BlockEntity blockEntity, CompoundTag tag) {
         if (!supports(blockEntity)) {
+            return;
+        }
+        // If block entity already owns lazy-tick fields via mixin, do not shadow-read into helper state.
+        if (blockEntity instanceof ISmartBlockEntityControl) {
             return;
         }
 
