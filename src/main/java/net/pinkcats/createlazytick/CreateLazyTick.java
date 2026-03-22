@@ -54,6 +54,12 @@ public class CreateLazyTick {
         return ResourceLocation.fromNamespaceAndPath(NameSpace,Path);
     }
 
+    private static void infoLog(String message) {
+        if (ServerConfig.getEnableInfoLog()) {
+            LOGGER.info(message);
+        }
+    }
+
     /** If you can't use level.isClientSide(),use this.</p>
      * Especially for LazyTickScrollBehaviour.addTo()
      * **/
@@ -77,7 +83,7 @@ public class CreateLazyTick {
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
 
         if (isClient()) {
-            LOGGER.info("[CreateLazyTick][ClientBootstrap] client environment detected, starting client bootstrap");
+            infoLog("[CreateLazyTick][ClientBootstrap] client environment detected, starting client bootstrap");
             ClientBootstrap.init(modContainer);
         }
     }
@@ -135,7 +141,7 @@ public class CreateLazyTick {
 
         @SubscribeEvent
         public static void registerGuiOverlays(RegisterGuiLayersEvent event) {
-            LOGGER.info("[CreateLazyTick][ClientInit] registering independent LazyTick tooltip overlay");
+            infoLog("[CreateLazyTick][ClientInit] registering independent LazyTick tooltip overlay");
             event.registerAbove(VanillaGuiLayers.HOTBAR,
                     CreateLazyTick.DropResourceLocation(MODID, "lazytick_tooltip"),
                     LazyTickTooltipOverlay.OVERLAY);
@@ -157,7 +163,7 @@ public class CreateLazyTick {
     private static void clearRecipeCaches() {
         IsServerReload = true;
         cacheReloadTick = 0;
-        LOGGER.info("[CreateLazyTick] clearing cache...");
+        infoLog("[CreateLazyTick] clearing cache...");
         CAN_FILL_CACHE.clear();
         AMOUNT_CACHE.clear();
         CrafterRecipeCache.clear();
@@ -172,11 +178,11 @@ public class CreateLazyTick {
 
         static void init(ModContainer modContainer) {
             try {
-                LOGGER.info("[CreateLazyTick][ClientBootstrap] loading ClientInit via reflection");
+                infoLog("[CreateLazyTick][ClientBootstrap] loading ClientInit via reflection");
                 Class<?> clientInit = Class.forName("net.pinkcats.createlazytick.Register.ClientInit");
                 clientInit.getMethod("initClient", ModContainer.class)
                         .invoke(null, modContainer);
-                LOGGER.info("[CreateLazyTick][ClientBootstrap] ClientInit.initClient completed");
+                infoLog("[CreateLazyTick][ClientBootstrap] ClientInit.initClient completed");
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException("CreateLazyTick failed to initialize client bootstrap", e);
             }

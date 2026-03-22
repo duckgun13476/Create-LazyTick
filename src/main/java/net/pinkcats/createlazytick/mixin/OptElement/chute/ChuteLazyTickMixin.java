@@ -190,7 +190,7 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
                     nextOffset = .5f;
                 else if (nextOffset > 1) {
                     boolean result = handleUpwardOutput(clientSide);
-                    if (!result) {
+                    if (!result && ServerConfig.getEnableDebugLog()) {
                         CreateLazyTick.LOGGER.debug("Chute has modified Unpredicted. Location: {}", this.worldPosition);
                     }
                     nextOffset = itemPosition.getValue();

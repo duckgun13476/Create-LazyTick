@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
@@ -111,7 +112,9 @@ public class ForcedActiveManager {
         if (dataChanged) {
             dataVersion.incrementAndGet();
         }
-        CreateLazyTick.LOGGER.debug("Cleared {} invalid lazytick data entries", dirtyDataCount);
+        if (ServerConfig.getEnableDebugLog()) {
+            CreateLazyTick.LOGGER.debug("Cleared {} invalid lazytick data entries", dirtyDataCount);
+        }
 
         return validResetCount;
     }

@@ -3,6 +3,7 @@ package net.pinkcats.createlazytick.Gui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import org.jetbrains.annotations.NotNull;
 
 public class mes {
@@ -19,10 +20,12 @@ public class mes {
     public static final String LOGO = "[Create:LazyTick]";
 
     public static void blue(Object message) {
+        if (!ServerConfig.getEnableInfoLog()) return;
         String messageString = String.valueOf(message);
         CreateLazyTick.LOGGER.info(CYAN+LOGO+BLUE + "{}" + RESET, messageString);
     }
     public static void warn(Object message) {
+        if (!ServerConfig.getEnableInfoLog()) return;
         String messageString = String.valueOf(message);
         CreateLazyTick.LOGGER.warn(CYAN+LOGO+YELLOW + "{}" + RESET, messageString);
     }
@@ -31,10 +34,12 @@ public class mes {
         CreateLazyTick.LOGGER.error(CYAN + "[{}][Error]" + RED + "{}" + RESET, result.caller, result.messageString());
     }
     public static void info(Object message) {
+        if (!ServerConfig.getEnableInfoLog()) return;
         String messageString = String.valueOf(message);
         CreateLazyTick.LOGGER.info(CYAN+LOGO+GREEN + "{}" + RESET, messageString);
     }
     public static void purple(Object message) {
+        if (!ServerConfig.getEnableInfoLog()) return;
         String messageString = String.valueOf(message);
         CreateLazyTick.LOGGER.info(CYAN+LOGO+MAGENTA + "{}" + RESET, messageString);
     }
@@ -43,6 +48,7 @@ public class mes {
             StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
 
     public static void debug(Object message) {
+        if (!ServerConfig.getEnableDebugLog()) return;
         SourceResult result = getSourceResult(message);
         CreateLazyTick.LOGGER.info(CYAN + "[{}][Debug]" + MAGENTA + "{}" + RESET, result.caller(), result.messageString());
     }

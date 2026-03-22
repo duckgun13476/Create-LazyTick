@@ -14,7 +14,9 @@ import net.pinkcats.createlazytick.helper.tooltip.LazyTickDepotDebug;
 public class ClientInit {
 
     public static void initClient(ModContainer modContainer) {
-        CreateLazyTick.LOGGER.info("[CreateLazyTick][ClientInit] registering client hooks");
+        if (ServerConfig.getEnableInfoLog()) {
+            CreateLazyTick.LOGGER.info("[CreateLazyTick][ClientInit] registering client hooks");
+        }
         GogglesItem.addIsWearingPredicate(player -> {
             boolean result = player != null && (
                     player.getMainHandItem().getItem() == LazyTickItem.CLOCK.get()
@@ -27,13 +29,17 @@ public class ClientInit {
             }
             return result;
         });
-        CreateLazyTick.LOGGER.info("[CreateLazyTick][ClientInit] goggles predicate registered");
+        if (ServerConfig.getEnableInfoLog()) {
+            CreateLazyTick.LOGGER.info("[CreateLazyTick][ClientInit] goggles predicate registered");
+        }
 
         modContainer.registerExtensionPoint(
                 IConfigScreenFactory.class,
                 (ModContainer container, Screen screen) -> new BaseConfigScreen(screen, CreateLazyTick.MODID)
                         .withSpecs(ClientConfig.SPEC, null, ServerConfig.SPEC)
         );
-        CreateLazyTick.LOGGER.info("[CreateLazyTick][ClientInit] config screen extension registered");
+        if (ServerConfig.getEnableInfoLog()) {
+            CreateLazyTick.LOGGER.info("[CreateLazyTick][ClientInit] config screen extension registered");
+        }
     }
 }
