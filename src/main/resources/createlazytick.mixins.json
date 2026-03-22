@@ -42,6 +42,7 @@
     "Create.Client.ChuteGoggleMixin",
     "Create.Client.DepotGoggleMixin",
     "Create.Client.GoggleOverlayRendererDebugMixin",
+    "Create.Client.GoggleOverlayRendererSuppressMixin",
     "Create.Client.ItemDrainGoggleMixin",
     "Create.Client.KineticBlockEntityGoggleMixin",
     "Create.Client.SmartBlockEntityGoggleMixin"
