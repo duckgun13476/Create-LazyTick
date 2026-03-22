@@ -159,19 +159,25 @@ public class LazyTickTooltipOverlay {
     }
 
     private static void renderTooltip(GuiGraphics guiGraphics, Minecraft mc, List<Component> tooltip) {
+        int width = guiGraphics.guiWidth();
+        int height = guiGraphics.guiHeight();
+        int maxTooltipWidth = Math.min(240, Math.max(180, width - 40));
+
         int tooltipTextWidth = 0;
+        int tooltipLineCount = 0;
         for (FormattedText textLine : tooltip) {
-            tooltipTextWidth = Math.max(tooltipTextWidth, mc.font.width(textLine));
+            int lineWidth = mc.font.width(textLine);
+            tooltipTextWidth = Math.max(tooltipTextWidth, Math.min(lineWidth, maxTooltipWidth));
+            int wrappedLines = Math.max(1, Mth.ceil((float) lineWidth / (float) maxTooltipWidth));
+            tooltipLineCount += wrappedLines;
         }
 
         int tooltipHeight = 8;
-        if (tooltip.size() > 1) {
+        if (tooltipLineCount > 1) {
             tooltipHeight += 2;
-            tooltipHeight += (tooltip.size() - 1) * 10;
+            tooltipHeight += (tooltipLineCount - 1) * 10;
         }
 
-        int width = guiGraphics.guiWidth();
-        int height = guiGraphics.guiHeight();
         int overlayOffsetX = AllConfigs.client().overlayOffsetX.get();
         int overlayOffsetY = AllConfigs.client().overlayOffsetY.get();
         int posX = width / 2 + overlayOffsetX;
@@ -216,7 +222,7 @@ public class LazyTickTooltipOverlay {
                 posY,
                 width,
                 height,
-                -1,
+                maxTooltipWidth,
                 colorBackground.getRGB(),
                 colorBorderTop.getRGB(),
                 colorBorderBot.getRGB(),
