@@ -21,7 +21,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.pinkcats.createlazytick.Channel.LazyTickClientStateCache;
-import net.pinkcats.createlazytick.Register.LazyTickItem;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickDepotDebug;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
@@ -33,6 +32,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LazyTickTooltipOverlay {
+    private static final int GOGGLES_ICON_OFFSET_X = 10;
+    private static final int GOGGLES_ICON_OFFSET_Y = -16;
+    private static final int TOOLTIP_ANCHOR_SHIFT_X = 16;
+    private static final int TOOLTIP_ANCHOR_SHIFT_Y = -16;
+    private static final int TOOLTIP_TEXT_OFFSET_Y = -2;
+    private static final int TOOLTIP_SCREEN_PADDING = 20;
     public static final LayeredDraw.Layer OVERLAY = (guiGraphics, deltaTracker) -> renderOverlay(guiGraphics);
 
     private static int hoverTicks = 0;
@@ -180,11 +185,12 @@ public class LazyTickTooltipOverlay {
 
         int overlayOffsetX = AllConfigs.client().overlayOffsetX.get();
         int overlayOffsetY = AllConfigs.client().overlayOffsetY.get();
-        int posX = width / 2 + overlayOffsetX;
-        int posY = height / 2 + overlayOffsetY;
-
-        posX = Math.min(posX, width - tooltipTextWidth - 20);
-        posY = Math.min(posY, height - tooltipHeight - 20);
+        int desiredPosX = width / 2 + overlayOffsetX + TOOLTIP_ANCHOR_SHIFT_X;
+        int desiredPosY = height / 2 + overlayOffsetY + TOOLTIP_ANCHOR_SHIFT_Y;
+        int maxPosX = width - tooltipTextWidth - TOOLTIP_SCREEN_PADDING;
+        int maxPosY = height - tooltipHeight - TOOLTIP_SCREEN_PADDING;
+        int posX = Mth.clamp(desiredPosX, TOOLTIP_SCREEN_PADDING, Math.max(TOOLTIP_SCREEN_PADDING, maxPosX));
+        int posY = Mth.clamp(desiredPosY, TOOLTIP_SCREEN_PADDING, Math.max(TOOLTIP_SCREEN_PADDING, maxPosY));
 
         float fade = Mth.clamp(hoverTicks / 24f, 0, 1);
         boolean useCustom = AllConfigs.client().overlayCustomColor.get();
@@ -206,8 +212,6 @@ public class LazyTickTooltipOverlay {
             colorBorderBot.scaleAlpha(fade);
         }
 
-        ItemStack icon = new ItemStack(LazyTickItem.CLOCK.get());
-        guiGraphics.renderItem(icon, posX + 2, posY - 18);
         if (LazyTickDepotDebug.enabled()) {
             LazyTickDepotDebug.log(mc, "overlay_draw",
                     "posX=" + posX + ", posY=" + posY
@@ -215,11 +219,12 @@ public class LazyTickTooltipOverlay {
                             + ", tooltipWidth=" + tooltipTextWidth + ", tooltipHeight=" + tooltipHeight);
         }
 
+        int tooltipTextY = posY + TOOLTIP_TEXT_OFFSET_Y;
         RemovedGuiUtils.drawHoveringText(
                 guiGraphics,
                 tooltip,
                 posX,
-                posY,
+                tooltipTextY,
                 width,
                 height,
                 maxTooltipWidth,
@@ -228,6 +233,13 @@ public class LazyTickTooltipOverlay {
                 colorBorderBot.getRGB(),
                 mc.font
         );
+
+        // Draw icon after tooltip so it always stays on top.
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 500);
+        ItemStack icon = AllItems.GOGGLES.asStack();
+        guiGraphics.renderItem(icon, posX + GOGGLES_ICON_OFFSET_X, posY + GOGGLES_ICON_OFFSET_Y);
+        guiGraphics.pose().popPose();
         guiGraphics.pose().popPose();
     }
 
