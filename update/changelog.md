@@ -1,3 +1,21 @@
+### 2.4.8-beta
+#### Feature
+1. Add support for NeoForge 1.21.x (Create 6.0.x migration branch).
+
+#### Fix
+1. Fix basin/mixer crash path (#18): cached `getMatchingRecipes()` result now returns a mutable list to avoid `UnsupportedOperationException` when mixer appends potion recipes.
+2. Fix basin not waking up when newly powered (#17) by clearing the basin cache state when speed changes from 0 to non-zero.
+3. Fix mode switching edge case: dynamic mode with value `0%` no longer shows `[Unknown Mode]`.
+
+
+---
+### 2.4.7-beta
+#### Fix
+1. Fix basin recipe cache key mismatch by making basin cache matching quantity-sensitive for items and fluids.
+2. Fix multiplayer basin getting stuck after temporary recipe invalidation by adding a short retry window before falling back to lazy skip.
+
+
+---
 ### 2.4.6-beta
 #### Fix
 1. Add server support Fix class leak.
@@ -11,7 +29,7 @@
 ---
 ### 2.4.4-hotfix-beta
 #### Fix
-1. Fix basin recipe processing issue.
+1. Fix the basin recipe processing issue.
 2. Fix UI config adjustment becoming unavailable when tick time is greater than 50ms.
 
 ---
