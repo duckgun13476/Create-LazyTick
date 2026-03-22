@@ -9,6 +9,7 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.List;
@@ -47,7 +48,10 @@ public class SmartBlockEntityGoggleMixin implements IHaveGoggleInformation {
             return true;
         }
 
-        if (this instanceof ISmartBlockEntityControl control) {
+        ISmartBlockEntityControl control = this instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control((SmartBlockEntity) (Object) this);
+        if (control != null) {
             int maxDelayTick = whiteItem.getMaxTick();
             int CLT$tick = 0;
             LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, CLT$tick, maxDelayTick);

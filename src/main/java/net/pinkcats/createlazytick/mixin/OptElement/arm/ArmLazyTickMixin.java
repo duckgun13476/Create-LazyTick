@@ -11,8 +11,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import net.pinkcats.createlazytick.helper.util.ScheduleTicker;
@@ -41,7 +41,7 @@ import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
  * 3. 错峰机制：初始化时引入随机计时器偏移 (Jitter)，防止大量机械臂在同一 Tick 同时执行扫描导致 TPS 骤降 (Thundering Herd Problem)。
  */
 @Mixin(ArmBlockEntity.class)
-public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmartBlockEntityControl {
+public abstract class ArmLazyTickMixin extends SmartBlockEntity {
 
     @Shadow(remap = false)
     List<ArmInteractionPoint> inputs;
@@ -185,10 +185,15 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
     private final ScheduleTicker ScanBlockType_Schedule = new ScheduleTicker(REVALIDATE_INTERVAL, this::createLazyTick$scanUrgency);
 
     @Unique
+    private ISmartBlockEntityControl createLazyTick$control() {
+        return (ISmartBlockEntityControl) (Object) this;
+    }
+
+    @Unique
     private void createLazyTick$resetDelayTick() {
         createLazyTick$armTick = 0;
 
-        LazyTickLogic.setIntervalSafe(this, 1);
+        LazyTickLogic.setIntervalSafe(createLazyTick$control(), 1);
     }
 
     //初始化时执行一次扫描，并设置随机偏移
@@ -203,12 +208,12 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyArm()) return;
         if (level == null || level.isClientSide) return;
 
-        NetworkSyncHelper.createLazyTick$syncPacketData(this,
-                this.level, this.worldPosition, this.createLazyTick$getCurrentSuperTick(), ServerConfig.getArmDelayMax());
+        NetworkSyncHelper.createLazyTick$syncPacketData(createLazyTick$control(),
+                this.level, this.worldPosition, createLazyTick$control().createLazyTick$getCurrentSuperTick(), ServerConfig.getArmDelayMax());
 
         ScanBlockType_Schedule.RandomTick();
 
-        this.lazytick$setExtraData(ArmExtraDataTool.packArmData(createLazyTick$ignoreLazy, createLazyTick$weakLazy));
+        createLazyTick$control().lazytick$setExtraData(ArmExtraDataTool.packArmData(createLazyTick$ignoreLazy, createLazyTick$weakLazy));
         /*if(!level.isClientSide()) {
             System.out.println("Arm:" + createLazyTick$armTick + "|" + this.createLazyTick$getLazyTickInterval());
         }*/
@@ -220,12 +225,12 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyArm()) return;
 
         if (createLazyTick$ignoreLazy) {
-            this.createLazyTick$setCurrentSuperTick(1);
+            createLazyTick$control().createLazyTick$setCurrentSuperTick(1);
             return;
         }
 
         createLazyTick$armTick++;
-        if (createLazyTick$armTick < this.createLazyTick$getCurrentSuperTick()) {
+        if (createLazyTick$armTick < createLazyTick$control().createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
             createLazyTick$armTick = 0;
@@ -248,12 +253,12 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
                 maxDelay = Math.min(ServerConfig.getArmWeakDelayMax(), maxDelay);
             }
 
-            int currentInterval = this.createLazyTick$getCurrentSuperTick();
+            int currentInterval = createLazyTick$control().createLazyTick$getCurrentSuperTick();
 
             if (currentInterval < maxDelay) {
-                int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
+                int newInterval = LazyTickLogic.computeNextInterval(createLazyTick$control(), currentInterval, maxDelay);
                 if (newInterval != currentInterval) {
-                    LazyTickLogic.setIntervalSafe(this, newInterval);
+                    LazyTickLogic.setIntervalSafe(createLazyTick$control(), newInterval);
                 }
             }
         }
@@ -265,12 +270,12 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyArm()) return;
 
         if (createLazyTick$ignoreLazy) {
-            this.createLazyTick$setCurrentSuperTick(1);
+            createLazyTick$control().createLazyTick$setCurrentSuperTick(1);
             return;
         }
 
         createLazyTick$armTick++;
-        if (createLazyTick$armTick < this.createLazyTick$getCurrentSuperTick()) {
+        if (createLazyTick$armTick < createLazyTick$control().createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
             createLazyTick$armTick = 0;
@@ -293,22 +298,21 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
                 maxDelay = Math.min(ServerConfig.getArmWeakDelayMax(), maxDelay);
             }
 
-            int currentInterval = this.createLazyTick$getCurrentSuperTick();
+            int currentInterval = createLazyTick$control().createLazyTick$getCurrentSuperTick();
 
             if (currentInterval < maxDelay) {
-                int newInterval = LazyTickLogic.computeNextInterval(this,currentInterval,maxDelay);
+                int newInterval = LazyTickLogic.computeNextInterval(createLazyTick$control(), currentInterval, maxDelay);
                 if (newInterval != currentInterval) {
-                    LazyTickLogic.setIntervalSafe(this, newInterval);
+                    LazyTickLogic.setIntervalSafe(createLazyTick$control(), newInterval);
                 }
             }
         }
     }
 
-    @Override
     public List<Component> createLazyTick$getCustomTooltipInfo() {
         List<Component> tooltip = new ArrayList<>();
 
-        int data = this.lazytick$getExtraData();
+        int data = createLazyTick$control().lazytick$getExtraData();
         boolean ignore = ArmExtraDataTool.unpackIgnore(data);
         boolean weak = ArmExtraDataTool.unpackWeak(data);
 
@@ -325,16 +329,14 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity implements ISmar
         return tooltip;
     }
 
-    @Override
     public boolean createLazyTick$shouldRenderTier() {
-        int data = this.lazytick$getExtraData();
+        int data = createLazyTick$control().lazytick$getExtraData();
         boolean ignore = ArmExtraDataTool.unpackIgnore(data);
         return !ignore;
     }
 
-    @Override
     public boolean createLazyTick$shouldRenderMode() {
-        int data = this.lazytick$getExtraData();
+        int data = createLazyTick$control().lazytick$getExtraData();
         boolean ignore = ArmExtraDataTool.unpackIgnore(data);
         return !ignore;
     }

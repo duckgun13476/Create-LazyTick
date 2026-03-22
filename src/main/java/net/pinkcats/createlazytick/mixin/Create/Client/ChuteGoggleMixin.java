@@ -7,6 +7,7 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
+import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,7 +26,10 @@ public class ChuteGoggleMixin {
         Minecraft mc = Minecraft.getInstance();
         if (!LazyTickTooltipTool.shouldRender(mc)) return;
 
-        if ((Object) this instanceof ISmartBlockEntityControl control) {
+        ISmartBlockEntityControl control = (Object) this instanceof ISmartBlockEntityControl smart
+                ? smart
+                : SmartLazyTickStateHelper.control((ChuteBlockEntity) (Object) this);
+        if (control != null) {
             int maxDelayTick = ServerConfig.getChuteDelayMax();
             this.createLazyTick$tick = LazyTickTooltipRenderer.appendLazyTickInfo(control, tooltip, this.createLazyTick$tick, maxDelayTick);
             cir.setReturnValue(true);

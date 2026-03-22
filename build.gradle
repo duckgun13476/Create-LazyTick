@@ -83,7 +83,7 @@ neoForge {
             logLevel = org.slf4j.event.Level.DEBUG
 
             // 如果您使用了 Mixin，请添加以下参数（配置文件名与清单中的一致）
-            //programArgument '-mixin.config=createlazytick.mixins.json'
+            programArgument '-mixin.config=createlazytick.mixins.json'
         }
     }
 
