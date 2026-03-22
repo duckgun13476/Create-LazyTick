@@ -59,6 +59,13 @@ public abstract class BasinOperatingLazyTickMixin {
     private float clt$lastSpeed = 0f;
 
     @Unique
+    private List<Recipe<?>> clt$asMutableSingleRecipeList(Recipe<?> recipe) {
+        List<Recipe<?>> list = new ArrayList<>(1);
+        list.add(recipe);
+        return list;
+    }
+
+    @Unique
     private void clt$sendData() {
         ((SyncedBlockEntity) (Object) this).sendData();
     }
@@ -296,7 +303,7 @@ public abstract class BasinOperatingLazyTickMixin {
             clt$staleRetryBudget = 0;
             clt$awaitingStaleRetryResult = false;
             clt$rememberRecipe(currentKey, currentRecipe);
-            cir.setReturnValue(Collections.singletonList(currentRecipe));
+            cir.setReturnValue(clt$asMutableSingleRecipeList(currentRecipe));
             return;
         }
 
@@ -305,7 +312,7 @@ public abstract class BasinOperatingLazyTickMixin {
             clt$staleRetryBudget = 0;
             clt$awaitingStaleRetryResult = false;
             currentRecipe = cachedRecipe;
-            cir.setReturnValue(Collections.singletonList(cachedRecipe));
+            cir.setReturnValue(clt$asMutableSingleRecipeList(cachedRecipe));
             return;
         }
     }
