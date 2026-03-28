@@ -315,12 +315,11 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
         // 是否跨越了倒水阈值 (5 tick) 原版:>5 (检查), ==5 (e执行), <5 (动画)
         boolean crossingThreshold = currentTicks > 5 && targetTicks <= 5;
-
         // 如果需要倒...(跨越阈值)
         if (crossingThreshold) {
             // 1. 强制触发模拟检查
             accessor.setProcessingTicks(6);
-            if (!accessor.invokeContinueProcessing()) {
+            if (accessor.getHeldItem() == null || !accessor.invokeContinueProcessing()) {
                 return false; // 物品被移除了，中断
             }
 
@@ -332,16 +331,25 @@ public abstract class ItemDrainLazyTickMixin extends SmartBlockEntity {
 
             // 2. 容量未满且物品正常,强制触发倒水
             accessor.setProcessingTicks(5);
-            if (!accessor.invokeContinueProcessing()) {
-                return false; // 倒水后如果物品意外消失
+            if (accessor.getHeldItem() == null || !accessor.invokeContinueProcessing()) {
+                return false; // 倒水后如果物品意外消失/耗尽
             }
 
+            // 阻止多次触发导致的循环
+            if (targetTicks == 5) {
+                return accessor.getHeldItem() != null;
+            }
             // 检查通过且成功倒水后,应用计时器
         }
 
         // 3. 应用剩余时间
         // 无论是跨越了阈值，还是普通倒计时，最后都定位到目标时间
         accessor.setProcessingTicks(targetTicks);
+
+        // 拦截可能的NPE
+        if (accessor.getHeldItem() == null) {
+            return false;
+        }
 
         // 执行动画逻辑
         return accessor.invokeContinueProcessing();
