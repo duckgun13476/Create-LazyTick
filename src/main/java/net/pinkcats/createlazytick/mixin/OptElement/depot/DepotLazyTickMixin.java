@@ -81,6 +81,9 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private int createLazyTick$DepotDelayTick = 0;
 
     @Unique
+    private static boolean createLazyTick$hasWarned = false;
+
+    @Unique
     private void createLazyTick$applyBackoff(ISmartBlockEntityControl control) {
         int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
         int newLazyTickInterval = LazyTickLogic.computeNextInterval(
@@ -107,7 +110,11 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         super.tick();
 
         if (!(this.blockEntity instanceof ISmartBlockEntityControl control)) {
-            mes.error("BlockEntity is not a SmartBlockEntityControl!");
+            if (!createLazyTick$hasWarned) {
+                createLazyTick$hasWarned = true;
+                String className = this.blockEntity.getClass().getName();
+                mes.error("[DepotLazyTickMixin]BlockEntity is not a SmartBlockEntityControl!Related class name:" + className);
+            }
             return;
         }
 
