@@ -97,6 +97,9 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
     public abstract void onTransfer(ItemStack stack);
 
     @Unique
+    private static boolean createLazyTick$hasWarned = false;
+
+    @Unique
     public Funnel.Mode determineCurrentMode() {
         BlockState state = getBlockState();
         if (!FunnelBlock.isFunnel(state))
@@ -169,8 +172,13 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         }
 
         if (!(this instanceof ISmartBlockEntityControl control)) {
-            mes.error("BlockEntity is not a SmartBlockEntityControl!");
-            return;}
+            if (!createLazyTick$hasWarned) {
+                createLazyTick$hasWarned = true;
+                String className = this.getClass().getName();
+                mes.error("[FunnelLazyTickMixin]BlockEntity is not a SmartBlockEntityControl!Related class name:" + className);
+            }
+            return;
+        }
 
 
         super.tick();
