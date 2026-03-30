@@ -4,7 +4,7 @@ import net.darkhax.curseforgegradle.TaskPublishCurseForge
 plugins {
 
     id "net.neoforged.moddev.legacyforge" version "2.0.74"
-    id 'net.darkhax.curseforgegradle' version '[1.1.24,)'
+    id 'net.darkhax.curseforgegradle' version '1.1.28'
     id "dev.ithundxr.silk" version "0.11.15"
     id "me.modmuss50.mod-publish-plugin" version "0.8.3"
     id "idea"
