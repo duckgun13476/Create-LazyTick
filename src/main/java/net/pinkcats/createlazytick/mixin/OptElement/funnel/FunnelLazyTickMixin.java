@@ -23,11 +23,13 @@ import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Mixin;
@@ -98,6 +100,17 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
 
     @Unique
     private static boolean createLazyTick$hasWarned = false;
+
+    @Unique
+    private String createLazyTick$buildIncompatibleSkipMessage() {
+        ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(this.getBlockState().getBlock());
+        String dimension = this.level != null ? this.level.dimension().location().toString() : "unknown";
+        return "[FunnelLazyTickMixin] Incompatible block entity detected; CLT will skip lazy tick handling and fall back to vanilla logic. "
+                + "class=" + this.getClass().getName()
+                + ", blockId=" + (blockId != null ? blockId : "unknown")
+                + ", pos=" + this.worldPosition
+                + ", dimension=" + dimension;
+    }
 
     @Unique
     public Funnel.Mode determineCurrentMode() {
@@ -174,8 +187,7 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         if (!(this instanceof ISmartBlockEntityControl control)) {
             if (!createLazyTick$hasWarned) {
                 createLazyTick$hasWarned = true;
-                String className = this.getClass().getName();
-                mes.error("[FunnelLazyTickMixin]BlockEntity is not a SmartBlockEntityControl!Related class name:" + className);
+                mes.error(createLazyTick$buildIncompatibleSkipMessage());
             }
             return;
         }
