@@ -14,6 +14,7 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -85,6 +86,19 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private static boolean createLazyTick$hasWarned = false;
 
     @Unique
+    private String createLazyTick$buildIncompatibleSkipMessage() {
+        ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(this.blockEntity.getBlockState().getBlock());
+        String dimension = this.blockEntity.getLevel() != null
+                ? this.blockEntity.getLevel().dimension().location().toString()
+                : "unknown";
+        return "[DepotLazyTickMixin] Incompatible block entity detected; CLT will skip lazy tick handling and fall back to vanilla logic. "
+                + "class=" + this.blockEntity.getClass().getName()
+                + ", blockId=" + (blockId != null ? blockId : "unknown")
+                + ", pos=" + this.blockEntity.getBlockPos()
+                + ", dimension=" + dimension;
+    }
+
+    @Unique
     private void createLazyTick$applyBackoff(ISmartBlockEntityControl control) {
         int currentLazyTickInterval = control.createLazyTick$getCurrentSuperTick();
         int newLazyTickInterval = LazyTickLogic.computeNextInterval(
@@ -114,8 +128,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         if (control == null) {
             if (!createLazyTick$hasWarned) {
                 createLazyTick$hasWarned = true;
-                String className = this.blockEntity.getClass().getName();
-                mes.error("[DepotLazyTickMixin]BlockEntity is not a SmartBlockEntityControl!Related class name:" + className);
+                mes.error(createLazyTick$buildIncompatibleSkipMessage());
             }
             return;
         }
