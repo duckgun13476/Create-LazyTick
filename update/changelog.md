@@ -1,3 +1,9 @@
+### 2.4.9-beta
+#### Fix
+1. Fix console error spam (#19, #20): incompatible Depot/Funnel block entities no longer flood the log every tick. CLT now prints a one-time compatibility warning and falls back to vanilla logic for unsupported cases.(Fugit-5414)
+2. Fix Item Drain crash in chained emptying recipes (#21): added defensive null checks for `heldItem` during lazy drain processing to prevent NPE when the current item is consumed or replaced mid-process.(Fugit-5414)
+3. Fix Item Drain double-drain edge case (#21): threshold-crossing lazy updates now short-circuit correctly so the same drain step cannot be applied twice in one catch-up frame.(Fugit-5414)
+
 ### 2.4.8-beta
 #### Feature
 1. Add support for NeoForge 1.21.x (Create 6.0.x migration branch).
