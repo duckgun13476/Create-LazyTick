@@ -1,4 +1,5 @@
 import net.darkhax.curseforgegradle.TaskPublishCurseForge
+import org.gradle.jvm.tasks.Jar
 //2025 copyright some gradle setting from Create : https://github.com/Creators-of-Create/Create
 
 
@@ -222,8 +223,15 @@ compileJava {
     options.compilerArgs = ['-Xdiags:verbose']
 }
 
+def jarTask = tasks.named('jar', Jar)
+def jarArchiveFile = jarTask.flatMap { it.archiveFile }
+def publishModVersion = mod_version
+def publishMinecraftVersion = minecraft_version
+def publishDisplayName = display_name
+def apiPropertiesFile = layout.projectDirectory.file('api.properties').asFile
+
 jar {
-    archiveFileName = "${mod_id}-${mod_version}-neoforge-${minecraft_version}.jar"
+    archiveFileName = "${package_name}-${mod_version}-neoforge-${minecraft_version}.jar"
     from('LICENSE.txt') {
         rename { "${it}_${archivesBaseName}" }
 
@@ -237,13 +245,12 @@ jar {
 
 tasks.register('PublishInfo') {
     doLast {
-        println "Reobfuscated JAR file path: ${reobfJar.archiveFile.get().asFile.absolutePath}"
-        println "version = \"$minecraft_version-$mod_version\"\n" +
-                "    displayName = \"${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}\""
-        def propertiesFile = file('api.properties')
-        if (propertiesFile.exists()) {
+        println "JAR file path: ${jarArchiveFile.get().asFile.absolutePath}"
+        println "version = \"$publishMinecraftVersion-$publishModVersion\"\n" +
+                "    displayName = \"${publishDisplayName}_v${mod_release_version}_for_Create_v${mod_create_compat_version}\""
+        if (apiPropertiesFile.exists()) {
             def properties = new Properties()
-            properties.load(new FileInputStream(propertiesFile))
+            properties.load(new FileInputStream(apiPropertiesFile))
             def cfToken = properties.getProperty("CF_TOKEN")
             def modrinthToken = properties.getProperty("MODRINTH_TOKEN")
 
@@ -258,7 +265,7 @@ tasks.register('PublishInfo') {
 
 tasks.register('publishAll') {
     dependsOn 'publishCurseForge'
-    dependsOn 'publishMods'
+    dependsOn 'publishModrinth'
     group = 'Publishing'
 }
 
@@ -270,8 +277,8 @@ tasks.register('publishAll') {
 
 
 
-/*tasks.register('publishCurseForge', TaskPublishCurseForge) {
-    dependsOn jar
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
+    dependsOn jarTask
     def propertiesFile = file('api.properties')
     def properties = new Properties()
     properties.load(new FileInputStream(propertiesFile))
@@ -279,8 +286,7 @@ tasks.register('publishAll') {
     var cfToken = properties.getProperty("CF_TOKEN")
     apiToken = cfToken
 
-    def mainFile = upload(curseforge_id, new File(
-            "./build/libs/${package_name}-${mod_version}-neoforge-${minecraft_version}.jar"))
+    def mainFile = upload(curseforge_id, jarArchiveFile.get().asFile)
     mainFile.changelog = new File("./update/changelog.md").text.split("\n\n\n")[0]
     mainFile.addEnvironment("Client", "Server")
     mainFile.addGameVersion("${minecraft_version}")
@@ -295,17 +301,17 @@ tasks.register('publishAll') {
             "observable")
     mainFile.releaseType = publish_version //beta release. is alpha.
     disableVersionDetection()
-}*/
+}
 
 
 
-/*publishMods {
+publishMods {
     def propertiesFile = file('api.properties')
     def properties = new Properties()
     properties.load(new FileInputStream(propertiesFile))
     def modrinthTokenGet = properties.getProperty("MODRINTH_TOKEN")
 
-//    file = reobfJar.archiveFile
+    file = jarArchiveFile
     changelog = rootProject.file("./update/changelog.md").text
     type = STABLE
     version = "$minecraft_version-$mod_version"
@@ -324,7 +330,11 @@ tasks.register('publishAll') {
             optional("jei","observable")
         }
     }
-}*/
+}
+
+tasks.named('publishModrinth').configure {
+    dependsOn jarTask
+}
 
 String calculateGitHash() {
     try {

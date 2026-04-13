@@ -24,13 +24,13 @@ import net.createmod.catnip.animation.LerpedFloat;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.util.SmartLazyTickStateHelper;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -105,7 +105,7 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
 
     @Unique
     private String createLazyTick$buildIncompatibleSkipMessage() {
-        ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(this.getBlockState().getBlock());
+        ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(this.getBlockState().getBlock());
         String dimension = this.level != null ? this.level.dimension().location().toString() : "unknown";
         return "[FunnelLazyTickMixin] Incompatible block entity detected; CLT will skip lazy tick handling and fall back to vanilla logic. "
                 + "class=" + this.getClass().getName()

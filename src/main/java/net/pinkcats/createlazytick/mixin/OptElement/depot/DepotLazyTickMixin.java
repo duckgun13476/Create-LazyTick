@@ -14,6 +14,7 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
@@ -87,7 +88,7 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
     @Unique
     private String createLazyTick$buildIncompatibleSkipMessage() {
-        ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(this.blockEntity.getBlockState().getBlock());
+        ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(this.blockEntity.getBlockState().getBlock());
         String dimension = this.blockEntity.getLevel() != null
                 ? this.blockEntity.getLevel().dimension().location().toString()
                 : "unknown";
