@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.mixin.OptElement.chute;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
+import com.simibubi.create.content.logistics.chute.AbstractChuteBlock;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -98,6 +99,11 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
     public void tick(CallbackInfo ci) {
+
+        if (level != null && !AbstractChuteBlock.isChute(level.getBlockState(worldPosition))) {
+            ci.cancel();
+            return;
+        }
 
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyChute()) {
             return;
