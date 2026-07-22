@@ -117,3 +117,5 @@ run/
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
 /crash-2026-02-28_17.59.50-fml.txt
+/api.properties
+**/api.properties

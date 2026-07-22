@@ -1,0 +1,50 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.pinkcats.createlazytick.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "createlazytick.refmap.json",
+  "mixins": [
+    "compat.createenchantment.OpenEndedPipeMixin",
+    "Create.ScrollOptionBehaviourGuardMixin",
+    "Create.SmartBlockEntityControlMixin",
+    "OptElement.arm.ArmLazyTickMixin",
+    "OptElement.arm.ArmBlockUseMixin",
+    "OptElement.chute.ChuteLazyTickMixin",
+    "OptElement.chute.AbstractChuteBlockUseMixin",
+    "OptElement.DeployerRecipeMixin",
+    "OptElement.SpoutRecipeMixin",
+    "OptElement.basin.BasinLazyTickMixin",
+    "OptElement.basin.BasinOperatingLazyTickMixin",
+    "OptElement.belt.BeltFunnelInteractionLazyTickMixin",
+    "OptElement.belt.BeltInventoryAccessor",
+    "OptElement.belt.BeltTickMixin",
+    "OptElement.crafter.CrafterAccessor",
+    "OptElement.crafter.CrafterRecipeMixin",
+    "OptElement.crafter.CrafterRedstoneLazyTickMixin",
+    "OptElement.crafter.MechanicalCrafterBlockUseMixin",
+    "OptElement.depot.DepotBlockEntityMixin",
+    "OptElement.depot.DepotBlockUseMixin",
+    "OptElement.depot.DepotLazyTickMixin",
+    "OptElement.fluid.FluidLazyTickMixin",
+    "OptElement.fluid.FluidNetworkTransferSpeedMixin",
+    "OptElement.funnel.FunnelLazyTickMixin",
+    "OptElement.funnel.FunnelBlockUseMixin",
+    "OptElement.itemdrain.ItemDrainAccessor",
+    "OptElement.itemdrain.ItemDrainLazyTickMixin",
+    "OptElement.itemdrain.ItemDrainBlockUseMixin",
+    "OptElement.saw.SawLazyTickMixin",
+    "OptElement.saw.SawBlockUseMixin",
+    "OptElement.saw.SawRecipeMixin"
+  ],
+  "client": [
+    "Create.Client.ChuteGoggleMixin",
+    "Create.Client.ItemDrainGoggleMixin",
+    "Create.Client.KineticBlockEntityGoggleMixin",
+    "Create.Client.SmartBlockEntityGoggleMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+

@@ -1,0 +1,6 @@
+plugins {
+    id 'java-library'
+}
+
+// Reserved for code that has a verified common API across every version project.
+// Do not add project dependencies until the first shared behavior is intentionally extracted.

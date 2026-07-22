@@ -1,0 +1,313 @@
+package net.pinkcats.createlazytick.Gui.Menu.ModifyMenu;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import net.pinkcats.NutUI.menu.Connect.NutUIClientApi;
+import net.pinkcats.NutUI.menu.NutKineticMenu;
+import net.pinkcats.NutUI.menu.NutKineticScreen;
+import net.pinkcats.NutUI.menu.architect.Helper.TextureSize;
+import net.pinkcats.NutUI.menu.architect.data.SharedData;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.Map;
+import java.util.Objects;
+
+import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
+
+/**
+ * Example custom screen for modify-menu ids.
+ */
+public class LazyTickScrollerScreen extends NutKineticScreen {
+
+    private static final ResourceLocation BACKGROUND =
+            new ResourceLocation(MODID, "gui/background.png");
+
+    private static final ResourceLocation SCROLLER_BUTTON =
+            new ResourceLocation(MODID, "gui/button.png");
+
+    private static final ResourceLocation SCROLLER_TABLE =
+            new ResourceLocation(MODID, "gui/table.png");
+
+    private static final double FOLLOW_SMOOTHING = 0.22D;
+    private static final int TRACK_MIN_X = -8;
+    private static final int TRACK_MAX_X = 250;
+    private static final int TRACK_Y_DYNAMIC = 1;
+    private static final int TRACK_Y_FORCED = 12;
+    private static final int Y_SWITCH_THRESHOLD = 7;
+    private static final int BUTTON_CHAR_COUNT = 4;
+    private static final int BUTTON_PIXEL_HEIGHT = 14;
+    private static final int DEFAULT_PERCENT_FALLBACK = 50;
+    private static final int BACKGROUND_TILE = 4;
+    private static final int BACKGROUND_ROWS = 16;
+    private static final int BACKGROUND_SPREAD_MAX = 36;
+    private static final int TABLE_OFFSET_X = -30;
+    private static final int TABLE_GAP_Y = 4;
+    private double buttonPosX;
+    private double buttonPosY;
+    private boolean buttonPositionInitialized;
+    private int buttonDrawWidth = 16;
+    private int buttonDrawHeight = 16;
+    private boolean draggingButton = false;
+    private boolean rightMouseDownLastFrame = false;
+
+    public LazyTickScrollerScreen(NutKineticMenu.NutItemMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        TextureSize.Size size = TextureSize.get(SCROLLER_BUTTON);
+        if (size.w() > 0 && size.h() > 0) {
+            buttonDrawWidth = size.w();
+            buttonDrawHeight = size.h();
+        }
+    }
+
+    @Override
+    public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        boolean rightMouseDown = isRightMouseDown();
+        if (rightMouseDownLastFrame && !rightMouseDown) {
+            onClose();
+            return;
+        }
+        rightMouseDownLastFrame = rightMouseDown;
+        draggingButton = rightMouseDown;
+        if (!buttonPositionInitialized) {
+            initializeFromServerState();
+            buttonPositionInitialized = true;
+        } else if (draggingButton) {
+            buttonPosX = smoothFollowCenteredX(buttonPosX, mouseX, buttonDrawWidth, FOLLOW_SMOOTHING);
+            buttonPosY = smoothFollowCenteredY(buttonPosY, mouseY, buttonDrawHeight, FOLLOW_SMOOTHING);
+        }
+        super.render(poseStack, mouseX, mouseY, partialTick);
+    }
+
+
+    @Override
+    protected void renderBg(@NotNull PoseStack poseStack, float partialTick, int mouseX, int mouseY) {
+
+        // Init
+        Component topHint = Component.translatable("createlazytick.scroller.target_lazytick_config");
+        Component bottomHint = Component.translatable("createlazytick.scroller.release_right_click_confirm");
+        int textCenterX = this.leftPos + (TRACK_MIN_X + TRACK_MAX_X) / 2;
+        int topHintX = textCenterX - this.font.width(topHint) / 2;
+        int bottomHintX = textCenterX - this.font.width(bottomHint) / 2;
+        updateTextureSizeIfNeeded();
+
+        // Draw default NutUI background first.
+        RenderBackground(poseStack, textCenterX + 7, this.topPos - 20);
+        renderDefaultBg(poseStack, partialTick, mouseX, mouseY);
+        renderTableLabels(poseStack);
+
+        if (buttonPosX < TRACK_MIN_X) buttonPosX = TRACK_MIN_X;
+        if (buttonPosX > TRACK_MAX_X) buttonPosX = TRACK_MAX_X;
+
+        int buttonX = (int) Math.round(buttonPosX);
+        int buttonY = (int) Math.round(buttonPosY);
+
+        if (buttonY > Y_SWITCH_THRESHOLD) buttonY = TRACK_Y_FORCED;
+        if (buttonY <= Y_SWITCH_THRESHOLD) buttonY = TRACK_Y_DYNAMIC;
+
+        int percent = mapXToPercent(buttonPosX);
+
+        RenderButton(poseStack, buttonX, buttonY, percent);
+        this.font.draw(poseStack, topHint, topHintX + 6, this.topPos - 10, 0xFFFFFF);
+        this.font.draw(poseStack, bottomHint, bottomHintX + 5, this.topPos + 28, 0xFFFFFF);
+    }
+
+    private void renderTableLabels(@NotNull PoseStack poseStack) {
+        TextureSize.Size tableSize = TextureSize.get(SCROLLER_TABLE);
+        int tableWidth = tableSize.w();
+        int tableHeight = tableSize.h();
+        if (tableWidth <= 0 || tableHeight <= 0) {
+            return;
+        }
+
+        int tableX = this.leftPos + TABLE_OFFSET_X;
+        int topTableY = this.topPos - tableHeight - TABLE_GAP_Y;
+        int bottomTableY = this.topPos + this.imageHeight + TABLE_GAP_Y;
+
+        renderTableLabel(poseStack, tableX, topTableY,
+                Component.translatable("createlazytick.scroller.dynamic_adjust"),
+                tableWidth, tableHeight);
+        renderTableLabel(poseStack, tableX, bottomTableY,
+                Component.translatable("createlazytick.scroller.locked_frequency"),
+                tableWidth, tableHeight);
+    }
+
+    private void renderTableLabel(@NotNull PoseStack poseStack, int x, int y, Component label, int tableWidth, int tableHeight) {
+        SBlit(poseStack, SCROLLER_TABLE, x, y, 1, 1, tableWidth, tableHeight);
+        int textX = x + (tableWidth - this.font.width(label)) / 2;
+        int textY = y + (tableHeight - 8) / 2;
+        this.font.draw(poseStack, label, textX, textY, 0x704630);
+    }
+
+    private int BackGroundTick = 0;
+
+    private void RenderBackground(@NotNull PoseStack poseStack, int X, int Y) {
+        if (BackGroundTick < BACKGROUND_SPREAD_MAX) {
+            BackGroundTick++;
+        }
+
+        drawBackgroundColumn(poseStack, X, Y);
+        for (int i = 1; i <= BackGroundTick; i++) {
+            int offset = i * BACKGROUND_TILE;
+            drawBackgroundColumn(poseStack, X - offset, Y);
+            drawBackgroundColumn(poseStack, X + offset, Y);
+        }
+    }
+
+
+    private void drawBackgroundColumn(@NotNull PoseStack poseStack, int x, int y) {
+        int drawY = y;
+        for (int i = 0; i < BACKGROUND_ROWS; i++) {
+            SBlit(poseStack, BACKGROUND, x, drawY,
+                    1, 1,
+                    BACKGROUND_TILE, BACKGROUND_TILE);
+            drawY += BACKGROUND_TILE;
+        }
+    }
+
+
+    private void RenderButton(@NotNull PoseStack poseStack, int X, int Y, int percent) {
+        int drawX = this.leftPos + X;
+        int drawY = this.topPos + Y;
+        int buttonStartX = drawX;
+
+        // left part
+        SBlit(poseStack, SCROLLER_BUTTON, drawX, drawY,
+                2, 2,
+                3, 14);
+        drawX += 3;
+
+        // middle part
+        for (int i = 0; i < BUTTON_CHAR_COUNT; i++) {
+            SBlit(poseStack, SCROLLER_BUTTON, drawX, drawY,
+                    6, 2,
+                    5, 14);
+            drawX += 5;
+        }
+
+        // right part
+        SBlit(poseStack, SCROLLER_BUTTON, drawX, drawY,
+                12, 2,
+                3, 14);
+
+        String percentText = percent + "%";
+        int buttonWidth = 3 + (BUTTON_CHAR_COUNT * 5) + 3;
+        int textX = buttonStartX + (buttonWidth - this.font.width(percentText)) / 2;
+        int textY = drawY + (BUTTON_PIXEL_HEIGHT - 8) / 2;
+        this.font.draw(poseStack, percentText, textX + 1, textY + 1, 0x704630);
+    }
+
+
+    private boolean isSyncedStateForCurrentMenu() {
+        String syncedMenuId = SharedData.getSyncedString("menuId", "");
+        int[] syncedPos = SharedData.getSyncedObject("pos", int[].class);
+        if (syncedPos == null || syncedPos.length != 3) {
+            return false;
+        }
+
+        String currentMenuId = out_menu.getMenuId().toString();
+        if (!Objects.equals(currentMenuId, syncedMenuId)) {
+            return false;
+        }
+
+        return syncedPos[0] == out_menu.getPos().getX()
+                && syncedPos[1] == out_menu.getPos().getY()
+                && syncedPos[2] == out_menu.getPos().getZ();
+    }
+
+    private void initializeFromServerState() {
+        if (!isSyncedStateForCurrentMenu()) {
+            buttonPosX = mapPercentToX(DEFAULT_PERCENT_FALLBACK);
+            buttonPosY = TRACK_Y_DYNAMIC;
+            return;
+        }
+
+        int percent = SharedData.getSyncedInt("clt_ui_percent", -1);
+        if (percent >= 0) {
+            buttonPosX = mapPercentToX(percent);
+            boolean forced = SharedData.getSyncedBoolean("clt_ui_forced", false);
+            buttonPosY = forced ? TRACK_Y_FORCED : TRACK_Y_DYNAMIC;
+            return;
+        }
+
+        buttonPosX = mapPercentToX(DEFAULT_PERCENT_FALLBACK);
+        buttonPosY = TRACK_Y_DYNAMIC;
+    }
+
+    // Tool func
+    private static boolean isRightMouseDown() {
+        long window = Minecraft.getInstance().getWindow().getWindow();
+        return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
+    }
+
+    private static int mapXToPercent(double x) {
+        double ratio = (x - TRACK_MIN_X) / (double) (TRACK_MAX_X - TRACK_MIN_X);
+        int percent = (int) Math.round(ratio * 100.0D);
+        if (percent < 0) return 0;
+        return Math.min(percent, 100);
+    }
+
+    private static double mapPercentToX(int percent) {
+        int clamped = percent;
+        if (clamped < 0) clamped = 0;
+        if (clamped > 100) clamped = 100;
+        double ratio = clamped / 100.0D;
+        return TRACK_MIN_X + ratio * (TRACK_MAX_X - TRACK_MIN_X);
+    }
+
+    private void sendCurrentStateToServer() {
+        if (!buttonPositionInitialized) {
+            initializeFromServerState();
+            buttonPositionInitialized = true;
+        }
+        double x = buttonPosX;
+        if (x < TRACK_MIN_X) x = TRACK_MIN_X;
+        if (x > TRACK_MAX_X) x = TRACK_MAX_X;
+        int rowY = buttonPosY > Y_SWITCH_THRESHOLD ? TRACK_Y_FORCED : TRACK_Y_DYNAMIC;
+        int percent = mapXToPercent(x);
+        boolean forced = rowY == TRACK_Y_FORCED;
+        NutUIClientApi.sendAction("clt_scroller_set", Map.of(
+                "menu_id", out_menu.getMenuId().toString(),
+                "pos_x", out_menu.getPos().getX(),
+                "pos_y", out_menu.getPos().getY(),
+                "pos_z", out_menu.getPos().getZ(),
+                "percent", percent,
+                "forced", forced
+        ));
+    }
+
+    @Override
+    public void onClose() {
+        sendCurrentStateToServer();
+        super.onClose();
+    }
+
+
+    @Override
+    protected void renderLabels(@NotNull PoseStack poseStack, int mouseX, int mouseY) {
+        // super.renderLabels(poseStack, mouseX, mouseY);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+}
