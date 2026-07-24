@@ -1,0 +1,33 @@
+// Shared source/resource wiring for every CreateLazyTick distribution project.
+//
+// This follows Create-SchematicChecker's source-level common pattern.  CLT's
+// common code may reference Minecraft classes whose mappings differ by target,
+// so it deliberately is not consumed as one compiled binary dependency.
+def cltRepositoryRoot = rootProject.projectDir
+if (!new File(cltRepositoryRoot, 'common/src/main/java').isDirectory()) {
+    // A version project may be invoked directly with -p.  In that case it is
+    // its own root project, so discover the combined checkout without changing
+    // the standalone invocation contract.
+    def cltCandidateRoot = project.projectDir
+    while (cltCandidateRoot != null && !new File(cltCandidateRoot, 'common/src/main/java').isDirectory()) {
+        cltCandidateRoot = cltCandidateRoot.parentFile
+    }
+    if (cltCandidateRoot == null) {
+        throw new GradleException("Could not find the CreateLazyTick common directory from ${project.projectDir}")
+    }
+    cltRepositoryRoot = cltCandidateRoot
+}
+
+def cltCommonJavaDir = new File(cltRepositoryRoot, 'common/src/main/java')
+def cltCommonResourcesDir = new File(cltRepositoryRoot, 'common/src/main/resources')
+
+if (!cltCommonJavaDir.isDirectory()) {
+    throw new GradleException("Missing CreateLazyTick common Java directory: ${cltCommonJavaDir}")
+}
+
+sourceSets {
+    main {
+        java.srcDir(cltCommonJavaDir)
+        resources.srcDir(cltCommonResourcesDir)
+    }
+}

@@ -2,12 +2,33 @@ plugins {
     id 'java-library'
 }
 
-// `common` is a source/resource fragment for the version projects, not a binary
-// dependency.  Keep this project source-empty so aggregate `:common:build`
-// remains valid even when shared Java uses Minecraft APIs supplied by children.
+java {
+    withSourcesJar()
+}
+
+// `common` is source-injected into each loader/version project by
+// gradle/clt-common.gradle, rather than linked as one binary.  Some shared
+// classes use Minecraft mapping types supplied by their target project, so this
+// metadata project intentionally does not compile the shared source by itself.
 sourceSets {
     main {
         java.setSrcDirs([])
         resources.setSrcDirs([])
     }
+}
+
+tasks.named('sourcesJar').configure {
+    from('src/main/java')
+    from('src/main/resources')
+}
+
+tasks.register('verifyCommonLayout') {
+    group = 'verification'
+    description = 'Verifies that the shared source/resource fragment is present.'
+    inputs.dir('src/main/java')
+    inputs.dir('src/main/resources')
+}
+
+tasks.named('check').configure {
+    dependsOn('verifyCommonLayout')
 }

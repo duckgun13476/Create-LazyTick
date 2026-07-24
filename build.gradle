@@ -2,14 +2,51 @@ plugins {
     id 'base'
 }
 
+def versionProjects = [
+        ':forge-1.19.2',
+        ':forge-1.20.1-0.5.1',
+        ':forge-1.20.1-6.0.x',
+        ':neoforge-1.21.1'
+]
+
 tasks.register('buildAllVersions') {
     group = 'build'
     description = 'Build every standalone CreateLazyTick version project.'
-    dependsOn(
-            ':common:build',
-            ':forge-1.19.2:build',
-            ':forge-1.20.1-0.5.1:build',
-            ':forge-1.20.1-6.0.x:build',
-            ':neoforge-1.21.1:build'
-    )
+    dependsOn(':common:build')
+    dependsOn(versionProjects.collect { "${it}:build" })
+}
+
+tasks.register('compileJavaAllVersions') {
+    group = 'build'
+    description = 'Compiles every supported CreateLazyTick version project.'
+    dependsOn(versionProjects.collect { "${it}:compileJava" })
+}
+
+tasks.register('jarAllVersions') {
+    group = 'build'
+    description = 'Builds final jars for every supported CreateLazyTick version project.'
+    dependsOn(versionProjects.collect { "${it}:jar" })
+}
+
+def cachedClientRunProjects = [
+        'forge1192'   : ':forge-1.19.2',
+        'forge1201old': ':forge-1.20.1-0.5.1',
+        'forge1201new': ':forge-1.20.1-6.0.x',
+        'neoforge1211': ':neoforge-1.21.1'
+]
+def isWindowsHost = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
+
+cachedClientRunProjects.each { taskSuffix, projectPath ->
+    tasks.register("runClientCached${taskSuffix.capitalize()}", Exec) {
+        group = 'development'
+        description = "Runs ${projectPath}:runClient with Gradle offline cache reuse."
+        workingDir = rootProject.projectDir
+        commandLine = [
+                isWindowsHost ? rootProject.file('gradlew.bat').absolutePath : rootProject.file('gradlew').absolutePath,
+                "${projectPath}:runClient",
+                '--offline',
+                '--no-daemon',
+                '--console=plain'
+        ]
+    }
 }
