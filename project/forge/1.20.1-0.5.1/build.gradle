@@ -14,6 +14,7 @@ plugins {
 apply from: file('../../../gradle/clt-property-loader.gradle')
 apply from: file('../../../gradle/clt-java.gradle')
 apply from: file('../../../gradle/clt-git.gradle')
+apply from: file('../../../gradle/clt-publishing-credentials.gradle')
 
 ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
 
@@ -272,8 +273,7 @@ tasks.register('PublishInfo') {
         println "Reobfuscated JAR file path: ${reobfJar.archiveFile.get().asFile.absolutePath}"
         println "version = \"$minecraft_version-$mod_version\"\n" +
                 "    displayName = \"${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}\""
-        def propertiesFile = file('api.properties')
-        if (propertiesFile.exists()) {
+        if (cltPublishingCredentialsPresent()) {
             println 'Publishing credentials: configured'
         } else {
             println "api.properties not exist"
@@ -304,9 +304,7 @@ tasks.register('publishAll') {
 
 tasks.register('publishCurseForge', TaskPublishCurseForge) {
     dependsOn 'reobfJar'
-    def propertiesFile = file('api.properties')
-    def properties = new Properties()
-    properties.load(new FileInputStream(propertiesFile))
+    def properties = cltReadPublishingCredentials()
 
     var cfToken = properties.getProperty("CF_TOKEN")
     apiToken = cfToken
@@ -332,9 +330,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
 
 
 publishMods {
-    def propertiesFile = file('api.properties')
-    def properties = new Properties()
-    properties.load(new FileInputStream(propertiesFile))
+    def properties = cltReadPublishingCredentials()
     def modrinthTokenGet = properties.getProperty("MODRINTH_TOKEN")
 
     file = reobfJar.archiveFile
