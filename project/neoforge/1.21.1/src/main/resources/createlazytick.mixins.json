@@ -35,7 +35,6 @@
     "OptElement.itemdrain.ItemDrainBlockUseMixin",
     "OptElement.itemdrain.ItemDrainLazyTickMixin",
     "OptElement.saw.SawBlockUseMixin",
-    "OptElement.saw.SawLazyTickMixin",
     "OptElement.saw.SawRecipeMixin"
   ],
   "client": [
