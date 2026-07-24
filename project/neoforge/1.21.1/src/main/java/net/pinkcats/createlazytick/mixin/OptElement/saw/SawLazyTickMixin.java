@@ -6,6 +6,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingInventory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.pinkcats.createlazytick.adaptive.SawAdaptiveSchedule;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -30,6 +31,12 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     private boolean createLazyTick$inventoryChanged = false;
 
     @Unique
+    private boolean createLazyTick$outputAttempted = false;
+
+    @Unique
+    private SawAdaptiveSchedule.State createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.State.initial();
+
+    @Unique
     private void createLazyTick$resetDelayTick() {
         createLazyTick$sawTick = 0;
         LazyTickLogic.setIntervalSafe(this, 1);
@@ -38,12 +45,11 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     @Unique
     private void createLazyTick$applyBackoff() {
         createLazyTick$sawTick = 0;
-        int currentInterval = this.createLazyTick$getCurrentSuperTick();
-        int newInterval = LazyTickLogic.computeNextInterval(this, currentInterval, ServerConfig.getSawDelayMax());
-
-        if (newInterval != currentInterval) {
-            LazyTickLogic.setIntervalSafe(this, newInterval);
-        }
+        int maxInterval = ServerConfig.getSawDelayMax();
+        createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.onRetryFailure(createLazyTick$adaptiveSchedule, maxInterval);
+        int nextInterval = SawAdaptiveSchedule.nextProbeInterval(
+                createLazyTick$adaptiveSchedule, level.getGameTime(), maxInterval, 2);
+        LazyTickLogic.setIntervalSafe(this, nextInterval);
     }
 
     public SawLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -59,6 +65,12 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
                 this.level, this.worldPosition, this.createLazyTick$getCurrentSuperTick(), ServerConfig.getSawDelayMax());
 
         createLazyTick$inventoryChanged = false;
+        createLazyTick$outputAttempted = false;
+        if (inventory.isEmpty()) {
+            int emptyResetTicks = (int) Math.min(Integer.MAX_VALUE, (long) ServerConfig.getSawDelayMax() * 2L);
+            createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.expireAfterEmptyIdle(
+                    createLazyTick$adaptiveSchedule, level.getGameTime(), emptyResetTicks);
+        }
     }
 
     @Inject(method = "tick", remap = false, at = @At(
@@ -83,6 +95,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         } else {
             // 放行一次实际重试；只有 RETURN 仍未产生库存变化时才增长退避。
             createLazyTick$sawTick = 0;
+            createLazyTick$outputAttempted = true;
         }
     }
 
@@ -94,6 +107,10 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         if (level == null || level.isClientSide) return;
 
         createLazyTick$inventoryChanged = true;
+        if (createLazyTick$outputAttempted) {
+            createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.onOutputSuccess(
+                    createLazyTick$adaptiveSchedule, level.getGameTime(), ServerConfig.getSawDelayMax());
+        }
         createLazyTick$resetDelayTick();
     }
 
@@ -102,7 +119,8 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
         if (level == null || level.isClientSide) return;
 
-        if (inventory.remainingTime == 0 && !inventory.isEmpty() && !createLazyTick$inventoryChanged)
+        if (createLazyTick$outputAttempted && inventory.remainingTime == 0 && !inventory.isEmpty()
+                && !createLazyTick$inventoryChanged)
             createLazyTick$applyBackoff();
     }
 
