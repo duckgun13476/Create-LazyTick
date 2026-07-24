@@ -341,3 +341,5 @@ tasks.register('checkResources') {
         }
     }
 }
+
+apply from: file('../../../gradle/clt-publishing-common.gradle')

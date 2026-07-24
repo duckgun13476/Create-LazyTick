@@ -354,3 +354,5 @@ publishMods {
         }
     }
 }
+
+apply from: file('../../../gradle/clt-publishing-common.gradle')

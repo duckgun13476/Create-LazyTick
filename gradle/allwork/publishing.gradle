@@ -1,0 +1,48 @@
+// CSC-style shared publishing surface. Loader-specific upload configuration
+// remains in each version build until it has been migrated and verified.
+ext.cltPublishArtifactTaskName = {
+    def configured = project.findProperty('clt_publish_artifact_task_name')?.toString()?.trim()
+    if (configured != null && !configured.isEmpty()) {
+        return configured
+    }
+    return tasks.findByName('reobfJar') != null ? 'reobfJar' : 'jar'
+}
+
+ext.cltPublishArtifactFile = {
+    Task artifactTask = tasks.named(cltPublishArtifactTaskName()).get()
+    if (!artifactTask.hasProperty('archiveFile')) {
+        throw new GradleException("Publish artifact task '${artifactTask.name}' has no archiveFile in '${project.path}'")
+    }
+    return artifactTask.archiveFile.get().asFile
+}
+
+tasks.register('allworkJarJar') {
+    group = 'Allwork'
+    description = 'Builds this version\'s final publishing artifact.'
+    dependsOn { cltPublishArtifactTaskName() }
+}
+
+tasks.register('verifyPublishArtifact') {
+    group = 'Verification'
+    description = 'Fails when this version\'s publishing artifact is missing or empty.'
+    dependsOn 'allworkJarJar'
+    doLast {
+        File artifact = cltPublishArtifactFile()
+        if (!artifact.isFile() || artifact.length() == 0L) {
+            throw new GradleException("Publishing artifact is missing or empty: ${artifact}")
+        }
+        println "Publish artifact verified: ${artifact.absolutePath}"
+    }
+}
+
+tasks.register('allworkPublishInfo') {
+    group = 'Allwork'
+    description = 'Allwork alias for the version publishing summary.'
+    dependsOn 'PublishInfo'
+}
+
+tasks.register('allworkPublishAll') {
+    group = 'Allwork'
+    description = 'Allwork alias for the version upload sequence.'
+    dependsOn 'publishAll'
+}

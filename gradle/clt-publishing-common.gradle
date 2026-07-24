@@ -1,0 +1,17 @@
+File current = project.projectDir
+File migratedScript = null
+
+while (current != null) {
+    File candidate = new File(current, 'gradle/allwork/publishing.gradle')
+    if (candidate.isFile()) {
+        migratedScript = candidate
+        break
+    }
+    current = current.parentFile
+}
+
+if (migratedScript == null) {
+    throw new GradleException("Unable to locate CLT allwork publishing convention for '${project.path}'")
+}
+
+apply from: migratedScript
