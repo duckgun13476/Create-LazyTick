@@ -18,7 +18,7 @@
 
 ### 组合开发结构
 
-本仓库采用 BO/CSC/CEC 风格的多版本组合结构：根 wrapper 提供跨版本构建与发布编排；`common/` 是由各版本源码注入的共享片段；`project/<loader>/<version>/` 只保留对应版本的 API、Mixin、资源元数据与依赖坐标。
+本仓库采用 BO/CSC/CEC 风格的多版本组合结构：根 wrapper 提供跨版本构建与发布编排；`common/` 是由各版本源码注入的共享片段；`project/<loader>/<version>/` 只保留对应版本的 API、Mixin、资源元数据与依赖坐标，不能再作为独立 Gradle 根工程调用。
 
 常用任务：
 

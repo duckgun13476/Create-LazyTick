@@ -18,7 +18,7 @@ A performance-focused optimization addon for **Create**. Lazy ticking and cachin
 
 ### Combined development layout
 
-This repository follows the BO/CSC/CEC multi-version layout. The root wrapper owns cross-version build and publishing orchestration; `common/` is source-injected into target projects; `project/<loader>/<version>/` retains only version-specific API, Mixin, metadata, and dependency code.
+This repository follows the BO/CSC/CEC multi-version layout. The root wrapper owns cross-version build and publishing orchestration; `common/` is source-injected into target projects; `project/<loader>/<version>/` retains only version-specific API, Mixin, metadata, and dependency code, and is no longer an independent Gradle root.
 
 ```powershell
 .\gradlew.bat compileJavaAllVersions
