@@ -2,5 +2,12 @@ plugins {
     id 'java-library'
 }
 
-// Reserved for code that has a verified common API across every version project.
-// Do not add project dependencies until the first shared behavior is intentionally extracted.
+// `common` is a source/resource fragment for the version projects, not a binary
+// dependency.  Keep this project source-empty so aggregate `:common:build`
+// remains valid even when shared Java uses Minecraft APIs supplied by children.
+sourceSets {
+    main {
+        java.setSrcDirs([])
+        resources.setSrcDirs([])
+    }
+}
