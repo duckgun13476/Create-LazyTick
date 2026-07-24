@@ -81,7 +81,8 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         if (createLazyTick$sawTick < this.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
-            createLazyTick$applyBackoff();
+            // 放行一次实际重试；只有 RETURN 仍未产生库存变化时才增长退避。
+            createLazyTick$sawTick = 0;
         }
     }
 
