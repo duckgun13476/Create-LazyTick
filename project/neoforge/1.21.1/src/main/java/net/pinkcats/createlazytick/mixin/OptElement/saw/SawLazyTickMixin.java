@@ -27,9 +27,6 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     private int createLazyTick$sawTick = 0;
 
     @Unique
-    private boolean createLazyTick$inventoryChanged = false; //脏标记
-
-    @Unique
     private void createLazyTick$resetDelayTick() {
         createLazyTick$sawTick = 0;
         LazyTickLogic.setIntervalSafe(this, 1);
@@ -58,55 +55,28 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         NetworkSyncHelper.createLazyTick$syncPacketData(this,
                 this.level, this.worldPosition, this.createLazyTick$getCurrentSuperTick(), ServerConfig.getSawDelayMax());
 
-        createLazyTick$inventoryChanged = false;
     }
 
     @Inject(method = "tick", remap = false, at = @At(
             value = "INVOKE",
-            target = "Lcom/simibubi/create/content/kinetics/saw/SawBlockEntity;getItemMovementVec()Lnet/minecraft/world/phys/Vec3;"), cancellable = true)
-    public void optimizedTick(CallbackInfo ci) {
+            target = "Lcom/simibubi/create/content/kinetics/base/BlockBreakingKineticBlockEntity;tick()V",
+            shift = At.Shift.AFTER), cancellable = true)
+    public void createLazyTick$gateIdleTail(CallbackInfo ci) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
         if (level == null || level.isClientSide) return;
 
-        /*if(!level.isClientSide()) {
-            System.out.println("saw:" + createLazyTick$sawTick + "|" + this.createLazyTick$getLazyTickInterval());
-        }*/
-
-        // 如果正在加工(remainingTime > 0) 或 空闲(Empty),不拦截
-        if (inventory.remainingTime > 0 || inventory.isEmpty()) {
+        // 产出待重试、加工中、或有待启动输入时，Create 必须维持逐 tick 执行。
+        if (!inventory.isEmpty() || inventory.remainingTime != -1) {
             createLazyTick$resetDelayTick();
             return;
         }
 
         createLazyTick$sawTick++;
 
-        // Tick < Interval -> Cancel
+        // 基类 tick 已完成；空库存的剩余 Saw 逻辑只会检查后返回，可安全延后。
         if (createLazyTick$sawTick < this.createLazyTick$getCurrentSuperTick()) {
             ci.cancel();
         } else {
-            // reset timer and try Logic
-            createLazyTick$sawTick = 0;
-        }
-    }
-
-    @Inject(method = "tick", remap = false, at = @At(
-            value = "INVOKE",
-            target = "Lcom/simibubi/create/content/processing/recipe/ProcessingInventory;setStackInSlot(ILnet/minecraft/world/item/ItemStack;)V"))
-    public void onInventoryChange(CallbackInfo ci) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
-
-        if (level == null || level.isClientSide) return;
-        createLazyTick$inventoryChanged = true;
-        createLazyTick$resetDelayTick();
-    }
-
-    @Inject(method = "tick", at = @At("RETURN"), remap = false)
-    public void onOutputFail(CallbackInfo ci) {
-        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
-
-        if (level == null || level.isClientSide) return;
-
-        if (inventory.remainingTime == 0 && !inventory.isEmpty() && !createLazyTick$inventoryChanged) {
             createLazyTick$applyBackoff();
         }
     }
