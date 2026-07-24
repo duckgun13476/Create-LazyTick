@@ -256,7 +256,7 @@ compileJava {
 }
 
 jar {
-    from('LICENSE.txt') {
+    from('LICENSE') {
         rename { "${it}_${archivesBaseName}" }
 
     }
@@ -313,7 +313,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
 
     def mainFile = upload(curseforge_id, project.file(
             "build/libs/${package_name}-${mod_version}-forge-${minecraft_version}.jar"))
-    mainFile.changelog = project.file('update/changelog.md').getText('UTF-8').split("\n\n\n")[0]
+    mainFile.changelog = new File(project.property('cltRepositoryRoot').toString(), 'update/changelog.md').getText('UTF-8').split("\n\n\n")[0]
     mainFile.addEnvironment("Client", "Server")
     mainFile.addGameVersion("${minecraft_version}")
     mainFile.addModLoader("Forge","NeoForge")
@@ -338,7 +338,7 @@ publishMods {
     def modrinthTokenGet = properties.getProperty("MODRINTH_TOKEN")
 
     file = reobfJar.archiveFile
-    changelog = project.file("update/changelog.md").text
+    changelog = new File(project.property('cltRepositoryRoot').toString(), 'update/changelog.md').getText('UTF-8')
     type = STABLE
     version = "$minecraft_version-$mod_version"
     displayName = "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}"
