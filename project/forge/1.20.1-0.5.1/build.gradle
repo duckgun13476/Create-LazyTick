@@ -11,8 +11,9 @@ plugins {
 }
 
 
-apply from: "./gradle/java.gradle"
-apply from: "gradle/property_loader.gradle"
+apply from: file('../../../gradle/clt-property-loader.gradle')
+apply from: file('../../../gradle/clt-java.gradle')
+apply from: file('../../../gradle/clt-git.gradle')
 
 ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
 
@@ -20,7 +21,7 @@ ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
 group = mod_group_id
 version = mod_version
 archivesBaseName = mod_id
-String gitHash = "${calculateGitHash() + (hasUnstaged() ? "-modified" : "")}"
+String gitHash = cltGitHash
 
 idea {
     module {
@@ -28,7 +29,6 @@ idea {
         downloadSources = true
     }
 }
-
 
 mixin {
     add sourceSets.main, "${mod_id}.refmap.json"
@@ -274,13 +274,7 @@ tasks.register('PublishInfo') {
                 "    displayName = \"${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}\""
         def propertiesFile = file('api.properties')
         if (propertiesFile.exists()) {
-            def properties = new Properties()
-            properties.load(new FileInputStream(propertiesFile))
-            def cfToken = properties.getProperty("CF_TOKEN")
-            def modrinthToken = properties.getProperty("MODRINTH_TOKEN")
-
-            println "CF_TOKEN: $cfToken"
-            println "MODRINTH_TOKEN: $modrinthToken"
+            println 'Publishing credentials: configured'
         } else {
             println "api.properties not exist"
         }
@@ -317,9 +311,9 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     var cfToken = properties.getProperty("CF_TOKEN")
     apiToken = cfToken
 
-    def mainFile = upload(curseforge_id, new File(
-            "./build/libs/${package_name}-${mod_version}-forge-${minecraft_version}.jar"))
-    mainFile.changelog = new File("./update/changelog.md").text.split("\n\n\n")[0]
+    def mainFile = upload(curseforge_id, project.file(
+            "build/libs/${package_name}-${mod_version}-forge-${minecraft_version}.jar"))
+    mainFile.changelog = project.file('update/changelog.md').getText('UTF-8').split("\n\n\n")[0]
     mainFile.addEnvironment("Client", "Server")
     mainFile.addGameVersion("${minecraft_version}")
     mainFile.addModLoader("Forge","NeoForge")
@@ -364,42 +358,3 @@ publishMods {
     }
 }
 
-String calculateGitHash() {
-    try {
-        def output = providers.exec {
-            commandLine("git", "rev-parse", "HEAD")
-        }
-        return output.standardOutput.asText.get().trim()
-    } catch (Throwable ignored) {
-        return "unknown"
-    }
-}
-
-boolean hasUnstaged() {
-    try {
-        def output = providers.exec {
-            commandLine("git", "status", "--porcelain")
-        }
-        String result = output.standardOutput.asText.get().replace("/M gradlew(\\.bat)?/", "").trim()
-        if (!result.isEmpty())
-            println("Found stageable results:\n ${result}\n")
-        return !result.isEmpty()
-    } catch (Throwable ignored) {
-        return false
-    }
-}
-
-allprojects {
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-        options.compilerArgs += ['-encoding', 'utf8']
-    }
-
-    tasks.withType(Test) {
-        systemProperty "file.encoding", "UTF-8"
-    }
-
-    tasks.withType(Javadoc) {
-        options.encoding = 'UTF-8'
-    }
-}

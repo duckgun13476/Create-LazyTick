@@ -1,0 +1,48 @@
+// BO/CEC-style root orchestration for the existing per-version publishing
+// implementations.  This script never reads credentials; individual publish
+// tasks retain their loader-specific upload configuration.
+def cltPublishableProjects = [
+        ':forge-1.19.2',
+        ':forge-1.20.1-0.5.1',
+        ':forge-1.20.1-6.0.x',
+        ':neoforge-1.21.1'
+]
+
+def cltPackageTasks = [
+        ':forge-1.19.2:reobfJar',
+        ':forge-1.20.1-0.5.1:reobfJar',
+        ':forge-1.20.1-6.0.x:reobfJar',
+        ':neoforge-1.21.1:jar'
+]
+
+gradle.projectsEvaluated {
+    Task previousPublishTask = null
+    cltPublishableProjects.collect { rootProject.project(it) }.each { targetProject ->
+        Task publishTask = targetProject.tasks.findByName('publishAll')
+        if (publishTask != null && previousPublishTask != null) {
+            publishTask.mustRunAfter(previousPublishTask)
+        }
+        if (publishTask != null) {
+            previousPublishTask = publishTask
+        }
+    }
+}
+
+tasks.register('packageAllVersions') {
+    group = 'publishing'
+    description = 'Builds loader-correct release artifacts for all CreateLazyTick versions.'
+    dependsOn(cltPackageTasks)
+}
+
+tasks.register('publishInfoAllVersions') {
+    group = 'publishing'
+    description = 'Prints per-version publishing information without uploading artifacts.'
+    dependsOn(cltPublishableProjects.collect { "${it}:PublishInfo" })
+}
+
+tasks.register('publishAllVersions') {
+    group = 'publishing'
+    description = 'Packages and publishes every CreateLazyTick version in a stable order.'
+    dependsOn('packageAllVersions')
+    dependsOn(cltPublishableProjects.collect { "${it}:publishAll" })
+}

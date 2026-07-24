@@ -1,0 +1,63 @@
+import groovy.json.JsonSlurper
+import org.codehaus.groovy.runtime.MethodClosure
+
+// BO/CEC-style shared property loading.  Gradle has already loaded the current
+// project's gradle.properties, so common values only fill metadata that a
+// version does not declare itself.  Command-line properties always win.
+def cltLoadGradleProperties(File propertyFile) {
+    if (propertyFile == null || !propertyFile.isFile()) {
+        return
+    }
+    Properties properties = new Properties()
+    propertyFile.withInputStream { properties.load(it) }
+    properties.each { key, value ->
+        String propertyName = key.toString()
+        if (!project.hasProperty(propertyName)) {
+            project.ext.set(propertyName, value)
+        }
+    }
+}
+
+def cltFindRepositoryRoot() {
+    File candidate = project.projectDir
+    while (candidate != null) {
+        if (new File(candidate, 'gradle/clt-common.properties').isFile()) {
+            return candidate
+        }
+        candidate = candidate.parentFile
+    }
+    return null
+}
+
+def cltRepositoryRoot = cltFindRepositoryRoot()
+if (cltRepositoryRoot == null) {
+    throw new GradleException("Could not find CreateLazyTick shared Gradle properties from ${project.projectDir}")
+}
+cltLoadGradleProperties(new File(cltRepositoryRoot, 'gradle/clt-common.properties'))
+
+def cltLoadProperties(File propertyFile) {
+    if (!propertyFile.isFile()) {
+        project.logger.warn("The property file ${propertyFile.name} could not be loaded.")
+        return
+    }
+    propertyFile.withReader('UTF-8') {
+        Object propertyMap = new JsonSlurper().parse(it)
+        propertyMap.each { key, value ->
+            if (!key.toString().endsWith('_comment')) {
+                project.ext.set(key.toString(), value)
+            }
+        }
+    }
+}
+
+if (project.rootProject.hasProperty('secretFile')) {
+    File secretFile = project.rootProject.file(project.rootProject.property('secretFile'))
+    if (secretFile.isFile() && secretFile.name.endsWith('.json')) {
+        cltLoadProperties(secretFile)
+    }
+}
+
+ext {
+    loadGradleProperties = this.&cltLoadGradleProperties as MethodClosure
+    loadProperties = this.&cltLoadProperties as MethodClosure
+}

@@ -1,0 +1,39 @@
+// Shared Git build metadata and UTF-8 task conventions for every CLT target.
+def cltCalculateGitHash = {
+    try {
+        providers.exec {
+            commandLine('git', 'rev-parse', 'HEAD')
+        }.standardOutput.asText.get().trim()
+    } catch (Throwable ignored) {
+        'unknown'
+    }
+}
+
+def cltHasUnstaged = {
+    try {
+        String result = providers.exec {
+            commandLine('git', 'status', '--porcelain')
+        }.standardOutput.asText.get().trim()
+        if (!result.isEmpty()) {
+            logger.lifecycle("Found stageable results:\n${result}\n")
+        }
+        !result.isEmpty()
+    } catch (Throwable ignored) {
+        false
+    }
+}
+
+ext.cltGitHash = "${cltCalculateGitHash() + (cltHasUnstaged() ? '-modified' : '')}"
+
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-encoding', 'utf8']
+    }
+    tasks.withType(Test).configureEach {
+        systemProperty 'file.encoding', 'UTF-8'
+    }
+    tasks.withType(Javadoc).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}

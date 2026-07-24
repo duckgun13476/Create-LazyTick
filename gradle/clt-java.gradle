@@ -1,8 +1,12 @@
-//2025 copyright some gradle setting from Create : https://github.com/Creators-of-Create/Create
-
 apply plugin: 'java'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+def cltJavaVersion = project.findProperty('clt_java_version')?.toString()?.trim()
+if (!cltJavaVersion) {
+    cltJavaVersion = project.hasProperty('neo_version') ? '21' : '17'
+}
+def cltJavaLanguageVersion = JavaLanguageVersion.of(Integer.parseInt(cltJavaVersion))
+
+java.toolchain.languageVersion = cltJavaLanguageVersion
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 java.withSourcesJar()
@@ -18,7 +22,7 @@ jar {
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'Timestampe'              : System.currentTimeMillis(),
+                'Timestamp'               : System.currentTimeMillis(),
                 'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                 'Built-On-Minecraft'      : minecraft_version
         ])
@@ -26,22 +30,18 @@ jar {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = 'UTF-8'
-    it.options.release = 21
+    options.encoding = 'UTF-8'
+    options.release = cltJavaLanguageVersion.asInt()
 }
 
-// Disables Gradle's custom module metadata from being published to maven. The
-// metadata includes mapped dependencies which are not reasonably consumable by
-// other mod developers.
-tasks.withType(GenerateModuleMetadata) {
+tasks.withType(GenerateModuleMetadata).configureEach {
     enabled = false
 }
 
 javadoc {
-    // Suppress annoying warnings when generating JavaDoc files.
     options.addStringOption('Xdoclint:none', '-quiet')
 }
 
-compileJava {
+tasks.named('compileJava').configure {
     options.compilerArgs = ['-Xdiags:verbose']
 }

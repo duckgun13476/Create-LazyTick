@@ -9,6 +9,8 @@ def versionProjects = [
         ':neoforge-1.21.1'
 ]
 
+apply from: rootProject.file('gradle/clt-publishing-root.gradle')
+
 tasks.register('buildAllVersions') {
     group = 'build'
     description = 'Build every standalone CreateLazyTick version project.'
@@ -24,8 +26,8 @@ tasks.register('compileJavaAllVersions') {
 
 tasks.register('jarAllVersions') {
     group = 'build'
-    description = 'Builds final jars for every supported CreateLazyTick version project.'
-    dependsOn(versionProjects.collect { "${it}:jar" })
+    description = 'Alias for packageAllVersions; builds loader-correct final jars.'
+    dependsOn('packageAllVersions')
 }
 
 def cachedClientRunProjects = [
