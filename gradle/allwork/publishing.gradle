@@ -1,10 +1,17 @@
-// BO-style publishing convention. Version projects declare only loader and
-// artifact metadata before applying this script.
-def cltCurseForgeTaskType = project.ext.cltCurseForgeTaskType
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+import java.net.HttpURLConnection
+import java.net.URI
+import java.net.URLEncoder
+import java.security.MessageDigest
+
+// CreateLazyTick publish mission
+
 def cltResolvePublishingRepositoryRoot = {
     File current = project.projectDir
     while (current != null) {
-        if (new File(current, 'gradle/clt-common.properties').isFile()) {
+        if (new File(current, 'gradle/clt-common.properties').exists()) {
             return current
         }
         current = current.parentFile
@@ -12,29 +19,32 @@ def cltResolvePublishingRepositoryRoot = {
     return rootProject.projectDir
 }
 
-def cltPublishingRepositoryRoot = cltResolvePublishingRepositoryRoot()
+def cltPublishingRepositoryRootDir = cltResolvePublishingRepositoryRoot()
 
 ext.cltReadPublishingProperties = {
-    File propertiesFile = new File(cltPublishingRepositoryRoot, 'api.properties')
-    if (!propertiesFile.isFile()) {
+    def propertiesFile = new File(cltPublishingRepositoryRootDir, 'api.properties')
+    if (!propertiesFile.exists()) {
         return null
     }
-    Properties properties = new Properties()
-    propertiesFile.withInputStream { properties.load(it) }
+
+    def properties = new Properties()
+    properties.load(new FileInputStream(propertiesFile))
     return properties
 }
 
 ext.cltReadPrimaryChangelog = {
-    File changelogFile = new File(cltPublishingRepositoryRoot, 'update/changelog.md')
-    if (!changelogFile.isFile()) {
+    def changelogFile = new File(cltPublishingRepositoryRootDir, 'update/changelog.md')
+    if (!changelogFile.exists()) {
         return ''
     }
-    return changelogFile.getText('UTF-8').split("\\n\\n\\n")[0]
+    String text = changelogFile.getText('UTF-8')
+    def matcher = text =~ /(?ms)\A(####\s+v[^\n]+.*?)(?=\n####\s+v|\z)/
+    return matcher.find() ? matcher.group(1).trim() : text.trim()
 }
 
 ext.cltReadFullChangelog = {
-    File changelogFile = new File(cltPublishingRepositoryRoot, 'update/changelog.md')
-    return changelogFile.isFile() ? changelogFile.getText('UTF-8') : ''
+    def changelogFile = new File(cltPublishingRepositoryRootDir, 'update/changelog.md')
+    return changelogFile.exists() ? changelogFile.getText('UTF-8') : ''
 }
 
 ext.cltReadStringListProperty = { String name, List<String> defaultValue = [] ->
@@ -45,70 +55,588 @@ ext.cltReadStringListProperty = { String name, List<String> defaultValue = [] ->
     if (value instanceof Collection) {
         return value.collect { it.toString().trim() }.findAll { !it.isEmpty() }
     }
-    return value.toString().split(',').collect { it.trim() }.findAll { !it.isEmpty() }
+    return value.toString()
+            .split(',')
+            .collect { it.trim() }
+            .findAll { !it.isEmpty() }
 }
 
-ext.cltPublishArtifactTaskName = {
+ext.cltReadBooleanProperty = { String name, boolean defaultValue = false ->
+    def value = project.findProperty(name)
+    if (value == null) {
+        return defaultValue
+    }
+    String normalized = value.toString().trim().toLowerCase(Locale.ROOT)
+    if (normalized in ['1', 'true', 'yes', 'y', 'on']) {
+        return true
+    }
+    if (normalized in ['0', 'false', 'no', 'n', 'off']) {
+        return false
+    }
+    return defaultValue
+}
+
+ext.cltPublishRemoteCheckEnabled = {
+    return !cltReadBooleanProperty('clt_publish_remote_check_disabled', false)
+}
+
+ext.cltPublishCurseForgeRemoteCheckEnabled = {
+    return cltPublishRemoteCheckEnabled() && !cltReadBooleanProperty('clt_publish_curseforge_remote_check_disabled', false)
+}
+
+ext.cltPublishModrinthRemoteCheckEnabled = {
+    return cltPublishRemoteCheckEnabled() && !cltReadBooleanProperty('clt_publish_modrinth_remote_check_disabled', false)
+}
+
+ext.cltReadPublishArtifactTaskName = {
     return project.findProperty('clt_publish_artifact_task_name')?.toString()?.trim() ?: 'jar'
 }
 
-ext.cltPublishLoaderId = {
+ext.cltReadPublishLoaderId = {
     return project.findProperty('clt_publish_loader_id')?.toString()?.trim() ?: ''
 }
 
-ext.cltPublishArtifactFile = {
-    Task artifactTask = tasks.named(cltPublishArtifactTaskName()).get()
+ext.cltReadPublishDisplaySuffix = {
+    def configuredSuffix = project.findProperty('clt_publish_display_suffix')?.toString()?.trim()
+    if (configuredSuffix != null && !configuredSuffix.isEmpty()) {
+        return configuredSuffix.startsWith('_') ? configuredSuffix : "_${configuredSuffix}"
+    }
+
+    return ''
+}
+
+ext.cltReadPublishVersionSuffix = {
+    def configuredSuffix = project.findProperty('clt_publish_version_suffix')?.toString()?.trim()
+    if (configuredSuffix != null && !configuredSuffix.isEmpty()) {
+        return configuredSuffix.startsWith('-') ? configuredSuffix : "-${configuredSuffix}"
+    }
+
+    return ''
+}
+
+ext.cltReadPublishDisplayName = {
+    return "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}${cltReadPublishDisplaySuffix()}"
+}
+
+ext.cltReadPublishVersionId = {
+    return "${minecraft_version}-${mod_version}${cltReadPublishVersionSuffix()}"
+}
+
+ext.cltReadPublishCurseForgeLoaders = {
+    return cltReadStringListProperty('clt_publish_curseforge_loaders')
+}
+
+ext.cltReadPublishModrinthLoaders = {
+    return cltReadStringListProperty('clt_publish_modrinth_loaders')
+}
+
+ext.cltReadPublishRequiredDependencies = {
+    return cltReadStringListProperty('clt_publish_required_dependencies')
+}
+
+ext.cltReadPublishOptionalDependencies = {
+    return cltReadStringListProperty('clt_publish_optional_dependencies')
+}
+
+ext.cltReadPublishArtifactFile = {
+    def relativePath = project.findProperty('clt_publish_artifact_relative_path')?.toString()?.trim()
+    if (relativePath != null && !relativePath.isEmpty()) {
+        return project.file(relativePath)
+    }
+
+    def artifactTask = tasks.named(cltReadPublishArtifactTaskName()).get()
     if (!artifactTask.hasProperty('archiveFile')) {
-        throw new GradleException("Publishing task '${artifactTask.name}' has no archiveFile in '${project.path}'")
+        throw new GradleException("Publishing task '${artifactTask.name}' does not expose archiveFile in project '${project.path}'")
     }
     return artifactTask.archiveFile.get().asFile
 }
 
+// 发布前强制检查最终 jar 是否真实生成，避免平台产物缺失时继续上传其他版本。
 ext.cltVerifyPublishArtifactFile = {
-    File artifact = cltPublishArtifactFile()
-    if (!artifact.isFile() || artifact.length() == 0L) {
-        throw new GradleException("Publishing artifact is missing or empty for '${project.path}': ${artifact.absolutePath}")
+    File artifactFile = cltReadPublishArtifactFile()
+    if (!artifactFile.isFile()) {
+        throw new GradleException("Publish artifact does not exist for '${project.path}': ${artifactFile.absolutePath}")
     }
-    return artifact
+    if (artifactFile.length() <= 0L) {
+        throw new GradleException("Publish artifact is empty for '${project.path}': ${artifactFile.absolutePath}")
+    }
+    return artifactFile
 }
 
-ext.cltPublishDisplayName = {
-    return "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}"
+ext.cltReadPublishLedgerFile = {
+    return new File(cltPublishingRepositoryRootDir, 'update/publish-ledger.json')
 }
 
-ext.cltPublishVersionId = {
-    return "${minecraft_version}-${mod_version}"
+ext.cltReadJsonFile = { File jsonFile ->
+    String text = jsonFile.getText('UTF-8')
+    if (!text.isEmpty() && text.charAt(0) == '\uFEFF' as char) {
+        text = text.substring(1)
+    }
+    return new JsonSlurper().parseText(text)
 }
 
-ext.cltPublishCurseForgeLoaders = {
-    return cltReadStringListProperty('clt_publish_curseforge_loaders')
+ext.cltReadPublishLedgerEntries = {
+    File ledgerFile = cltReadPublishLedgerFile()
+    if (!ledgerFile.isFile()) {
+        return []
+    }
+    def parsed = cltReadJsonFile(ledgerFile)
+    if (parsed instanceof Map && parsed.entries instanceof Collection) {
+        return parsed.entries.findAll { it instanceof Map }.collect { it as Map }
+    }
+    if (parsed instanceof Collection) {
+        return parsed.findAll { it instanceof Map }.collect { it as Map }
+    }
+    return []
 }
 
-ext.cltPublishModrinthLoaders = {
-    return cltReadStringListProperty('clt_publish_modrinth_loaders')
+ext.cltSha256Hex = { File file ->
+    MessageDigest digest = MessageDigest.getInstance('SHA-256')
+    file.withInputStream { InputStream input ->
+        byte[] buffer = new byte[8192]
+        int read
+        while ((read = input.read(buffer)) > 0) {
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest().collect { String.format('%02x', it & 0xff) }.join('')
 }
 
-ext.cltPublishRequiredDependencies = {
-    return cltReadStringListProperty('clt_publish_required_dependencies', ['create'])
+ext.cltWritePublishLedgerSuccessEntry = { String platform, Map extra = [:] ->
+    File ledgerFile = cltReadPublishLedgerFile()
+    File artifactFile = cltReadPublishArtifactFile()
+    Map ledger = [
+            schemaVersion: 1,
+            entries      : []
+    ]
+    if (ledgerFile.isFile()) {
+        def parsed = cltReadJsonFile(ledgerFile)
+        if (parsed instanceof Map) {
+            ledger.putAll(parsed as Map)
+            if (!(ledger.entries instanceof Collection)) {
+                ledger.entries = []
+            }
+        } else if (parsed instanceof Collection) {
+            ledger.entries = parsed
+        }
+    }
+
+    Map entry = [
+            platform        : platform,
+            projectId       : curseforge_id.toString(),
+            minecraftVersion: minecraft_version.toString(),
+            loader          : cltReadPublishLoaderId(),
+            versionId       : cltReadPublishVersionId(),
+            displayName     : cltReadPublishDisplayName(),
+            artifactFileName: artifactFile.name,
+            artifactSha256  : artifactFile.isFile() ? cltSha256Hex(artifactFile) : null,
+            status          : 'success',
+            source          : 'gradle-publish-success',
+            confirmedAt     : new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+    ] + extra.findAll { it.value != null }
+
+    List<Map> retainedEntries = (ledger.entries as Collection)
+            .findAll { it instanceof Map }
+            .collect { it as Map }
+            .findAll { Map existing ->
+                !(existing.platform?.toString() == entry.platform?.toString()
+                        && existing.projectId?.toString() == entry.projectId?.toString()
+                        && existing.minecraftVersion?.toString() == entry.minecraftVersion?.toString()
+                        && existing.loader?.toString() == entry.loader?.toString()
+                        && existing.versionId?.toString() == entry.versionId?.toString()
+                        && existing.displayName?.toString() == entry.displayName?.toString())
+            }
+    retainedEntries.add(entry)
+    ledger.entries = retainedEntries
+
+    ledgerFile.parentFile.mkdirs()
+    ledgerFile.setText(JsonOutput.prettyPrint(JsonOutput.toJson(ledger)) + System.lineSeparator(), 'UTF-8')
+    println "Recorded ${platform} publish success in ${ledgerFile.absolutePath}: version=${entry.versionId} loader=${entry.loader}"
 }
 
-ext.cltPublishOptionalDependencies = {
-    return cltReadStringListProperty('clt_publish_optional_dependencies', ['jei', 'observable'])
+ext.cltPublishLedgerEntryMatchesCurrentTarget = { Map entry, String platform ->
+    String artifactFileName = cltReadPublishArtifactFile().name
+    return entry.status?.toString() == 'success'
+            && entry.platform?.toString() == platform
+            && entry.projectId?.toString() == curseforge_id.toString()
+            && entry.minecraftVersion?.toString() == minecraft_version.toString()
+            && entry.loader?.toString() == cltReadPublishLoaderId()
+            && entry.versionId?.toString() == cltReadPublishVersionId()
+            && entry.displayName?.toString() == cltReadPublishDisplayName()
+            && (!entry.containsKey('artifactFileName') || entry.artifactFileName?.toString() == artifactFileName)
+}
+
+ext.cltFindPublishLedgerSuccessEntry = { String platform ->
+    return cltReadPublishLedgerEntries().find { Map entry ->
+        cltPublishLedgerEntryMatchesCurrentTarget(entry, platform)
+    }
+}
+
+ext.cltPublishRemoteStatus = [:]
+
+ext.cltPublishUserAgent = {
+    return project.findProperty('clt_publish_user_agent')?.toString()?.trim() ?: 'duckgun13476/CreateLazyTick-publish-check'
+}
+
+ext.cltPublishHttpTimeoutMillis = {
+    return (project.findProperty('clt_publish_remote_check_timeout_ms')?.toString()?.trim() ?: '20000') as int
+}
+
+ext.cltUrlEncode = { String value ->
+    return URLEncoder.encode(value, 'UTF-8')
+}
+
+ext.cltHttpGetJson = { String url, Map<String, String> headers = [:], boolean notFoundAsNull = false ->
+    HttpURLConnection connection = (HttpURLConnection) URI.create(url).toURL().openConnection()
+    connection.setRequestMethod('GET')
+    connection.setConnectTimeout(cltPublishHttpTimeoutMillis())
+    connection.setReadTimeout(cltPublishHttpTimeoutMillis())
+    connection.setRequestProperty('Accept', 'application/json')
+    connection.setRequestProperty('User-Agent', cltPublishUserAgent())
+    headers.each { String key, String value ->
+        if (value != null && !value.trim().isEmpty()) {
+            connection.setRequestProperty(key, value)
+        }
+    }
+
+    int responseCode = connection.getResponseCode()
+    InputStream stream = responseCode >= 400 ? connection.getErrorStream() : connection.getInputStream()
+    String body = stream == null ? '' : stream.getText('UTF-8')
+    if (responseCode == 404 && notFoundAsNull) {
+        return null
+    }
+    if (responseCode < 200 || responseCode >= 300) {
+        String bodySummary = body == null ? '' : body.replaceAll(/\s+/, ' ').take(240)
+        throw new GradleException("Publishing remote check failed for ${project.path}: GET ${url} returned HTTP ${responseCode}${bodySummary.isEmpty() ? '' : " (${bodySummary})"}")
+    }
+    return body.trim().isEmpty() ? null : new JsonSlurper().parseText(body)
+}
+
+ext.cltReadCurseForgeApiKey = {
+    def properties = cltReadPublishingProperties()
+    return properties?.getProperty('CF_CORE_API_KEY')
+            ?: properties?.getProperty('CF_API_KEY')
+            ?: properties?.getProperty('CURSEFORGE_API_KEY')
+            ?: properties?.getProperty('CF_TOKEN')
+}
+
+ext.cltReadCurseForgeApiKeySource = {
+    def properties = cltReadPublishingProperties()
+    if (properties?.getProperty('CF_CORE_API_KEY') != null) {
+        return 'CF_CORE_API_KEY'
+    }
+    if (properties?.getProperty('CF_API_KEY') != null) {
+        return 'CF_API_KEY'
+    }
+    if (properties?.getProperty('CURSEFORGE_API_KEY') != null) {
+        return 'CURSEFORGE_API_KEY'
+    }
+    if (properties?.getProperty('CF_TOKEN') != null) {
+        return 'CF_TOKEN fallback'
+    }
+    return null
+}
+
+ext.cltReadCurseForgeApiHeaders = {
+    String apiKey = cltReadCurseForgeApiKey()
+    if (apiKey == null || apiKey.trim().isEmpty()) {
+        return [:]
+    }
+    String trimmedKey = apiKey.trim()
+    if (trimmedKey.startsWith('cfc_pat_')) {
+        return ['Authorization': "Key ${trimmedKey}"]
+    }
+    return ['x-api-key': trimmedKey]
+}
+
+ext.cltReadCurseForgeModLoaderTypeIds = {
+    Map<String, Integer> loaderTypeIds = [
+            'forge'   : 1,
+            'fabric'  : 4,
+            'quilt'   : 5,
+            'neoforge': 6
+    ]
+    return cltReadPublishCurseForgeLoaders()
+            .collect { loaderName -> loaderTypeIds[loaderName.toString().trim().toLowerCase(Locale.ROOT)] }
+            .findAll { it != null }
+            .unique()
+}
+
+ext.cltCurseForgeFileMatchesPublishTarget = { Map file ->
+    String expectedDisplayName = cltReadPublishDisplayName()
+    String expectedFileName = cltReadPublishArtifactFile().name
+    def gameVersions = file.gameVersions instanceof Collection ? file.gameVersions.collect { it.toString() } : []
+    return (file.displayName?.toString() == expectedDisplayName || file.fileName?.toString() == expectedFileName)
+            && gameVersions.contains(minecraft_version.toString())
+}
+
+ext.cltCheckCurseForgePublished = {
+    if (cltReadBooleanProperty('clt_publish_force', false)) {
+        cltPublishRemoteStatus.curseforgeExists = false
+        cltPublishRemoteStatus.curseforgeLedgerIgnored = true
+        return false
+    }
+
+    Map ledgerEntry = cltFindPublishLedgerSuccessEntry('curseforge') as Map
+    if (ledgerEntry != null) {
+        cltPublishRemoteStatus.curseforgeExists = true
+        cltPublishRemoteStatus.curseforgeLedgerMatch = ledgerEntry
+        return true
+    }
+
+    if (!cltPublishCurseForgeRemoteCheckEnabled()) {
+        cltPublishRemoteStatus.curseforgeExists = false
+        cltPublishRemoteStatus.curseforgeCheckDisabled = true
+        return false
+    }
+
+    String apiKey = cltReadCurseForgeApiKey()
+    if (apiKey == null || apiKey.trim().isEmpty()) {
+        cltPublishRemoteStatus.curseforgeExists = false
+        cltPublishRemoteStatus.curseforgeRemoteUnknown = true
+        cltPublishRemoteStatus.curseforgeRemoteCheckError = "missing CurseForge Core API key"
+        return false
+    }
+
+    String baseUrl = "https://api.curseforge.com/v1/mods/${cltUrlEncode(curseforge_id.toString())}/files"
+    List<Integer> loaderTypeIds = cltReadCurseForgeModLoaderTypeIds()
+    if (loaderTypeIds.isEmpty()) {
+        throw new GradleException("No CurseForge modLoaderType mapping for ${project.path}: ${cltReadPublishCurseForgeLoaders()}")
+    }
+
+    List<Map> matches = []
+    try {
+        loaderTypeIds.each { Integer loaderTypeId ->
+            String query = [
+                    "gameVersion=${cltUrlEncode(minecraft_version.toString())}",
+                    "modLoaderType=${loaderTypeId}",
+                    'pageSize=50'
+            ].join('&')
+            def response = cltHttpGetJson("${baseUrl}?${query}", cltReadCurseForgeApiHeaders(), false)
+            def files = response?.data instanceof Collection ? response.data : []
+            files.findAll { file -> file instanceof Map && cltCurseForgeFileMatchesPublishTarget(file as Map) }
+                    .each { file -> matches.add(file as Map) }
+        }
+    } catch (Throwable error) {
+        cltPublishRemoteStatus.curseforgeExists = false
+        cltPublishRemoteStatus.curseforgeRemoteUnknown = true
+        cltPublishRemoteStatus.curseforgeRemoteCheckError = error.message
+        return false
+    }
+
+    boolean exists = !matches.isEmpty()
+    cltPublishRemoteStatus.curseforgeExists = exists
+    cltPublishRemoteStatus.curseforgeMatches = matches
+    return exists
+}
+
+ext.cltCheckModrinthPublished = {
+    if (!cltPublishModrinthRemoteCheckEnabled()) {
+        cltPublishRemoteStatus.modrinthExists = false
+        cltPublishRemoteStatus.modrinthCheckDisabled = true
+        return false
+    }
+    if (cltReadBooleanProperty('clt_publish_force', false)) {
+        cltPublishRemoteStatus.modrinthExists = false
+        return false
+    }
+
+    String versionId = cltReadPublishVersionId()
+    String url = "https://api.modrinth.com/v2/project/${cltUrlEncode(modrinth_id.toString())}/version/${cltUrlEncode(versionId)}"
+    Map<String, String> headers = [:]
+    String token = cltReadPublishingProperties()?.getProperty('MODRINTH_TOKEN')
+    if (token != null && !token.trim().isEmpty()) {
+        headers['Authorization'] = token
+    }
+
+    def version = cltHttpGetJson(url, headers, true)
+    boolean exists = false
+    if (version instanceof Map) {
+        List<String> loaders = version.loaders instanceof Collection ? version.loaders.collect { it.toString() } : []
+        List<String> gameVersions = version.game_versions instanceof Collection ? version.game_versions.collect { it.toString() } : []
+        exists = version.version_number?.toString() == versionId
+                && gameVersions.contains(minecraft_version.toString())
+                && !Collections.disjoint(loaders, cltReadPublishModrinthLoaders())
+    }
+
+    cltPublishRemoteStatus.modrinthExists = exists
+    cltPublishRemoteStatus.modrinthMatch = exists ? version : null
+    return exists
+}
+
+ext.cltReadCurseForgeUploadApiToken = {
+    def properties = cltReadPublishingProperties()
+    return properties?.getProperty('CF_TOKEN')
+}
+
+ext.cltReadCurseForgeUploadEndpoint = {
+    return project.findProperty('clt_publish_curseforge_upload_endpoint')?.toString()?.trim() ?: 'https://authors-old.curseforge.com'
+}
+
+ext.cltReadCurseForgeUploadVersionIds = {
+    // The legacy upload endpoint expects gameVersionId values, not Core API ids.
+    Map<String, Long> minecraftVersionIds = [
+            '1.19.2': 9366L,
+            '1.20.1': 9990L,
+            '1.21.1': 11779L
+    ]
+    Map<String, Long> loaderVersionIds = [
+            'fabric'  : 7499L,
+            'forge'   : 7498L,
+            'neoforge': 10150L,
+            'quilt'   : 9153L
+    ]
+    List<Long> versionIds = []
+    Long minecraftVersionId = minecraftVersionIds[minecraft_version.toString()]
+    if (minecraftVersionId == null) {
+        throw new GradleException("No CurseForge upload gameVersionId mapping for Minecraft ${minecraft_version} in ${project.path}")
+    }
+    versionIds.add(minecraftVersionId)
+
+    cltReadPublishCurseForgeLoaders().each { loaderName ->
+        Long loaderVersionId = loaderVersionIds[loaderName.toString().trim().toLowerCase(Locale.ROOT)]
+        if (loaderVersionId == null) {
+            throw new GradleException("No CurseForge upload loader mapping for ${loaderName} in ${project.path}")
+        }
+        versionIds.add(loaderVersionId)
+    }
+
+    versionIds.add(9638L)
+    versionIds.add(9639L)
+    return versionIds.unique()
+}
+
+ext.cltReadCurseForgeUploadMetadata = {
+    return [
+            changelog    : cltReadPrimaryChangelog(),
+            changelogType: 'markdown',
+            displayName  : cltReadPublishDisplayName(),
+            releaseType  : publish_version.toString(),
+            gameVersions : cltReadCurseForgeUploadVersionIds()
+    ]
+}
+
+ext.cltWriteMultipartTextPart = { OutputStream output, String boundary, String name, String content, String contentType ->
+    output.write("--${boundary}\r\n".getBytes('UTF-8'))
+    output.write("Content-Disposition: form-data; name=\"${name}\"\r\n".getBytes('UTF-8'))
+    output.write("Content-Type: ${contentType}\r\n\r\n".getBytes('UTF-8'))
+    output.write(content.getBytes('UTF-8'))
+    output.write("\r\n".getBytes('UTF-8'))
+}
+
+ext.cltWriteMultipartFilePart = { OutputStream output, String boundary, String name, File file ->
+    output.write("--${boundary}\r\n".getBytes('UTF-8'))
+    output.write("Content-Disposition: form-data; name=\"${name}\"; filename=\"${file.name}\"\r\n".getBytes('UTF-8'))
+    output.write("Content-Type: application/java-archive\r\n\r\n".getBytes('UTF-8'))
+    file.withInputStream { InputStream input ->
+        byte[] buffer = new byte[8192]
+        int read
+        while ((read = input.read(buffer)) > 0) {
+            output.write(buffer, 0, read)
+        }
+    }
+    output.write("\r\n".getBytes('UTF-8'))
+}
+
+ext.cltUploadCurseForgeFile = {
+    String token = cltReadCurseForgeUploadApiToken()
+    if (token == null || token.trim().isEmpty()) {
+        throw new GradleException("Missing CF_TOKEN for CurseForge upload in ${project.path}")
+    }
+
+    File artifactFile = cltVerifyPublishArtifactFile()
+    String endpoint = cltReadCurseForgeUploadEndpoint()
+    String uploadUrl = "${endpoint}/api/projects/${cltUrlEncode(curseforge_id.toString())}/upload-file"
+    String boundary = "clt-cf-${System.currentTimeMillis()}-${Math.abs(new Random().nextInt())}"
+    HttpURLConnection connection = (HttpURLConnection) URI.create(uploadUrl).toURL().openConnection()
+    connection.setRequestMethod('POST')
+    connection.setConnectTimeout(cltPublishHttpTimeoutMillis())
+    connection.setReadTimeout(Math.max(cltPublishHttpTimeoutMillis(), 180000))
+    connection.setDoOutput(true)
+    connection.setRequestProperty('X-Api-Token', token.trim())
+    connection.setRequestProperty('User-Agent', cltPublishUserAgent())
+    connection.setRequestProperty('Content-Type', "multipart/form-data; boundary=${boundary}")
+
+    connection.outputStream.withCloseable { OutputStream output ->
+        cltWriteMultipartTextPart(output, boundary, 'metadata', JsonOutput.toJson(cltReadCurseForgeUploadMetadata()), 'application/json; charset=UTF-8')
+        cltWriteMultipartFilePart(output, boundary, 'file', artifactFile)
+        output.write("--${boundary}--\r\n".getBytes('UTF-8'))
+    }
+
+    int responseCode = connection.getResponseCode()
+    InputStream stream = responseCode >= 400 ? connection.getErrorStream() : connection.getInputStream()
+    String body = stream == null ? '' : stream.getText('UTF-8')
+    if (responseCode < 200 || responseCode >= 300) {
+        String bodySummary = body == null ? '' : body.replaceAll(/\s+/, ' ').take(500)
+        throw new GradleException("CurseForge upload failed for ${project.path}: POST ${uploadUrl} returned HTTP ${responseCode}${bodySummary.isEmpty() ? '' : " (${bodySummary})"}")
+    }
+    return body.trim().isEmpty() ? [:] : new JsonSlurper().parseText(body)
 }
 
 tasks.register('PublishInfo') {
     group = 'Publishing'
+
     doLast {
-        println "Publish artifact path: ${cltPublishArtifactFile().absolutePath}"
-        println "version = \"${cltPublishVersionId()}\"\n    displayName = \"${cltPublishDisplayName()}\""
+        println "Publish artifact path: ${cltReadPublishArtifactFile().absolutePath}"
+        println "version = \"${cltReadPublishVersionId()}\"\n" +
+                "    displayName = \"${cltReadPublishDisplayName()}\""
         def properties = cltReadPublishingProperties()
-        if (properties == null) {
-            println 'api.properties not exist'
-        } else {
+        if (properties != null) {
             println "CF_TOKEN: ${properties.getProperty('CF_TOKEN') == null ? 'missing' : 'present'}"
+            println "CurseForge Core API key source: ${cltReadCurseForgeApiKeySource() ?: 'missing'}"
             println "MODRINTH_TOKEN: ${properties.getProperty('MODRINTH_TOKEN') == null ? 'missing' : 'present'}"
+        } else {
+            println "api.properties not exist"
         }
     }
+}
+
+tasks.register('checkCurseForgePublishStatus') {
+    group = 'Publishing'
+    description = 'Checks CurseForge for an existing file matching this publish target.'
+
+    doLast {
+        boolean exists = cltCheckCurseForgePublished()
+        if (cltPublishRemoteStatus.curseforgeLedgerIgnored) {
+            println "CurseForge publish ledger ignored for ${project.path} because -Pclt_publish_force=true was set."
+        } else if (cltPublishRemoteStatus.curseforgeLedgerMatch) {
+            def match = cltPublishRemoteStatus.curseforgeLedgerMatch
+            println "CurseForge local ledger has successful upload for ${project.path}; skipping upload. version=${match.versionId} loader=${match.loader} source=${match.source ?: 'ledger'}"
+        } else if (cltPublishRemoteStatus.curseforgeCheckDisabled) {
+            println "CurseForge remote publish check disabled for ${project.path}; no successful local ledger entry found, so upload will be attempted."
+        } else if (cltPublishRemoteStatus.curseforgeRemoteUnknown) {
+            println "CurseForge remote publish check is unavailable for ${project.path}; no successful local ledger entry found, so upload will be attempted. reason=${cltPublishRemoteStatus.curseforgeRemoteCheckError ?: 'unknown'}"
+        } else if (exists) {
+            def match = (cltPublishRemoteStatus.curseforgeMatches ?: [[:]])[0]
+            println "CurseForge already has ${project.path} target; skipping upload if requested. id=${match.id ?: 'unknown'} displayName=${match.displayName ?: 'unknown'} fileName=${match.fileName ?: 'unknown'} fileStatus=${match.fileStatus ?: 'unknown'}"
+        } else {
+            println "CurseForge does not have ${project.path} target: displayName=${cltReadPublishDisplayName()} fileName=${cltReadPublishArtifactFile().name}"
+        }
+    }
+}
+
+tasks.register('checkModrinthPublishStatus') {
+    group = 'Publishing'
+    description = 'Checks Modrinth for an existing version matching this publish target.'
+
+    doLast {
+        boolean exists = cltCheckModrinthPublished()
+        if (cltPublishRemoteStatus.modrinthCheckDisabled) {
+            println "Modrinth remote publish check disabled for ${project.path}; upload task will not be skipped by remote status."
+        } else if (exists) {
+            def match = cltPublishRemoteStatus.modrinthMatch ?: [:]
+            println "Modrinth already has ${project.path} target; skipping upload if requested. id=${match.id ?: 'unknown'} version=${match.version_number ?: cltReadPublishVersionId()} status=${match.status ?: 'unknown'}"
+        } else {
+            println "Modrinth does not have ${project.path} target: version=${cltReadPublishVersionId()}"
+        }
+    }
+}
+
+tasks.register('checkPublishRemoteStatus') {
+    group = 'Publishing'
+    description = 'Checks remote publishing platforms for existing targets before upload.'
+    dependsOn 'checkCurseForgePublishStatus'
+    dependsOn 'checkModrinthPublishStatus'
 }
 
 tasks.register('publishInfo') {
@@ -117,74 +645,12 @@ tasks.register('publishInfo') {
     dependsOn 'PublishInfo'
 }
 
-tasks.register('allworkJarJar') {
-    group = 'Allwork'
-    description = 'Builds this version\'s final publishing artifact.'
-    dependsOn { cltPublishArtifactTaskName() }
-}
-
-tasks.register('verifyPublishArtifact') {
-    group = 'Publishing'
-    description = 'Verifies that the final publishing artifact exists and is non-empty.'
-    dependsOn 'allworkJarJar'
-    doLast {
-        File artifact = cltVerifyPublishArtifactFile()
-        println "Verified publish artifact for ${project.path}: ${artifact.absolutePath} (${artifact.length()} bytes)"
-    }
-}
-
-tasks.register('publishCurseForge', cltCurseForgeTaskType) {
-    group = 'Publishing'
-    dependsOn { cltPublishArtifactTaskName() }
-    dependsOn 'verifyPublishArtifact'
-
-    def properties = cltReadPublishingProperties()
-    apiToken = properties?.getProperty('CF_TOKEN')
-    def mainFile = upload(curseforge_id, cltPublishArtifactFile())
-    mainFile.changelog = cltReadPrimaryChangelog()
-    mainFile.addEnvironment('Client', 'Server')
-    mainFile.addGameVersion(minecraft_version.toString())
-    cltPublishCurseForgeLoaders().each { loaderName ->
-        mainFile.addModLoader(loaderName.equalsIgnoreCase('neoforge') ? 'NeoForge' : 'Forge')
-    }
-    cltPublishRequiredDependencies().each { mainFile.addRequirement(it) }
-    cltPublishOptionalDependencies().each { mainFile.addOptional(it) }
-    mainFile.displayName = cltPublishDisplayName()
-    mainFile.releaseType = publish_version
-    disableVersionDetection()
-}
-
-publishMods {
-    def properties = cltReadPublishingProperties()
-    file = cltPublishArtifactFile()
-    changelog = cltReadFullChangelog()
-    type = STABLE
-    version = cltPublishVersionId()
-    displayName = cltPublishDisplayName()
-
-    cltPublishModrinthLoaders().each { loaderName -> modLoaders.add(loaderName) }
-    String token = properties?.getProperty('MODRINTH_TOKEN')
-    if (token != null && !token.trim().isEmpty()) {
-        modrinth {
-            accessToken = token
-            projectId = modrinth_id.toString()
-            minecraftVersions.add(minecraft_version)
-            cltPublishRequiredDependencies().each { requires(it) }
-            cltPublishOptionalDependencies().each { optional(it) }
-        }
-    }
-}
-
-tasks.matching { it.name in ['publishMods', 'publishModrinth'] }.configureEach {
-    dependsOn { cltPublishArtifactTaskName() }
-    dependsOn 'verifyPublishArtifact'
-}
-
 tasks.register('publishAll') {
-    group = 'Publishing'
     dependsOn 'publishCurseForge'
     dependsOn 'publishMods'
+    dependsOn 'checkPublishRemoteStatus'
     dependsOn 'verifyPublishArtifact'
+    group = 'Publishing'
 }
 
 tasks.register('allworkPublishInfo') {
@@ -197,4 +663,92 @@ tasks.register('allworkPublishAll') {
     group = 'Allwork'
     description = 'Allwork alias for publishAll.'
     dependsOn 'publishAll'
+}
+
+tasks.register('allworkJarJar') {
+    group = 'Allwork'
+    description = 'Allwork alias for the configured final publish artifact task.'
+    dependsOn cltReadPublishArtifactTaskName()
+}
+
+tasks.register('verifyPublishArtifact') {
+    group = 'Publishing'
+    description = 'Verify that the configured final publish artifact exists before uploading.'
+    dependsOn cltReadPublishArtifactTaskName()
+
+    doLast {
+        File artifactFile = cltVerifyPublishArtifactFile()
+        println "Verified publish artifact for ${project.path}: ${artifactFile.absolutePath} (${artifactFile.length()} bytes)"
+    }
+}
+
+tasks.register('publishCurseForge') {
+    dependsOn cltReadPublishArtifactTaskName()
+    dependsOn 'verifyPublishArtifact'
+    dependsOn 'checkCurseForgePublishStatus'
+
+    onlyIf {
+        boolean exists = cltPublishRemoteStatus.containsKey('curseforgeExists')
+                ? (cltPublishRemoteStatus.curseforgeExists as boolean)
+                : cltCheckCurseForgePublished()
+        if (exists) {
+            println "Skipping CurseForge upload for ${project.path}: successful local ledger or remote target already exists. Use -Pclt_publish_force=true to upload anyway."
+            return false
+        }
+        return true
+    }
+
+    doLast {
+        def response = cltUploadCurseForgeFile()
+        cltWritePublishLedgerSuccessEntry('curseforge', [
+                source: 'direct-curseforge-upload',
+                fileId: response instanceof Map ? response.id : null
+        ])
+    }
+}
+
+publishMods {
+    def properties = cltReadPublishingProperties()
+    def modrinthTokenGet = properties?.getProperty('MODRINTH_TOKEN')
+
+    file = cltReadPublishArtifactFile()
+    changelog = cltReadFullChangelog()
+    type = STABLE
+    version = cltReadPublishVersionId()
+    displayName = cltReadPublishDisplayName()
+
+    cltReadPublishModrinthLoaders().each { loaderName ->
+        modLoaders.add(loaderName)
+    }
+
+    if (modrinthTokenGet != null) {
+        modrinth {
+            accessToken = modrinthTokenGet
+            projectId = "${modrinth_id}"
+            minecraftVersions.add(minecraft_version)
+            cltReadPublishRequiredDependencies().each { dependencyId ->
+                requires(dependencyId)
+            }
+            cltReadPublishOptionalDependencies().each { dependencyId ->
+                optional(dependencyId)
+            }
+        }
+    }
+}
+
+tasks.matching { it.name in ['publishMods', 'publishModrinth'] }.configureEach {
+    dependsOn cltReadPublishArtifactTaskName()
+    dependsOn 'verifyPublishArtifact'
+    dependsOn 'checkModrinthPublishStatus'
+
+    onlyIf {
+        boolean exists = cltPublishRemoteStatus.containsKey('modrinthExists')
+                ? (cltPublishRemoteStatus.modrinthExists as boolean)
+                : cltCheckModrinthPublished()
+        if (exists) {
+            println "Skipping Modrinth upload for ${project.path}: remote target already exists. Use -Pclt_publish_force=true to upload anyway."
+            return false
+        }
+        return true
+    }
 }

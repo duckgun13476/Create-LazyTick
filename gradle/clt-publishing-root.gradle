@@ -8,15 +8,24 @@ def cltPublishableProjects = [
 ]
 
 gradle.projectsEvaluated {
-    Task previousPublishTask = null
+    Task previousCurseForgeTask = null
+    Task previousModrinthTask = null
     cltPublishableProjects.collect { rootProject.project(it) }.each { targetProject ->
-        Task publishTask = targetProject.tasks.findByName('allworkPublishAll')
-        if (publishTask != null && previousPublishTask != null) {
-            publishTask.mustRunAfter(previousPublishTask)
+        Task curseForgeTask = targetProject.tasks.findByName('publishCurseForge')
+        Task modrinthTask = targetProject.tasks.findByName('publishModrinth')
+        Task publishModsTask = targetProject.tasks.findByName('publishMods')
+        if (curseForgeTask != null) {
+            if (previousCurseForgeTask != null) curseForgeTask.mustRunAfter(previousCurseForgeTask)
+            if (previousModrinthTask != null) curseForgeTask.mustRunAfter(previousModrinthTask)
         }
-        if (publishTask != null) {
-            previousPublishTask = publishTask
+        if (modrinthTask != null) {
+            if (curseForgeTask != null) modrinthTask.mustRunAfter(curseForgeTask)
+            if (previousCurseForgeTask != null) modrinthTask.mustRunAfter(previousCurseForgeTask)
+            if (previousModrinthTask != null) modrinthTask.mustRunAfter(previousModrinthTask)
         }
+        if (publishModsTask != null && modrinthTask != null) publishModsTask.mustRunAfter(modrinthTask)
+        if (curseForgeTask != null) previousCurseForgeTask = curseForgeTask
+        if (modrinthTask != null) previousModrinthTask = modrinthTask
     }
 }
 

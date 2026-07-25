@@ -1,4 +1,3 @@
-import net.darkhax.curseforgegradle.TaskPublishCurseForge
 //2025 copyright some gradle setting from Create : https://github.com/Creators-of-Create/Create
 
 plugins {
@@ -15,8 +14,6 @@ apply from: file('../../../gradle/clt-property-loader.gradle')
 apply from: file('../../../gradle/clt-java.gradle')
 apply from: file('../../../gradle/clt-git.gradle')
 apply from: file('../../../gradle/clt-publishing-credentials.gradle')
-
-ext.cltCurseForgeTaskType = TaskPublishCurseForge
 
 ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
 
