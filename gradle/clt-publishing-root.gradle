@@ -20,23 +20,48 @@ gradle.projectsEvaluated {
     }
 }
 
-tasks.register('packageAllVersions') {
-    group = 'publishing'
-    description = 'Builds loader-correct release artifacts for all CreateLazyTick versions.'
-    dependsOn(cltPublishableProjects.collect { "${it}:allworkJarJar" })
-}
-
-tasks.register('publishInfoAllVersions') {
-    group = 'publishing'
-    description = 'Prints per-version publishing information without uploading artifacts.'
+tasks.register('allworkPublishInfoAllVersions') {
+    group = 'Allwork'
+    description = 'Prints publishing information for all CreateLazyTick versions.'
     dependsOn(cltPublishableProjects.collect { "${it}:allworkPublishInfo" })
 }
 
-tasks.register('publishAllVersions') {
-    group = 'publishing'
-    description = 'Packages and publishes every CreateLazyTick version in a stable order.'
-    dependsOn('packageAllVersions')
+tasks.register('publishInfoAllVersions') {
+    group = 'Publishing'
+    description = 'Alias for allworkPublishInfoAllVersions.'
+    dependsOn 'allworkPublishInfoAllVersions'
+}
+
+tasks.register('allworkPackageAllVersions') {
+    group = 'Allwork'
+    description = 'Builds and verifies final artifacts for all CreateLazyTick versions.'
+    dependsOn(cltPublishableProjects.collect { "${it}:allworkJarJar" })
+    dependsOn(cltPublishableProjects.collect { "${it}:verifyPublishArtifact" })
+}
+
+tasks.register('allworkJarJarAllVersions') {
+    group = 'Allwork'
+    description = 'Alias for allworkPackageAllVersions.'
+    dependsOn 'allworkPackageAllVersions'
+}
+
+tasks.register('packageAllVersions') {
+    group = 'Publishing'
+    description = 'Builds and verifies final artifacts for all CreateLazyTick versions.'
+    dependsOn 'allworkPackageAllVersions'
+}
+
+tasks.register('allworkPublishAllVersions') {
+    group = 'Allwork'
+    description = 'Publishes all CreateLazyTick versions in stable order.'
+    dependsOn 'packageAllVersions'
     dependsOn(cltPublishableProjects.collect { "${it}:allworkPublishAll" })
+}
+
+tasks.register('publishAllVersions') {
+    group = 'Publishing'
+    description = 'Alias for allworkPublishAllVersions.'
+    dependsOn 'allworkPublishAllVersions'
 }
 
 tasks.register('verifyPublishArtifactsAllVersions') {

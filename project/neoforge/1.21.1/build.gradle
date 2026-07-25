@@ -21,6 +21,8 @@ apply from: file('../../../gradle/clt-java.gradle')
 apply from: file('../../../gradle/clt-git.gradle')
 apply from: file('../../../gradle/clt-publishing-credentials.gradle')
 
+ext.cltCurseForgeTaskType = TaskPublishCurseForge
+
 ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
 
 
@@ -247,7 +249,14 @@ jar {
 
 }
 
-tasks.register('PublishInfo') {
+ext.clt_publish_artifact_task_name = 'jar'
+ext.clt_publish_loader_id = 'neoforge'
+ext.clt_publish_curseforge_loaders = ['forge', 'neoforge']
+ext.clt_publish_modrinth_loaders = ['forge', 'neoforge']
+ext.clt_publish_required_dependencies = ['create']
+ext.clt_publish_optional_dependencies = ['jei', 'observable']
+
+tasks.register('legacyPublishInfo') {
     doLast {
         println "JAR file path: ${jarArchiveFile.get().asFile.absolutePath}"
         println "version = \"$publishMinecraftVersion-$publishModVersion\"\n" +
@@ -261,7 +270,7 @@ tasks.register('PublishInfo') {
     group = 'Publishing'
 }
 
-tasks.register('publishAll') {
+tasks.register('legacyPublishAll') {
     dependsOn 'publishCurseForge'
     dependsOn 'publishModrinth'
     group = 'Publishing'
@@ -275,7 +284,7 @@ tasks.register('publishAll') {
 
 
 
-tasks.register('publishCurseForge', TaskPublishCurseForge) {
+tasks.register('legacyPublishCurseForge', TaskPublishCurseForge) {
     dependsOn jarTask
     def properties = cltReadPublishingCredentials()
 
