@@ -1,5 +1,4 @@
 import net.darkhax.curseforgegradle.TaskPublishCurseForge
-import org.gradle.jvm.tasks.Jar
 //2025 copyright some gradle setting from Create : https://github.com/Creators-of-Create/Create
 
 
@@ -229,13 +228,6 @@ compileJava {
     options.compilerArgs = ['-Xdiags:verbose']
 }
 
-def jarTask = tasks.named('jar', Jar)
-def jarArchiveFile = jarTask.flatMap { it.archiveFile }
-def publishModVersion = mod_version
-def publishMinecraftVersion = minecraft_version
-def publishDisplayName = display_name
-def apiPropertiesFile = new File(project.property('cltRepositoryRoot').toString(), 'api.properties')
-
 jar {
     archiveFileName = "${package_name}-${mod_version}-neoforge-${minecraft_version}.jar"
     from(new File(project.property('cltRepositoryRoot').toString(), 'LICENSE')) {
@@ -255,90 +247,6 @@ ext.clt_publish_curseforge_loaders = ['forge', 'neoforge']
 ext.clt_publish_modrinth_loaders = ['forge', 'neoforge']
 ext.clt_publish_required_dependencies = ['create']
 ext.clt_publish_optional_dependencies = ['jei', 'observable']
-
-tasks.register('legacyPublishInfo') {
-    doLast {
-        println "JAR file path: ${jarArchiveFile.get().asFile.absolutePath}"
-        println "version = \"$publishMinecraftVersion-$publishModVersion\"\n" +
-                "    displayName = \"${publishDisplayName}_v${mod_release_version}_for_Create_v${mod_create_compat_version}\""
-        if (apiPropertiesFile.exists()) {
-            println 'Publishing credentials: configured'
-        } else {
-            println "api.properties not exist"
-        }
-    }
-    group = 'Publishing'
-}
-
-tasks.register('legacyPublishAll') {
-    dependsOn 'publishCurseForge'
-    dependsOn 'publishModrinth'
-    group = 'Publishing'
-}
-
-
-
-
-
-
-
-
-
-tasks.register('legacyPublishCurseForge', TaskPublishCurseForge) {
-    dependsOn jarTask
-    def properties = cltReadPublishingCredentials()
-
-    var cfToken = properties.getProperty("CF_TOKEN")
-    apiToken = cfToken
-
-    def mainFile = upload(curseforge_id, jarArchiveFile.get().asFile)
-    mainFile.changelog = new File(project.property('cltRepositoryRoot').toString(), 'update/changelog.md').getText('UTF-8').split("\n\n\n")[0]
-    mainFile.addEnvironment("Client", "Server")
-    mainFile.addGameVersion("${minecraft_version}")
-    mainFile.addModLoader("Forge","NeoForge")
-    mainFile.addRequirement("create")
-
-
-    mainFile.displayName = "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}"
-
-    mainFile.addOptional(
-            "jei",
-            "observable")
-    mainFile.releaseType = publish_version //beta release. is alpha.
-    disableVersionDetection()
-}
-
-
-
-publishMods {
-    def properties = cltReadPublishingCredentials()
-    def modrinthTokenGet = properties.getProperty("MODRINTH_TOKEN")
-
-    file = jarArchiveFile
-    changelog = new File(project.property('cltRepositoryRoot').toString(), 'update/changelog.md').getText('UTF-8')
-    type = STABLE
-    version = "$minecraft_version-$mod_version"
-    displayName = "${display_name}_v${mod_release_version}_for_Create_v${mod_create_compat_version}"
-
-    modLoaders.add("forge")
-    modLoaders.add("neoforge")
-
-    var mrToken = modrinthTokenGet
-    if(mrToken != null) {
-        modrinth {
-            accessToken = mrToken
-            projectId = "${modrinth_id}"
-            minecraftVersions.add(minecraft_version)
-            requires("create")
-            optional("jei","observable")
-        }
-    }
-}
-
-tasks.named('publishModrinth').configure {
-    dependsOn jarTask
-}
-
 
 tasks.register('checkResources') {
     dependsOn 'processResources'
