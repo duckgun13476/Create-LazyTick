@@ -261,7 +261,7 @@ compileJava {
 }
 
 jar {
-    from(new File(project.property('cltRepositoryRoot').toString(), 'licenses/PolyForm-Noncommercial-1.0.0.txt')) {
+    from(new File(project.property('cltRepositoryRoot').toString(), 'LICENSE')) {
         rename { "${it}_${archivesBaseName}" }
 
     }
