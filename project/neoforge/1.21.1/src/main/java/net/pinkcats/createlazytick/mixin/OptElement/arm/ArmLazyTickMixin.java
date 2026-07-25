@@ -68,6 +68,14 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     @Unique private static Set<ResourceLocation> createLazyTick$cachedIgnoreBlocks = null;
     @Unique private static Set<ResourceLocation> createLazyTick$cachedWeakBlocks = null;
 
+    /**
+     * Targets whose automation contract cannot tolerate deferred arm discovery.
+     * Kept as resource identifiers so CBC remains an optional runtime dependency.
+     */
+    @Unique
+    private static final Set<ResourceLocation> createLazyTick$alwaysActiveCompatBlocks = Set.of(
+            DropResourceLocation("createbigcannons:autocannon_ammo_container"));
+
     public ArmLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
@@ -122,6 +130,11 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
         return configSet.contains(blockId);
     }
 
+    @Unique
+    private boolean createLazyTick$isAlwaysActiveCompatBlock(Block block) {
+        return block != null && createLazyTick$alwaysActiveCompatBlocks.contains(BuiltInRegistries.BLOCK.getKey(block));
+    }
+
     // 扫描逻辑
     // 遍历所有输入/输出点，判断是否接触了需要在"忽略懒加载列表"或"弱懒加载列表"中的容器。
     @Unique
@@ -142,7 +155,8 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
                 Block block = state.getBlock();
 
                 // 匹配
-                if (createLazyTick$isBlockInConfig(block, createLazyTick$cachedIgnoreBlocks)) {
+                if (createLazyTick$isAlwaysActiveCompatBlock(block)
+                        || createLazyTick$isBlockInConfig(block, createLazyTick$cachedIgnoreBlocks)) {
                     foundIgnore = true;
                     break; // 如果已经全速,无需再查弱懒加载的部分和未查的其他方块
                 }
@@ -160,7 +174,8 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
                 BlockState state = level.getBlockState(point.getPos());
                 Block block = state.getBlock();
 
-                if (createLazyTick$isBlockInConfig(block, createLazyTick$cachedIgnoreBlocks)) {
+                if (createLazyTick$isAlwaysActiveCompatBlock(block)
+                        || createLazyTick$isBlockInConfig(block, createLazyTick$cachedIgnoreBlocks)) {
                     foundIgnore = true;
                     break;
                 }
