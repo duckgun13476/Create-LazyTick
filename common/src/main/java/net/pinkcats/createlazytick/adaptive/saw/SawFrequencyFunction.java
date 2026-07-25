@@ -1,17 +1,17 @@
-package net.pinkcats.createlazytick.adaptive;
+package net.pinkcats.createlazytick.adaptive.saw;
 
 /**
- * Pure, loader-neutral retry scheduling for a Create saw's output path.
+ * Pure, loader-neutral frequency function for a Create saw's output-retry path.
  *
  * <p>The predictor learns only from successful output transfers. A failed retry before the next
  * predicted transfer window waits for that window; a miss after that window uses bounded fallback
  * backoff. Callers own event classification and applying the returned interval.</p>
  */
-public final class SawAdaptiveSchedule {
+public final class SawFrequencyFunction {
 
     private static final long NO_SUCCESS = Long.MIN_VALUE;
 
-    private SawAdaptiveSchedule() {
+    private SawFrequencyFunction() {
     }
 
     public record State(int fallbackInterval, long lastSuccessTick, int learnedPeriod) {

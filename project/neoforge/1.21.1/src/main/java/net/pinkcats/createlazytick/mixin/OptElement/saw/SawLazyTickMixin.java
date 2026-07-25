@@ -6,7 +6,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingInventory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.pinkcats.createlazytick.adaptive.SawAdaptiveSchedule;
+import net.pinkcats.createlazytick.adaptive.saw.SawFrequencyFunction;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
@@ -34,7 +34,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     private boolean createLazyTick$outputAttempted = false;
 
     @Unique
-    private SawAdaptiveSchedule.State createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.State.initial();
+    private SawFrequencyFunction.State createLazyTick$adaptiveSchedule = SawFrequencyFunction.State.initial();
 
     @Unique
     private void createLazyTick$resetDelayTick() {
@@ -46,8 +46,8 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     private void createLazyTick$applyBackoff() {
         createLazyTick$sawTick = 0;
         int maxInterval = ServerConfig.getSawDelayMax();
-        createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.onRetryFailure(createLazyTick$adaptiveSchedule, maxInterval);
-        int nextInterval = SawAdaptiveSchedule.nextProbeInterval(
+        createLazyTick$adaptiveSchedule = SawFrequencyFunction.onRetryFailure(createLazyTick$adaptiveSchedule, maxInterval);
+        int nextInterval = SawFrequencyFunction.nextProbeInterval(
                 createLazyTick$adaptiveSchedule, level.getGameTime(), maxInterval, 2);
         LazyTickLogic.setIntervalSafe(this, nextInterval);
     }
@@ -68,7 +68,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         createLazyTick$outputAttempted = false;
         if (inventory.isEmpty()) {
             int emptyResetTicks = (int) Math.min(Integer.MAX_VALUE, (long) ServerConfig.getSawDelayMax() * 2L);
-            createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.expireAfterEmptyIdle(
+            createLazyTick$adaptiveSchedule = SawFrequencyFunction.expireAfterEmptyIdle(
                     createLazyTick$adaptiveSchedule, level.getGameTime(), emptyResetTicks);
         }
     }
@@ -108,7 +108,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
 
         createLazyTick$inventoryChanged = true;
         if (createLazyTick$outputAttempted) {
-            createLazyTick$adaptiveSchedule = SawAdaptiveSchedule.onOutputSuccess(
+            createLazyTick$adaptiveSchedule = SawFrequencyFunction.onOutputSuccess(
                     createLazyTick$adaptiveSchedule, level.getGameTime(), ServerConfig.getSawDelayMax());
         }
         createLazyTick$resetDelayTick();

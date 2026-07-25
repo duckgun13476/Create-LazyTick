@@ -6,8 +6,8 @@
  * Version-local adapters own event classification, persistence, configuration, and application
  * of the computed interval.</p>
  *
- * <p>The intended policy distinguishes confirmed retry failure, partial/full progress, a new
- * work session, and sustained empty-idle. It must support bounded growth and gradual decay so
- * intermittent workloads can retain a learned medium polling interval.</p>
+ * <p>Each machine owns a dedicated subpackage because its valid events, wake conditions, and
+ * liveness requirements differ. Shared mathematical primitives should be extracted here only
+ * after two machine functions demonstrably need the same rule.</p>
  */
 package net.pinkcats.createlazytick.adaptive;
