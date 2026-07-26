@@ -30,25 +30,17 @@ tasks.register('jarAllVersions') {
     dependsOn('packageAllVersions')
 }
 
-def cachedClientRunProjects = [
-        'forge1192'   : ':forge-1.19.2',
-        'forge1201old': ':forge-1.20.1-0.5.1',
-        'forge1201new': ':forge-1.20.1-6.0.x',
-        'neoforge1211': ':neoforge-1.21.1'
+def clientRunProjects = [
+        'runClient-forge-1.19.2'       : ':forge-1.19.2',
+        'runClient-forge-1.20.1-0.5.1' : ':forge-1.20.1-0.5.1',
+        'runClient-forge-1.20.1-6.0.x' : ':forge-1.20.1-6.0.x',
+        'runClient-neoforge-1.21.1'    : ':neoforge-1.21.1'
 ]
-def isWindowsHost = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
 
-cachedClientRunProjects.each { taskSuffix, projectPath ->
-    tasks.register("runClientCached${taskSuffix.capitalize()}", Exec) {
+clientRunProjects.each { taskName, projectPath ->
+    tasks.register(taskName) {
         group = 'development'
-        description = "Runs ${projectPath}:runClient with Gradle offline cache reuse."
-        workingDir = rootProject.projectDir
-        commandLine = [
-                isWindowsHost ? rootProject.file('gradlew.bat').absolutePath : rootProject.file('gradlew').absolutePath,
-                "${projectPath}:runClient",
-                '--offline',
-                '--no-daemon',
-                '--console=plain'
-        ]
+        description = "Runs ${projectPath}:runClient in this Gradle build."
+        dependsOn("${projectPath}:runClient")
     }
 }
