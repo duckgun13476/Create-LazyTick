@@ -127,7 +127,9 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
         ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this.blockEntity);
         if (control == null) {
-            if (!createLazyTick$hasWarned) {
+            ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(this.blockEntity.getBlockState().getBlock());
+            boolean expectedSharedOwner = "create".equals(blockId.getNamespace()) && ("weighted_ejector".equals(blockId.getPath()) || "track_station".equals(blockId.getPath()));
+            if (!expectedSharedOwner && !createLazyTick$hasWarned) {
                 createLazyTick$hasWarned = true;
                 mes.error(createLazyTick$buildIncompatibleSkipMessage());
             }
