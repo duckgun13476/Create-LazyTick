@@ -241,14 +241,38 @@ dependencies {
     //}
 }
 
+def templatedResourceProperties = [
+        minecraft_version      : project.findProperty('minecraft_version') ?: '',
+        minecraft_version_range: project.findProperty('minecraft_version_range') ?: '',
+        forge_version          : project.findProperty('forge_version') ?: '',
+        forge_version_range    : project.findProperty('forge_version_range') ?: '',
+        loader_version_range   : project.findProperty('loader_version_range') ?: '',
+        mod_id                 : project.findProperty('mod_id') ?: '',
+        mod_name               : project.findProperty('mod_name') ?: '',
+        mod_license            : project.findProperty('mod_license') ?: '',
+        mod_version            : project.findProperty('mod_version') ?: '',
+        mod_authors            : project.findProperty('mod_authors') ?: '',
+        mod_description        : project.findProperty('mod_description') ?: '',
+        file                   : [jarVersion: project.version.toString()]
+]
+
 processResources {
-    def buildProps = project.properties.clone()
+    inputs.properties(templatedResourceProperties)
+    doLast {
+        def outputRoot = destinationDir
+        def engine = new groovy.text.SimpleTemplateEngine()
 
-    // Replaces FML's magic file.jarVersion string with the correct version at build time.
-    buildProps.put('file', [jarVersion: project.version])
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand buildProps
+        ['META-INF/mods.toml', 'pack.mcmeta'].each { path ->
+            def inputFile = file("src/main/resources/${path}")
+            if (inputFile.exists()) {
+                def outputFile = new File(outputRoot, path)
+                outputFile.parentFile.mkdirs()
+                def rendered = engine.createTemplate(inputFile.getText('UTF-8'))
+                        .make(templatedResourceProperties)
+                        .toString()
+                outputFile.setText(rendered, 'UTF-8')
+            }
+        }
     }
 }
 

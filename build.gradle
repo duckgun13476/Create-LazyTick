@@ -1,5 +1,7 @@
 plugins {
     id 'base'
+    id 'idea'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.2'
 }
 
 def versionProjects = [

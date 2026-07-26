@@ -199,26 +199,49 @@ dependencies {
     //}
 }
 
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+def modMetadataProperties = [
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version            : neo_version,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description
+]
+def generatedModMetadataDir = layout.buildDirectory.dir('generated/sources/modMetadata')
+
+def generateModMetadata = tasks.register('generateModMetadata') {
+    inputs.properties(modMetadataProperties)
+    inputs.dir('src/main/templates')
+    outputs.dir(generatedModMetadataDir)
+
+    doLast {
+        def templateRoot = file('src/main/templates')
+        def outputRoot = generatedModMetadataDir.get().asFile
+        def engine = new groovy.text.SimpleTemplateEngine()
+
+        fileTree(templateRoot).visit { details ->
+            if (details.directory) {
+                return
+            }
+
+            def outputFile = new File(outputRoot, details.relativePath.pathString)
+            outputFile.parentFile.mkdirs()
+            def rendered = engine.createTemplate(details.file.getText('UTF-8'))
+                    .make(modMetadataProperties)
+                    .toString()
+            outputFile.setText(rendered, 'UTF-8')
+        }
+    }
 }
-sourceSets.main.resources.srcDir generateModMetadata
+sourceSets.main.resources.srcDir generatedModMetadataDir
+tasks.named('processResources').configure {
+    dependsOn(generateModMetadata)
+}
 neoForge.ideSyncTask generateModMetadata
 
 compileJava {
