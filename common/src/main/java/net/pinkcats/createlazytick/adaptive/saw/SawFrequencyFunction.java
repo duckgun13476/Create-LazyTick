@@ -1,11 +1,12 @@
 package net.pinkcats.createlazytick.adaptive.saw;
 
 /**
- * Pure, loader-neutral frequency function for a Create saw's output-retry path.
+ * Pure, loader-neutral frequency function for a Create saw's periodic input/output paths.
  *
- * <p>The predictor learns only from successful output transfers. A failed retry before the next
- * predicted transfer window waits for that window; a miss after that window uses bounded fallback
- * backoff. Callers own event classification and applying the returned interval.</p>
+ * <p>Callers keep independent state for input arrivals and output transfers. Each state learns
+ * successful event spacing, probes shortly before the next predicted window, and falls back to a
+ * bounded backoff when no prediction is available. Callers own event classification and applying
+ * the returned interval.</p>
  */
 public final class SawFrequencyFunction {
 
@@ -39,6 +40,31 @@ public final class SawFrequencyFunction {
         return new State(1, gameTick, period);
     }
 
+    /**
+     * Records an item becoming available to an otherwise idle saw. Input arrival and output
+     * release must use separate {@link State} instances: their cadences are independent.
+     */
+    public static State onInputArrival(State state, long gameTick, int maxInterval, int currentInterval) {
+        State observed = onOutputSuccess(state, gameTick, maxInterval);
+        return new State(reduceAfterInput(currentInterval), observed.lastSuccessTick(), observed.learnedPeriod());
+    }
+
+    /**
+     * Advances the bounded fallback after an idle probe found no input.
+     */
+    public static State onIdleProbe(State state, int maxInterval) {
+        return onRetryFailure(state, maxInterval);
+    }
+
+    /**
+     * One observed input makes the idle schedule more responsive without discarding the learned
+     * low-frequency operating point. This is deliberately the inverse of the bounded 10% backoff.
+     */
+    public static int reduceAfterInput(int currentInterval) {
+        int current = Math.max(1, currentInterval);
+        return Math.max(1, current - Math.max(1, current / 10));
+    }
+
     public static State expireAfterEmptyIdle(State state, long gameTick, int resetAfterTicks) {
         if (state.lastSuccessTick() == NO_SUCCESS || gameTick - state.lastSuccessTick() < resetAfterTicks)
             return state;
@@ -54,6 +80,21 @@ public final class SawFrequencyFunction {
         if (predictedTick <= gameTick)
             return fallback;
         return clampLong(predictedTick - gameTick, 1, maxInterval);
+    }
+
+    /**
+     * Input-idle prediction may cap a gradual probe curve, but must never jump directly to the
+     * whole predicted wait. A large learned period is a target horizon, not one giant sleep.
+     */
+    public static int nextInputProbeInterval(State state, long gameTick, int maxInterval, int earlyGuardTicks) {
+        int fallback = clamp(state.fallbackInterval(), 1, maxInterval);
+        if (!state.hasLearnedPeriod())
+            return fallback;
+
+        long predictedTick = state.lastSuccessTick() + state.learnedPeriod() - Math.max(0, earlyGuardTicks);
+        if (predictedTick <= gameTick)
+            return fallback;
+        return Math.min(fallback, clampLong(predictedTick - gameTick, 1, maxInterval));
     }
 
     private static int clamp(int value, int min, int max) {

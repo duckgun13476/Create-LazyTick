@@ -6,6 +6,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingInventory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
 import net.pinkcats.createlazytick.adaptive.saw.SawFrequencyFunction;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
@@ -24,6 +25,9 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     @Shadow(remap = false)
     public ProcessingInventory inventory;
 
+    @Shadow(remap = false)
+    protected abstract boolean canProcess();
+
     @Unique
     private int createLazyTick$sawTick = 0;
 
@@ -34,7 +38,16 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
     private boolean createLazyTick$outputAttempted = false;
 
     @Unique
+    private boolean createLazyTick$allowNextOutputAttempt = true;
+
+    @Unique
     private SawFrequencyFunction.State createLazyTick$adaptiveSchedule = SawFrequencyFunction.State.initial();
+
+    @Unique
+    private int createLazyTick$idleInputTick = 0;
+
+    @Unique
+    private SawFrequencyFunction.State createLazyTick$inputSchedule = SawFrequencyFunction.State.initial();
 
     @Unique
     private void createLazyTick$resetDelayTick() {
@@ -50,6 +63,16 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         int nextInterval = SawFrequencyFunction.nextProbeInterval(
                 createLazyTick$adaptiveSchedule, level.getGameTime(), maxInterval, 2);
         LazyTickLogic.setIntervalSafe(this, nextInterval);
+    }
+
+    @Unique
+    private void createLazyTick$wakeForInput() {
+        createLazyTick$idleInputTick = 0;
+        int currentInterval = this.createLazyTick$getCurrentSuperTick();
+        createLazyTick$inputSchedule = SawFrequencyFunction.onInputArrival(
+                createLazyTick$inputSchedule, level.getGameTime(), ServerConfig.getSawDelayMax(), currentInterval);
+        createLazyTick$sawTick = 0;
+        LazyTickLogic.setIntervalSafe(this, SawFrequencyFunction.reduceAfterInput(currentInterval));
     }
 
     public SawLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -73,6 +96,44 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         }
     }
 
+    /**
+     * The saw's own processing countdown must stay per-tick, but a top-facing saw with no input
+     * has no work to perform after its base tick.  {@code start(ItemStack)} below is the wake-up
+     * edge for belt, capability, and entity input.
+     */
+    @Inject(method = "tick", remap = false, at = @At(
+            value = "INVOKE",
+            target = "Lcom/simibubi/create/content/kinetics/saw/SawBlockEntity;canProcess()Z"), cancellable = true)
+    public void createLazyTick$gateEmptyInputIdle(CallbackInfo ci) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
+        if (level == null || level.isClientSide || !canProcess()) return;
+
+        if (!inventory.isEmpty()) {
+            createLazyTick$idleInputTick = 0;
+            return;
+        }
+
+        createLazyTick$idleInputTick++;
+        if (createLazyTick$idleInputTick < this.createLazyTick$getCurrentSuperTick()) {
+            ci.cancel();
+            return;
+        }
+
+        createLazyTick$idleInputTick = 0;
+        int maxInterval = ServerConfig.getSawDelayMax();
+        createLazyTick$inputSchedule = SawFrequencyFunction.onIdleProbe(createLazyTick$inputSchedule, maxInterval);
+        int nextInterval = SawFrequencyFunction.nextInputProbeInterval(
+                createLazyTick$inputSchedule, level.getGameTime(), maxInterval, 2);
+        LazyTickLogic.setIntervalSafe(this, nextInterval);
+    }
+
+    @Inject(method = "start", remap = false, at = @At("HEAD"))
+    public void createLazyTick$wakeOnInput(ItemStack inserted, CallbackInfo ci) {
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
+        if (level == null || level.isClientSide) return;
+        createLazyTick$wakeForInput();
+    }
+
     @Inject(method = "tick", remap = false, at = @At(
             value = "INVOKE",
             target = "Lcom/simibubi/create/content/kinetics/saw/SawBlockEntity;getItemMovementVec()Lnet/minecraft/world/phys/Vec3;"), cancellable = true)
@@ -82,8 +143,22 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
 
         // 到达此处代表 Create 已完成加工倒计时，正准备输出或抛出产物。
         // 尚未阻塞时第一次必须放行；失败后由 onOutputFail 逐步增加下一次重试间隔。
-        if (inventory.remainingTime > 0 || inventory.isEmpty()) {
-            createLazyTick$resetDelayTick();
+        if (inventory.remainingTime > 0) {
+            createLazyTick$sawTick = 0;
+            createLazyTick$allowNextOutputAttempt = true;
+            return;
+        }
+        if (inventory.isEmpty()) {
+            createLazyTick$sawTick = 0;
+            return;
+        }
+
+        // A completed processing batch may export once immediately; only a confirmed unchanged
+        // export enters the bounded retry policy below.
+        if (createLazyTick$allowNextOutputAttempt) {
+            createLazyTick$allowNextOutputAttempt = false;
+            createLazyTick$sawTick = 0;
+            createLazyTick$outputAttempted = true;
             return;
         }
 
@@ -111,7 +186,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
             createLazyTick$adaptiveSchedule = SawFrequencyFunction.onOutputSuccess(
                     createLazyTick$adaptiveSchedule, level.getGameTime(), ServerConfig.getSawDelayMax());
         }
-        createLazyTick$resetDelayTick();
+        createLazyTick$sawTick = 0;
     }
 
     @Inject(method = "tick", at = @At("RETURN"), remap = false)
