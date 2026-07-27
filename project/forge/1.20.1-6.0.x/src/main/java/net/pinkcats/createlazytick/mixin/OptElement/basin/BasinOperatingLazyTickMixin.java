@@ -15,6 +15,7 @@ import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeCacheKey;
 import net.pinkcats.createlazytick.bridge.Basin.BasinRecipeIndex;
 import net.pinkcats.createlazytick.bridge.Basin.BasinStateSnapshot;
 import net.pinkcats.createlazytick.bridge.Basin.IBasinOptimization;
+import net.pinkcats.createlazytick.bridge.Basin.IBasinLazyTickBypass;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -207,6 +208,8 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(remap = false, method = "updateBasin", at = @At("HEAD"), cancellable = true)
     private void clt$onUpdateBasin(CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this instanceof IBasinLazyTickBypass) return;
+
         if (!ServerConfig.getEnableLazyTick()
                 || !ServerConfig.getEnableLazyBasin()
                 || !isBasinOptimizationSafe) return;
@@ -288,6 +291,8 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("HEAD"), cancellable = true, remap = false)
     private void clt$onGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
+        if ((Object) this instanceof IBasinLazyTickBypass) return;
+
         if (!ServerConfig.getEnableLazyTick()
                 || !ServerConfig.getEnableLazyBasin()
                 || !isBasinOptimizationSafe) return;
@@ -319,6 +324,8 @@ public abstract class BasinOperatingLazyTickMixin {
 
     @Inject(method = "getMatchingRecipes", at = @At("RETURN"), remap = false)
     private void clt$afterGetMatchingRecipes(CallbackInfoReturnable<List<Recipe<?>>> cir) {
+        if ((Object) this instanceof IBasinLazyTickBypass) return;
+
         if (!ServerConfig.getEnableLazyTick()
                 || !ServerConfig.getEnableLazyBasin()
                 || !isBasinOptimizationSafe) return;

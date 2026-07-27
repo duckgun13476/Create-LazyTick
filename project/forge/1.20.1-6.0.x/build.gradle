@@ -193,6 +193,7 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' //Mixin注解处理器(记得开)
     //Create
     modImplementation("curse.maven:create-328085:7178761")
+    // modRuntimeOnly("curse.maven:vintage-improvenents-ssw-edition-1255448:8066288")
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
 
