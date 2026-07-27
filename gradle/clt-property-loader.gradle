@@ -35,6 +35,11 @@ if (cltRepositoryRoot == null) {
 }
 cltLoadGradleProperties(new File(cltRepositoryRoot, 'gradle/clt-common.properties'))
 
+if (!project.hasProperty('mod_version')) {
+    throw new GradleException("CreateLazyTick shared mod_version is missing from gradle/clt-common.properties")
+}
+project.ext.clt_release_version = project.property('mod_version').toString()
+
 def cltLoadProperties(File propertyFile) {
     if (!propertyFile.isFile()) {
         project.logger.warn("The property file ${propertyFile.name} could not be loaded.")

@@ -19,7 +19,7 @@ apply from: file('../../../gradle/clt-java.gradle')
 apply from: file('../../../gradle/clt-git.gradle')
 apply from: file('../../../gradle/clt-publishing-credentials.gradle')
 
-ext.mod_version = "${mod_release_version}-${mod_create_compat_version}"
+ext.mod_version = "${clt_release_version}-${mod_create_compat_version}"
 
 
 group = mod_group_id
