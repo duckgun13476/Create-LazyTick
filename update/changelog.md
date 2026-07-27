@@ -1,3 +1,17 @@
+### 2.5.15
+#### Feature
+1. Add adaptive Mechanical Saw idle scheduling.
+
+#### Fix
+1. Fix Mechanical Saw idle/output retry behavior and unpacked processing stalls.
+2. Fix Vintage Improvements Vacuum Chamber compatibility.
+3. Fix Create Big Cannons ammo-container Mechanical Arms and expected Create shared-owner warnings.
+
+#### Build
+1. Repair the multi-version Gradle build and per-target client run tasks.
+
+---
+
 ### 2.4.9-beta
 #### Fix
 1. Fix console error spam (#19, #20): incompatible Depot/Funnel block entities no longer flood the log every tick. CLT now prints a one-time compatibility warning and falls back to vanilla logic for unsupported cases.(Fugit-5414)
