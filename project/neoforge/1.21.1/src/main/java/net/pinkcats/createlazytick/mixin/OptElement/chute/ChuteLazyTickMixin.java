@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
@@ -73,6 +74,12 @@ public class ChuteLazyTickMixin extends SmartBlockEntity implements IHaveGoggleI
 
     public ChuteLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+    }
+
+    @Inject(method = "canDirectlyInsert", at = @At("HEAD"), cancellable = true)
+    private void createLazyTick$skipUnloadedDirectInput(CallbackInfoReturnable<Boolean> cir) {
+        if (level != null && !level.isClientSide && !level.hasChunkAt(worldPosition.above()))
+            cir.setReturnValue(false);
     }
 
     @Unique
