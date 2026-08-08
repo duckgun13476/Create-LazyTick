@@ -365,7 +365,11 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
                             Direction.EAST, Direction.WEST};
 
                     for (Direction dir : allDirections) {
-                        Block block = level.getBlockState(blockPos.relative(dir)).getBlock();
+                        BlockPos probePos = blockPos.relative(dir);
+                        if (!level.hasChunkAt(probePos))
+                            continue;
+
+                        Block block = level.getBlockState(probePos).getBlock();
 
                         // 找到目标方块：记录方向并返回true
                         if (block == PORTABLE_STORAGE_INTERFACE.get() || block == DEPLOYER.get()) {
@@ -383,7 +387,11 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         }
         else {
             if (level != null) {
-                Block target = level.getBlockState(blockPos.relative(createlazytick$targetDirection)).getBlock();
+                BlockPos probePos = blockPos.relative(createlazytick$targetDirection);
+                if (!level.hasChunkAt(probePos))
+                    return false;
+
+                Block target = level.getBlockState(probePos).getBlock();
                 return target == PORTABLE_STORAGE_INTERFACE.get() || target == DEPLOYER.get();
             }
         }
