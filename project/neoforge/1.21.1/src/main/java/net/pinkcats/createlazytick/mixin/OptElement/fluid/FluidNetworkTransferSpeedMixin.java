@@ -55,7 +55,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
         )
         private Object createlazytick$safeGetCapability(ICapabilityProvider<?> provider, Operation<Object> original) {
             try {
-                return original.call(provider);
+                Object capability = original.call(provider);
+                if (capability == null && provider == this.source) {
+                    this.source = null;
+                    this.reset();
+                }
+                return capability;
             } catch (IllegalStateException ex) {
                 // Silent self-heal for migrated worlds: skip this cycle and let the network rebuild capability caches.
                 String msg = ex.getMessage();
