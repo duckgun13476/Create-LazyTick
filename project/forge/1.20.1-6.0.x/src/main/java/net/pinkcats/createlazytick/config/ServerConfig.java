@@ -260,7 +260,7 @@ public class ServerConfig {
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
                 .comment("The maximum delay for activating a mechanical crafter via redstone after it has been inactive for a period of time.")
-                .defineInRange("crafter_redstone_delay_max", 60, 0, Integer.MAX_VALUE);
+                .defineInRange("crafter_redstone_delay_max", 15, 0, Integer.MAX_VALUE);
 
         BUILDER.pop();
 
