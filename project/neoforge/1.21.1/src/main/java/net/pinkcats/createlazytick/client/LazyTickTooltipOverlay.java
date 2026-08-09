@@ -1,6 +1,5 @@
 package net.pinkcats.createlazytick.client;
 
-import com.simibubi.create.AllItems;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.equipment.goggles.GoggleOverlayRenderer;
 import com.simibubi.create.foundation.gui.RemovedGuiUtils;
@@ -244,7 +243,7 @@ public class LazyTickTooltipOverlay {
     }
 
     private static boolean isActuallyWearingGoggles(Minecraft mc) {
-        return AllItems.GOGGLES.isIn(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD));
+        return mc.player != null && GogglesItem.isWearingGoggles(mc.player);
     }
 
     private static boolean hasLazyTickState(CompoundTag tag) {
