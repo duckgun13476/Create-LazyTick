@@ -122,8 +122,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         Level world = blockEntity.getLevel();
         if (world == null) { ci.cancel(); return; }
 
-        super.tick();
-
         if (!(this.blockEntity instanceof ISmartBlockEntityControl control)) {
             ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(this.blockEntity.getBlockState().getBlock());
             boolean expectedSharedOwner = "create".equals(blockId.getNamespace())
@@ -134,6 +132,8 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             }
             return;
         }
+
+        super.tick();
 
        // mes.error("Run pack synchronization");
        // mes.debug("server"+control.createLazyTick$getCurrentSuperTick());
@@ -249,7 +249,9 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
     private void handleBeltFunnelOutput(CallbackInfoReturnable<Boolean> cir) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazyDepot()) {return;}
 
-        ISmartBlockEntityControl control = (ISmartBlockEntityControl) this.blockEntity;
+        if (!(this.blockEntity instanceof ISmartBlockEntityControl control)) {
+            return;
+        }
 
         BlockState funnel = getWorld().getBlockState(getPos().above());
         Direction funnelFacing = AbstractFunnelBlock.getFunnelFacing(funnel);
