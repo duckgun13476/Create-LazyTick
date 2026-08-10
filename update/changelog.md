@@ -1,3 +1,11 @@
+#### v2.5.19
+
+- Fix shared Create depot behavior, unloaded Chute/Funnel guards, and stale fluid-network source caches.
+- Add Curios-equipped goggle support for the Lazy Tick overlay.
+- Target Create 6.0.10 for NeoForge 1.21.1.
+
+---
+
 ### 2.5.15
 #### Feature
 1. Add adaptive Mechanical Saw idle scheduling.
