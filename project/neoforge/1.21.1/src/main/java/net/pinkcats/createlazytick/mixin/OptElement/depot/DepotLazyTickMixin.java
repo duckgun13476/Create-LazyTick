@@ -123,8 +123,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
         Level world = blockEntity.getLevel();
         if (world == null) { ci.cancel(); return; }
 
-        super.tick();
-
         ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this.blockEntity);
         if (control == null) {
             ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(this.blockEntity.getBlockState().getBlock());
@@ -135,6 +133,8 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
             }
             return;
         }
+
+        super.tick();
 
        // mes.error("Run pack synchronization");
        // mes.debug("server"+control.createLazyTick$getCurrentSuperTick());
@@ -253,8 +253,6 @@ public class DepotLazyTickMixin extends BlockEntityBehaviour {
 
         ISmartBlockEntityControl control = SmartLazyTickStateHelper.control(this.blockEntity);
         if (control == null) {
-            cir.setReturnValue(false);
-            cir.cancel();
             return;
         }
 
