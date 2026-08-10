@@ -22,6 +22,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.pinkcats.createlazytick.Channel.LazyTickClientStateCache;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
+import net.pinkcats.createlazytick.client.compat.CuriosGoggleCompat;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickDepotDebug;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipRenderer;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipTool;
@@ -244,7 +245,8 @@ public class LazyTickTooltipOverlay {
     }
 
     private static boolean isActuallyWearingGoggles(Minecraft mc) {
-        return AllItems.GOGGLES.isIn(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD));
+        return mc.player != null && (AllItems.GOGGLES.isIn(mc.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD))
+                || CuriosGoggleCompat.isWearingGoggles(mc.player));
     }
 
     private static boolean hasLazyTickState(CompoundTag tag) {

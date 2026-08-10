@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.pinkcats.createlazytick.CreateLazyTick;
+import net.pinkcats.createlazytick.client.compat.CuriosGoggleCompat;
 import net.pinkcats.createlazytick.config.ClientConfig;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickDepotDebug;
@@ -21,6 +22,7 @@ public class ClientInit {
             boolean result = player != null && (
                     player.getMainHandItem().getItem() == LazyTickItem.CLOCK.get()
                             || player.getOffhandItem().getItem() == LazyTickItem.CLOCK.get()
+                            || CuriosGoggleCompat.isWearingGoggles(player)
             );
             if (result && ClientConfig.enableDepotDebug()) {
                 LazyTickDepotDebug.log(Minecraft.getInstance(), "goggles_predicate",
