@@ -52,6 +52,9 @@ public class ServerConfig {
     private static final ModConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
     private static final ModConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
 
+    // Redstone
+    private static final ModConfigSpec.BooleanValue ENABLE_REDSTONE_LINK_SIGNAL_DEDUP;
+
     // Mechanical Arm
     private static final ModConfigSpec.BooleanValue ENABLE_LAZY_ARM;
     private static final ModConfigSpec.IntValue ARM_DELAY_MAX;
@@ -279,6 +282,17 @@ public class ServerConfig {
 
         BUILDER.pop();
 
+        // --- Redstone Settings ---
+        BUILDER.comment("Redstone Link Settings").push("redstone link");
+
+        ENABLE_REDSTONE_LINK_SIGNAL_DEDUP = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Whether to skip redundant Redstone Link network transmissions when the signal strength is unchanged.")
+                .define("enable_redstone_link_signal_dedup", true);
+
+        BUILDER.pop();
+
         // --- Mechanical Arm Settings ---
         BUILDER.comment("Mechanical Arm Settings").push("arm");
 
@@ -481,6 +495,10 @@ public class ServerConfig {
 
     public static int getCrafterRedstoneDelayMax() {
         return CRAFTER_REDSTONE_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableRedstoneLinkSignalDedup() {
+        return ENABLE_REDSTONE_LINK_SIGNAL_DEDUP.get();
     }
 
     public static boolean getEnableLazyArm() {

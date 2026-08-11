@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.mixin.OptElement.redstone;
 
 import com.simibubi.create.content.redstone.link.RedstoneLinkBlock;
 import com.simibubi.create.content.redstone.link.RedstoneLinkBlockEntity;
+import net.pinkcats.createlazytick.config.ServerConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -18,7 +19,8 @@ public abstract class RedstoneLinkSignalDedupMixin {
         at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/redstone/link/RedstoneLinkBlockEntity;transmit(I)V")
     )
     private static void createLazyTick$transmitOnlyWhenChanged(RedstoneLinkBlockEntity blockEntity, int strength) {
-        if (blockEntity.getSignal() != strength)
+        if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableRedstoneLinkSignalDedup()
+                || blockEntity.getSignal() != strength)
             blockEntity.transmit(strength);
     }
 }
