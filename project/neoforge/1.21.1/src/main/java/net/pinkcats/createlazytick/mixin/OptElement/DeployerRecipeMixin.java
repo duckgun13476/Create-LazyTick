@@ -43,6 +43,7 @@ public abstract class DeployerRecipeMixin {
     @Unique private RecipeHolder<? extends Recipe<? extends RecipeInput>> lazytick$cachedRecipe = null; // 缓存的配方结果
     @Unique private boolean lazytick$isBlacklisted = false; // 黑名单标记（熔断开关）
     @Unique private boolean lazytick$cachedTargetItemHasNbt = false;
+    @Unique private ItemStack lazytick$cachedTargetStack = ItemStack.EMPTY;
 
     //注入到 getRecipe 方法头部，尝试直接返回缓存的配方。
     @Inject(method = "getRecipe", at = @At("HEAD"), cancellable = true, remap = false)
@@ -63,6 +64,9 @@ public abstract class DeployerRecipeMixin {
 
         boolean hasTag = !stack.getComponentsPatch().isEmpty();
         if (hasTag != lazytick$cachedTargetItemHasNbt) return;
+        // Dynamic deployer recipes may build their result from item components (for example,
+        // CBC ammo containers). Item identity and component presence are not a sufficient key.
+        if (!ItemStack.isSameItemSameComponents(stack, lazytick$cachedTargetStack)) return;
 
         // 3. 黑名单检查
         // 如果该物品之前已被判定为导致序列组装的“危险物品”，直接跳过处理，走原版逻辑。
@@ -122,6 +126,7 @@ public abstract class DeployerRecipeMixin {
             this.lazytick$cachedHeldItem = player.getMainHandItem().getItem();
 
             this.lazytick$cachedTargetItemHasNbt = !stack.getComponentsPatch().isEmpty();
+            this.lazytick$cachedTargetStack = stack.copy();
             this.lazytick$isBlacklisted = true; // 标记为黑名单，下次 checkCache 直接熔断
             this.lazytick$cachedRecipe = null;  // 不缓存危险配方
             return;
@@ -133,6 +138,7 @@ public abstract class DeployerRecipeMixin {
         this.lazytick$cachedHeldItem = player.getMainHandItem().getItem();
 
         this.lazytick$cachedTargetItemHasNbt = !stack.getComponentsPatch().isEmpty();
+        this.lazytick$cachedTargetStack = stack.copy();
         this.lazytick$isBlacklisted = false;
         this.lazytick$cachedRecipe = result;
     }
@@ -145,5 +151,6 @@ public abstract class DeployerRecipeMixin {
         this.lazytick$cachedRecipe = null;
         this.lazytick$isBlacklisted = false;
         this.lazytick$cachedTargetItemHasNbt = false;
+        this.lazytick$cachedTargetStack = ItemStack.EMPTY;
     }
 }
