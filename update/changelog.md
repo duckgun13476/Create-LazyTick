@@ -1,3 +1,9 @@
+#### v2.5.20
+
+- Fix Create Big Cannons autocannon ammo containers not filling on a Depot when Deployer recipe caching is enabled (#37).
+
+---
+
 #### v2.5.19
 
 - Fix shared Create depot behavior, unloaded Chute/Funnel guards, and stale fluid-network source caches.
