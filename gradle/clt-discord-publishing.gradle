@@ -13,7 +13,7 @@ import java.security.MessageDigest
 ext.cltDiscordLatestChangelog = { String text ->
     String normalized = text ?: ''
     if (!normalized.isEmpty() && normalized.charAt(0) == '\uFEFF' as char) normalized = normalized.substring(1)
-    def matcher = normalized =~ /(?ms)\A(####\s+v[^\n]+.*?)(?=\n####\s+v|\z)/
+    def matcher = normalized =~ /(?ms)\A(#{3,4}\s+v?\d[^\n]+.*?)(?=\r?\n#{3,4}\s+v?\d|\z)/
     return matcher.find() ? matcher.group(1).trim() : ''
 }
 
