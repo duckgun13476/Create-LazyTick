@@ -1,11 +1,7 @@
-#### v2.5.20
+#### v2.5.21
 
 - Fix Create Big Cannons autocannon ammo containers not filling on a Depot when Deployer recipe caching is enabled (#37).
-
----
-
-#### v2.5.19
-
+- Optimize Create wireless redstone links by skipping redundant propagation when the transmitted signal is unchanged.
 - Fix shared Create depot behavior, unloaded Chute/Funnel guards, and stale fluid-network source caches.
 - Add Curios-equipped goggle support for the Lazy Tick overlay.
 - Target Create 6.0.10 for NeoForge 1.21.1.
