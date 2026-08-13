@@ -1,0 +1,209 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+
+// Release notification convention shared with BandwidthOptimizer.  Platform
+// publishing stays authoritative: Discord failures are journaled and reported
+// but never reclassify an uploaded release as failed.
+ext.cltDiscordLatestChangelog = { String text ->
+    String normalized = text ?: ''
+    if (!normalized.isEmpty() && normalized.charAt(0) == '\uFEFF' as char) normalized = normalized.substring(1)
+    def matcher = normalized =~ /(?ms)\A(####\s+v[^\n]+.*?)(?=\n####\s+v|\z)/
+    return matcher.find() ? matcher.group(1).trim() : ''
+}
+
+ext.cltDiscordReleaseId = { String changelog ->
+    def matcher = (changelog ?: '') =~ /\A####[ \t]+(v[^\r\n]+)[ \t]*(?:\r?\n|\z)/
+    return matcher.find() ? matcher.group(1).trim() : ''
+}
+
+ext.cltDiscordSha256 = { String text ->
+    byte[] digest = MessageDigest.getInstance('SHA-256').digest((text ?: '').getBytes(StandardCharsets.UTF_8))
+    return digest.collect { String.format('%02x', it & 0xff) }.join('')
+}
+
+ext.cltDiscordLedgerFile = { rootProject.file('update/discord-publish-ledger.json') }
+
+ext.cltDiscordReadLedger = { File ledgerFile = cltDiscordLedgerFile() ->
+    if (!ledgerFile.isFile()) return [schemaVersion: 1, entries: []]
+    String text = ledgerFile.getText('UTF-8')
+    if (!text.isEmpty() && text.charAt(0) == '\uFEFF' as char) text = text.substring(1)
+    def parsed = new JsonSlurper().parseText(text)
+    if (!(parsed instanceof Map)) return [schemaVersion: 1, entries: []]
+    Map ledger = parsed as Map
+    if (!(ledger.entries instanceof Collection)) ledger.entries = []
+    return ledger
+}
+
+ext.cltDiscordWriteLedger = { Map ledger, File ledgerFile = cltDiscordLedgerFile() ->
+    ledgerFile.parentFile.mkdirs()
+    File temporaryFile = new File(ledgerFile.parentFile, ledgerFile.name + '.tmp')
+    temporaryFile.setText(JsonOutput.prettyPrint(JsonOutput.toJson(ledger)) + System.lineSeparator(), 'UTF-8')
+    try {
+        Files.move(temporaryFile.toPath(), ledgerFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+    } catch (AtomicMoveNotSupportedException ignored) {
+        Files.move(temporaryFile.toPath(), ledgerFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+
+ext.cltDiscordFindLedgerEntry = { Map ledger, String target, String releaseId, String messageSha256 ->
+    return (ledger.entries as Collection).findAll { it instanceof Map }.collect { it as Map }.find { Map entry ->
+        entry.target?.toString() == target && entry.releaseId?.toString() == releaseId && entry.messageSha256?.toString() == messageSha256
+    }
+}
+
+ext.cltDiscordSuccessfulChunkKeys = { Map entry ->
+    if (!(entry?.successfulChunks instanceof Collection)) return []
+    return (entry.successfulChunks as Collection).findAll { it instanceof Map }.collect { it as Map }
+            .findAll { Map chunk -> chunk.index?.toString()?.isInteger() && chunk.sha256?.toString() ==~ /[0-9a-fA-F]{64}/ }
+            .collect { Map chunk -> "${chunk.index.toString().toInteger()}:${chunk.sha256.toString().toLowerCase(Locale.ROOT)}" }.unique().sort()
+}
+
+ext.cltDiscordRecordAttempt = { Map ledger, Map release, int exitCode, Collection<Map> events, String warning = '' ->
+    List<Map> entries = (ledger.entries as Collection).findAll { it instanceof Map }.collect { it as Map }
+    Map entry = cltDiscordFindLedgerEntry(ledger, release.target.toString(), release.releaseId.toString(), release.messageSha256.toString()) as Map
+    if (entry == null) {
+        entry = [target: release.target, releaseId: release.releaseId, messageSha256: release.messageSha256, successfulChunks: [], attemptCount: 0, status: 'pending']
+        entries.add(entry)
+        ledger.entries = entries
+    }
+    Map<String, Map> successfulByKey = [:]
+    if (entry.successfulChunks instanceof Collection) {
+        (entry.successfulChunks as Collection).findAll { it instanceof Map }.each { Map chunk ->
+            if (chunk.index != null && chunk.sha256 != null) successfulByKey["${chunk.index}:${chunk.sha256.toString().toLowerCase(Locale.ROOT)}"] = chunk
+        }
+    }
+    events.findAll { it?.type?.toString() == 'chunk_result' && it.status?.toString() in ['sent', 'skipped'] }.each { Map event ->
+        String key = "${event.index.toString().toInteger()}:${event.sha256.toString().toLowerCase(Locale.ROOT)}"
+        successfulByKey[key] = [index: event.index.toString().toInteger(), sha256: event.sha256.toString().toLowerCase(Locale.ROOT), length: event.length?.toString()?.toInteger(), confirmedAt: new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")].findAll { it.value != null }
+    }
+    Map result = events.findAll { it?.type?.toString() == 'release_result' }.last() as Map
+    entry.successfulChunks = successfulByKey.values().sort { Map left, Map right -> (left.index as int) <=> (right.index as int) }
+    entry.attemptCount = (entry.attemptCount ?: 0).toString().toInteger() + 1
+    entry.lastExitCode = exitCode
+    entry.status = exitCode == 0 && result?.status?.toString() == 'success' ? 'success' : 'failed'
+    entry.chunkCount = result?.chunkCount ?: entry.chunkCount
+    entry.updatedAt = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+    if (warning?.trim()) entry.lastWarning = warning.trim().take(1000)
+    else entry.remove('lastWarning')
+    return entry
+}
+
+ext.cltDiscordReadStringProperty = { String propertyName, String environmentName, String defaultValue = '' ->
+    String propertyValue = project.findProperty(propertyName)?.toString()?.trim()
+    return propertyValue ?: (System.getenv(environmentName)?.trim() ?: defaultValue)
+}
+
+ext.cltDiscordPublishingDisabled = {
+    cltDiscordReadStringProperty('clt_discord_publish_disabled', 'CLT_DISCORD_PUBLISH_DISABLED', 'false').toLowerCase(Locale.ROOT) in ['1', 'true', 'yes', 'on']
+}
+
+ext.cltDiscordResolveInvocation = {
+    String projectDirectoryText = cltDiscordReadStringProperty('clt_discord_project_dir', 'CLT_DISCORD_PROJECT_DIR', System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('windows') ? 'C:\\F\\Discord' : '')
+    File projectDirectory = projectDirectoryText ? new File(projectDirectoryText) : null
+    String senderText = cltDiscordReadStringProperty('clt_discord_sender_path', 'CLT_DISCORD_SENDER_PATH', '')
+    File sender = senderText ? new File(senderText) : (projectDirectory == null ? null : new File(projectDirectory, 'scripts/send_release_log.py'))
+    String python = cltDiscordReadStringProperty('clt_discord_python_path', 'CLT_DISCORD_PYTHON_PATH', '')
+    if (!python && projectDirectory != null) {
+        File venv = new File(projectDirectory, System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('windows') ? '.venv/Scripts/python.exe' : '.venv/bin/python')
+        if (venv.isFile()) python = venv.absolutePath
+    }
+    return [projectDirectory: projectDirectory, sender: sender, python: python ?: (System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('windows') ? 'python' : 'python3'), target: cltDiscordReadStringProperty('clt_discord_target', 'CLT_DISCORD_TARGET', 'createlazytick')]
+}
+
+ext.cltDiscordInvokeRelease = { Map release ->
+    File ledgerFile = cltDiscordLedgerFile()
+    Map ledger = cltDiscordReadLedger(ledgerFile) as Map
+    Map prior = cltDiscordFindLedgerEntry(ledger, release.target.toString(), release.releaseId.toString(), release.messageSha256.toString()) as Map
+    if (prior?.status?.toString() == 'success') return [status: 'already_published', entry: prior]
+
+    Map invocation = cltDiscordResolveInvocation() as Map
+    File projectDirectory = invocation.projectDirectory as File
+    File sender = invocation.sender as File
+    if (projectDirectory == null || !projectDirectory.isDirectory() || sender == null || !sender.isFile()) {
+        String warning = "Discord sender is unavailable: ${sender?.absolutePath ?: projectDirectory?.absolutePath ?: 'not configured'}"
+        Map entry = cltDiscordRecordAttempt(ledger, release, 127, [[type: 'release_result', status: 'unavailable', chunkCount: 0]], warning) as Map
+        cltDiscordWriteLedger(ledger, ledgerFile)
+        return [status: 'unavailable', entry: entry, warning: warning]
+    }
+
+    File messageFile = new File(rootProject.buildDir, "tmp/discord-publish/${release.messageSha256}.md")
+    messageFile.parentFile.mkdirs()
+    messageFile.setText(release.message.toString() + System.lineSeparator(), 'UTF-8')
+    List<String> command = [invocation.python.toString(), sender.absolutePath, '--target', invocation.target.toString(), '--file', messageFile.absolutePath, '--result-json']
+    cltDiscordSuccessfulChunkKeys(prior).each { String key -> command.addAll(['--skip-chunk', key]) }
+
+    List<Map> events = []
+    List<String> output = []
+    int exitCode
+    try {
+        Process process = new ProcessBuilder(command as String[]).directory(projectDirectory).redirectErrorStream(true).start()
+        process.inputStream.withReader('UTF-8') { reader -> reader.eachLine { String line ->
+            output.add(line)
+            if (line.trim().startsWith('{')) try { def parsed = new JsonSlurper().parseText(line); if (parsed instanceof Map) events.add(parsed as Map) } catch (Exception ignored) { }
+        }}
+        exitCode = process.waitFor()
+    } catch (Exception exception) {
+        String warning = "Discord sender could not be executed: ${exception.class.simpleName}: ${exception.message}"
+        Map entry = cltDiscordRecordAttempt(ledger, release, 126, [[type: 'release_result', status: 'unavailable', chunkCount: 0]], warning) as Map
+        cltDiscordWriteLedger(ledger, ledgerFile)
+        return [status: 'unavailable', entry: entry, warning: warning]
+    }
+    String warning = exitCode == 0 ? '' : "Discord sender exited with code ${exitCode}: ${output.findAll { !it.trim().isEmpty() }.takeRight(8).join(' | ').take(1000)}"
+    ledger = cltDiscordReadLedger(ledgerFile) as Map
+    Map entry = cltDiscordRecordAttempt(ledger, release, exitCode, events, warning) as Map
+    cltDiscordWriteLedger(ledger, ledgerFile)
+    return [status: entry.status, entry: entry, warning: warning]
+}
+
+tasks.register('publishDiscordRelease') {
+    group = 'Publishing'
+    description = 'Publishes the latest CreateLazyTick changelog section to Discord after all version uploads.'
+    dependsOn 'allworkPublishAllVersions'
+    doLast {
+        if (cltDiscordPublishingDisabled()) {
+            logger.lifecycle('Discord release notification is disabled by configuration.')
+            return
+        }
+        try {
+            File changelogFile = rootProject.file('update/changelog.md')
+            String latest = changelogFile.isFile() ? cltDiscordLatestChangelog(changelogFile.getText('UTF-8')) : ''
+            String releaseId = cltDiscordReleaseId(latest)
+            if (!latest || !releaseId) {
+                logger.warn('[CLT Publish] Discord notification skipped: latest changelog section could not be parsed. Platform publishing remains successful.')
+                return
+            }
+            String target = cltDiscordReadStringProperty('clt_discord_target', 'CLT_DISCORD_TARGET', 'createlazytick')
+            Map result = cltDiscordInvokeRelease([target: target, releaseId: releaseId, messageSha256: cltDiscordSha256(latest), message: latest]) as Map
+            if (result.status == 'success') logger.lifecycle("Discord release notification completed: release=${releaseId}, chunks=${result.entry.chunkCount ?: result.entry.successfulChunks?.size() ?: 0}")
+            else if (result.status == 'already_published') logger.lifecycle("Discord release notification already recorded: release=${releaseId}")
+            else logger.warn("[CLT Publish] Discord notification was not completed: ${result.warning ?: "status=${result.status}"}. Platform publishing remains successful.")
+        } catch (Exception exception) {
+            logger.warn("[CLT Publish] Discord notification failed unexpectedly: ${exception.class.simpleName}: ${exception.message}. Platform publishing remains successful.")
+        }
+    }
+}
+
+tasks.named('publishAllVersions').configure { dependsOn 'publishDiscordRelease' }
+
+tasks.register('testDiscordPublishSupport') {
+    group = 'Verification'
+    description = 'Tests CreateLazyTick Discord changelog parsing and ledger semantics without network access.'
+    doLast {
+        String sample = '#### v9.8.7\n\n- Latest.\n\n#### v1.0.0\n\n- Old.'
+        String latest = cltDiscordLatestChangelog(sample)
+        assert latest == '#### v9.8.7\n\n- Latest.'
+        assert cltDiscordReleaseId(latest) == 'v9.8.7'
+        assert cltDiscordSha256(latest) ==~ /[0-9a-f]{64}/
+        Map ledger = [schemaVersion: 1, entries: []]
+        Map release = [target: 'formal', releaseId: 'v9.8.7', messageSha256: cltDiscordSha256(latest)]
+        Map entry = cltDiscordRecordAttempt(ledger, release, 0, [[type: 'chunk_result', status: 'sent', index: 1, length: 10, sha256: 'a' * 64], [type: 'release_result', status: 'success', chunkCount: 1]])
+        assert entry.status == 'success'
+        assert cltDiscordSuccessfulChunkKeys(entry) == ["1:${'a' * 64}"]
+    }
+}

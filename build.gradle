@@ -12,6 +12,7 @@ def versionProjects = [
 ]
 
 apply from: rootProject.file('gradle/clt-publishing-root.gradle')
+apply from: rootProject.file('gradle/clt-discord-publishing.gradle')
 
 tasks.register('buildAllVersions') {
     group = 'build'
