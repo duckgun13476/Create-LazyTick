@@ -67,6 +67,7 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     // 相比存储 String，这消除了运行时的 ForgeRegistries.getKey() 反查和 res.toString() 开销。
     @Unique private static Set<ResourceLocation> createLazyTick$cachedIgnoreBlocks = null;
     @Unique private static Set<ResourceLocation> createLazyTick$cachedWeakBlocks = null;
+    @Unique private static boolean createLazyTick$configCacheNeedsRebuild = false;
 
     /**
      * Targets whose automation contract cannot tolerate deferred arm discovery.
@@ -111,12 +112,16 @@ public abstract class ArmLazyTickMixin extends SmartBlockEntity {
     private void createLazyTick$ensureConfigCaches() {
         // 情况1: 服务器重载配置 (IsServerReload)
         if (IsServerReload) {
+            // Keep the last known-good sets for the reload grace window, then rebuild once
+            // after it ends. Clearing here would temporarily remove compatibility protection.
+            createLazyTick$configCacheNeedsRebuild = true;
             return;
         }
 
-        // 情况2: 首次初始化
-        if (createLazyTick$cachedIgnoreBlocks == null) {
+        // 情况2: 首次初始化，或重载结束后的单次重建
+        if (createLazyTick$configCacheNeedsRebuild || createLazyTick$cachedIgnoreBlocks == null) {
             createLazyTick$rebuildCaches();
+            createLazyTick$configCacheNeedsRebuild = false;
         }
     }
 
