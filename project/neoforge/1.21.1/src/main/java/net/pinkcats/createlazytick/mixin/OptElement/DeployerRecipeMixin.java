@@ -113,6 +113,14 @@ public abstract class DeployerRecipeMixin {
 
         RecipeHolder<? extends Recipe<? extends RecipeInput>> result = cir.getReturnValue();
 
+        // CBC registers input-instance-bound recipes through DeployerRecipeSearchEvent.
+        // Even an equal stack reinserted into a Depot is a new instance, so retaining
+        // the old generated recipe can consume the live target with a stale result.
+        if (result != null && "createbigcannons".equals(result.id().getNamespace())) {
+            this.lazytick$clearCache();
+            return;
+        }
+
         // 配方危险性检查
         // 检查输出是否会导致序列组装
         DeployerBlockEntity be = (DeployerBlockEntity)(Object)this;
