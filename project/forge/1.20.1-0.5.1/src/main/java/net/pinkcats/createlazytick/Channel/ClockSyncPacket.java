@@ -8,8 +8,9 @@ import net.minecraftforge.network.NetworkEvent;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class ClockSyncPacket {
@@ -19,7 +20,10 @@ public class ClockSyncPacket {
     private final int extraData;
     private final boolean isQuery;
 
-    public static List<ClientData> PacketCache = new ArrayList<>();
+    private static final int MAX_PENDING_REQUESTS = 80;
+    private static final long PENDING_REQUEST_TTL_MILLIS = 10_000L;
+    private static final Map<RequestTarget, LinkedHashMap<Integer, ClientData>> PENDING_REQUESTS = new LinkedHashMap<>();
+    private static int pendingRequestCount = 0;
 
     // 构造函数 1: 纯查询 (Tooltip 用)
     public ClockSyncPacket(BlockPos pos) {
@@ -72,22 +76,61 @@ public class ClockSyncPacket {
                 return;
             }
 
-            ClientData data = new ClientData(extraData, dimension, pos);
-
-            // Packet Lock
-            if (PacketCache.size() > 80) {
-                mes.error("ServerPacket Cargo is full. This shouldn't happen!");
-                PacketCache.clear();
-            }
-
-            // Remove the same
-            for (ClientData existingData : PacketCache) {
-                if (data.isSimilar(existingData))
-                    return;
-            }
-            PacketCache.add(data);
+            enqueuePendingRequest(new ClientData(extraData, dimension, pos));
         });
     }
+
+    public static ClientData takePendingRequest(String dimension, BlockPos pos) {
+        RequestTarget target = new RequestTarget(dimension, pos.immutable());
+        LinkedHashMap<Integer, ClientData> requests = PENDING_REQUESTS.get(target);
+        if (requests == null || requests.isEmpty()) {
+            return null;
+        }
+
+        Iterator<ClientData> iterator = requests.values().iterator();
+        ClientData request = iterator.next();
+        iterator.remove();
+        pendingRequestCount--;
+        if (requests.isEmpty()) {
+            PENDING_REQUESTS.remove(target);
+        }
+        return request;
+    }
+
+    private static void enqueuePendingRequest(ClientData data) {
+        purgeExpiredRequests(System.currentTimeMillis());
+
+        RequestTarget target = new RequestTarget(data.getDimension(), data.getPos().immutable());
+        LinkedHashMap<Integer, ClientData> requests = PENDING_REQUESTS.computeIfAbsent(target, ignored -> new LinkedHashMap<>());
+        if (requests.containsKey(data.getExtraData())) {
+            return;
+        }
+        if (pendingRequestCount >= MAX_PENDING_REQUESTS) {
+            mes.error("ServerPacket Cargo is full. This shouldn't happen!");
+            return;
+        }
+        requests.put(data.getExtraData(), data);
+        pendingRequestCount++;
+    }
+
+    private static void purgeExpiredRequests(long now) {
+        Iterator<Map.Entry<RequestTarget, LinkedHashMap<Integer, ClientData>>> targetIterator = PENDING_REQUESTS.entrySet().iterator();
+        while (targetIterator.hasNext()) {
+            LinkedHashMap<Integer, ClientData> requests = targetIterator.next().getValue();
+            Iterator<ClientData> requestIterator = requests.values().iterator();
+            while (requestIterator.hasNext()) {
+                if (now - requestIterator.next().getCreatedAtMillis() > PENDING_REQUEST_TTL_MILLIS) {
+                    requestIterator.remove();
+                    pendingRequestCount--;
+                }
+            }
+            if (requests.isEmpty()) {
+                targetIterator.remove();
+            }
+        }
+    }
+
+    private record RequestTarget(String dimension, BlockPos pos) {}
 
 
     @Override
