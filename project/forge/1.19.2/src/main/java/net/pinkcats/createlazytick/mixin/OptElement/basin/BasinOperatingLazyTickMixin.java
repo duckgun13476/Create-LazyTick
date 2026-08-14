@@ -203,6 +203,12 @@ public abstract class BasinOperatingLazyTickMixin {
                 return true;
             }
         }
+
+        for (Object2IntMap.Entry<Item> entry : oldItems.object2IntEntrySet()) {
+            if (!newItems.containsKey(entry.getKey())) {
+                return true;
+            }
+        }
         return false;
     }
 
