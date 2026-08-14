@@ -1,3 +1,11 @@
+#### v2.6.25
+
+- Fix Create Big Cannons ammo containers disappearing or failing to refill when a Mechanical Arm reuses a cached Deployer recipe (#37).
+- Fix Basin-operated machines failing to resume after a full-stack output extraction (#38).
+- Keep Mechanical Arm compatibility rules current after a resource reload, and reduce Lazy Clock network-sync queue overhead.
+
+---
+
 #### v2.5.21
 
 - Fix Create Big Cannons autocannon ammo containers not filling on a Depot when Deployer recipe caching is enabled (#37).
