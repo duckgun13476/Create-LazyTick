@@ -41,6 +41,8 @@ The active optimization surface includes:
 | Processing | Basins, mechanical crafters, saws, deployers, spouts, and recipe lookup paths. |
 | Interaction | Mechanical arms and selected block-entity interaction checks. |
 | Fluids | Configurable global fluid-transfer scheduling. |
+| Factory monitoring *(Create 6.0.x)* | Factory gauges back off only after repeated, unchanged observations of an isolated and satisfied display panel. |
+| Wireless redstone | Redstone links skip network propagation only when their transmitted signal is unchanged. |
 
 The benchmarks published on the project's [MC百科 page](https://www.mcmod.cn/class/23850.html)
 show the intended type of savings: idle belts, funnels, chutes, depots, and
@@ -85,18 +87,22 @@ the actual pack.
 
 ## Lazy Clock
 
-CLT adds a **Lazy Clock** for per-machine control. Use it on an eligible Create
-block entity to cycle the configured optimization level. The default cycle is
-`0`, `25`, `50`, `75`, and `100` percent:
+CLT adds a **Lazy Clock** for per-machine control. Its settings board has two
+rows, each using the configured percentage cycle (by default `0`, `25`, `50`,
+`75`, and `100`):
 
-- `0` disables CLT optimization for that machine and keeps it at normal cadence.
-- Higher values raise the allowed lazy interval.
-- **Dynamic mode** adjusts the upper bound used by CLT's adaptive/backoff logic.
-- **Forced mode** applies a fixed interval percentage instead.
+- **Dynamic control** sets the ceiling for adaptive backoff, as a percentage of
+  that machine family's configured maximum delay. The interval may vary below
+  that ceiling as the machine's state changes.
+- **Forced control** sets one fixed interval, also as a percentage of the
+  configured maximum. It overrides dynamic backoff while selected.
+- **Forced `0%`** keeps the machine at full speed and disables CLT optimization
+  for that machine.
 
-The server configuration controls the default mode and the cycle values. The
-client overlay and Create-goggle information can show the current state for
-supported machines.
+The two controls are alternatives, not cumulative limits. The server
+configuration chooses which row ordinary clock right-clicks cycle by default;
+the settings board can select either row directly. The client overlay and
+Create-goggle information can show the current state for supported machines.
 
 ## Configuration
 
@@ -117,8 +123,9 @@ Important groups include:
 | `logistics` | Funnel, chute, and belt lazy-tick switches and maximum delays. |
 | `processing` | Depot, saw, basin, item drain, deployer, and spout controls. |
 | `crafter` | Mechanical-crafter recipe cache and redstone scheduling controls. |
+| `factory-gauge` *(Create 6.0.x)* | Enable stable-monitor backoff and set its maximum refresh interval. |
 | `arm` | Mechanical-arm delay, full-speed exclusions, and weak-lazy targets. |
-| `lazytick-clock` | Lazy Clock cycle values and default dynamic/forced mode. |
+| `lazytick-clock` | Percentage cycle for both control rows and the row ordinary clock right-clicks select by default. |
 
 Start with the defaults. Increase a limit only after testing the corresponding
 machine, rather than applying one aggressive value to every factory.
@@ -130,6 +137,13 @@ For example, a funnel adjacent to a portable storage interface stays on Create's
 normal funnel cadence, and a saw with blocked output uses a retrying wait rather
 than sleeping permanently. These paths protect short interaction windows and
 eventual output progress.
+
+Factory-gauge backoff is similarly narrow: it applies only to an active,
+filtered, satisfied display panel with no requester, restocker, redstone input,
+unloaded link, pending promise, or incoming panel/link connection. A changed
+state resets the backoff and returns the panel to normal monitoring. Wireless
+redstone optimization never delays a changed strength: every actual signal
+change still propagates through Create's normal network path.
 
 Nevertheless, any optimization that reduces polling can add visible delay to
 machine animations or to contraptions designed around one-game-tick timing. In
@@ -150,23 +164,6 @@ Please report bugs and compatibility problems through
 [GitHub Issues](https://github.com/duckgun13476/Create-LazyTick/issues). Include
 the affected versions, logs from both sides when applicable, the relevant CLT
 configuration, and steps that reproduce the behavior.
-
-## Development Layout
-
-This repository uses the BO/CSC/CEC combined multi-version layout:
-
-- The root Gradle wrapper orchestrates builds across all maintained targets.
-- `common/` is a source/resource fragment injected into each target; it is not
-  a standalone cross-version runtime dependency.
-- `project/<loader>/<version>/` holds version-specific APIs, Mixins, metadata,
-  and dependencies.
-
-Useful root tasks:
-
-```powershell
-.\gradlew.bat compileJavaAllVersions
-.\gradlew.bat packageAllVersions
-```
 
 ## License
 
