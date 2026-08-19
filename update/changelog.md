@@ -1,3 +1,10 @@
+#### v2.6.27
+
+- Fix Basin machines missing a second fluid input when evaluating recipes (#41).
+- Reduce passive Factory Gauge monitoring overhead on Create 6.x.
+
+---
+
 #### v2.6.25
 
 - Fix Create Big Cannons ammo containers disappearing or failing to refill when a Mechanical Arm reuses a cached Deployer recipe (#37).
