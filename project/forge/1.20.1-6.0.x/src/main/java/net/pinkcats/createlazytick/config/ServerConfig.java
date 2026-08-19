@@ -50,6 +50,10 @@ public class ServerConfig {
     private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_CRAFTER_REDSTONE;
     private static final ForgeConfigSpec.IntValue CRAFTER_REDSTONE_DELAY_MAX;
 
+    // Factory Gauge
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_FACTORY_GAUGE;
+    private static final ForgeConfigSpec.IntValue FACTORY_GAUGE_STABLE_DELAY_MAX;
+
     // Mechanical Arm
     private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_ARM;
     private static final ForgeConfigSpec.IntValue ARM_DELAY_MAX;
@@ -264,6 +268,22 @@ public class ServerConfig {
 
         BUILDER.pop();
 
+        // --- Factory Gauge Settings ---
+        BUILDER.comment("Factory Gauge Settings").push("factory-gauge");
+
+        ENABLE_LAZY_FACTORY_GAUGE = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Whether to adaptively reduce stable factory gauge storage checks.")
+                .define("enable_lazy_factory_gauge", true);
+        FACTORY_GAUGE_STABLE_DELAY_MAX = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Maximum interval for a factory gauge that has repeatedly observed no state changes.")
+                .defineInRange("factory_gauge_stable_delay_max", 60, 1, Integer.MAX_VALUE);
+
+        BUILDER.pop();
+
         // --- Mechanical Arm Settings ---
         BUILDER.comment("Mechanical Arm Settings").push("arm");
 
@@ -447,6 +467,14 @@ public class ServerConfig {
 
     public static int getCrafterRedstoneDelayMax() {
         return CRAFTER_REDSTONE_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyFactoryGauge() {
+        return ENABLE_LAZY_FACTORY_GAUGE.get();
+    }
+
+    public static int getFactoryGaugeStableDelayMax() {
+        return FACTORY_GAUGE_STABLE_DELAY_MAX.get();
     }
 
     public static boolean getEnableLazyArm() {
