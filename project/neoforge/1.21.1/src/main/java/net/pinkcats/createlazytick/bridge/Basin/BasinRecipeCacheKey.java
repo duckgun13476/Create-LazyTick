@@ -7,6 +7,7 @@ import com.simibubi.create.foundation.item.SmartInventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -46,8 +47,10 @@ public final class BasinRecipeCacheKey {
         if (basin.getTanks() != null) {
             for (SmartFluidTankBehaviour tankBehaviour : basin.getTanks()) {
                 if (tankBehaviour == null) continue;
-                for (int i = 0; i < tankBehaviour.getTanks().length; i++) {
-                    FluidStack fs = tankBehaviour.getPrimaryHandler().getFluidInTank(i);
+                IFluidHandler fluidHandler = tankBehaviour.getCapability();
+                if (fluidHandler == null) continue;
+                for (int i = 0; i < fluidHandler.getTanks(); i++) {
+                    FluidStack fs = fluidHandler.getFluidInTank(i);
                     if (fs.isEmpty()) continue;
                     int typeHash = fs.getFluid().hashCode();
                     int tagHash = !fs.getComponentsPatch().isEmpty() ? fs.getComponentsPatch().hashCode() : 0;

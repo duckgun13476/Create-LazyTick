@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class BasinStateSnapshot {
     private final Object2IntMap<Item> itemQuantities;
@@ -63,8 +64,10 @@ public class BasinStateSnapshot {
 
     private void extractFluidTank(SmartFluidTankBehaviour tankBehaviour) {
         if (tankBehaviour == null) return;
-        for (int i = 0; i < tankBehaviour.getTanks().length; i++) {
-            FluidStack fs = tankBehaviour.getPrimaryHandler().getFluidInTank(i);
+        IFluidHandler fluidHandler = tankBehaviour.getCapability().orElse(null);
+        if (fluidHandler == null) return;
+        for (int i = 0; i < fluidHandler.getTanks(); i++) {
+            FluidStack fs = fluidHandler.getFluidInTank(i);
             if (!fs.isEmpty()) {
                 int typeHash = fs.getFluid().hashCode();
                 int tagHash = fs.hasTag() ? fs.getTag().hashCode() : 0;
