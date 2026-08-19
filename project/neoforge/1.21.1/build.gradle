@@ -26,6 +26,8 @@ group = mod_group_id
 version = mod_version
 archivesBaseName = mod_id
 String gitHash = cltGitHash
+String cltMcpAgentClientToken = (findProperty('cltMcpAgentClientToken') ?: '').toString().trim()
+boolean cltMcpAgentClientEnabled = !cltMcpAgentClientToken.isEmpty()
 
 idea {
     module {
@@ -61,6 +63,11 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (cltMcpAgentClientEnabled) {
+                systemProperty 'mcp_tool_for_agent_client.bridge.enabled', 'true'
+                systemProperty 'mcp_tool_for_agent_client.bridge.port', (findProperty('cltMcpAgentClientPort') ?: '18770').toString()
+                systemProperty 'mcp_tool_for_agent_client.bridge.token', cltMcpAgentClientToken
+            }
         }
 
         server {
@@ -161,8 +168,6 @@ dependencies {
     //minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
 
-
-    implementation("curse.maven:observable-509575:6697124")
 
     implementation("curse.maven:spark-361579:6225208")
 

@@ -22,6 +22,18 @@ group = mod_group_id
 version = mod_version
 archivesBaseName = mod_id
 String gitHash = cltGitHash
+String cltMcpAgentClientJarProperty = (findProperty('cltMcpAgentClientJar') ?: '').toString().trim()
+String cltMcpAgentClientToken = (findProperty('cltMcpAgentClientToken') ?: '').toString().trim()
+File cltMcpAgentClientJar = null
+if (!cltMcpAgentClientJarProperty.isEmpty()) {
+    cltMcpAgentClientJar = file(cltMcpAgentClientJarProperty)
+    if (!cltMcpAgentClientJar.isFile()) {
+        throw new GradleException("MCP client jar was not found: ${cltMcpAgentClientJar.absolutePath}")
+    }
+    if (cltMcpAgentClientToken.isEmpty()) {
+        throw new GradleException('cltMcpAgentClientToken is required when cltMcpAgentClientJar is set')
+    }
+}
 
 idea {
     module {
@@ -96,6 +108,9 @@ repositories {
     mavenLocal()
     flatDir {
         dirs 'libs'
+        if (cltMcpAgentClientJar != null) {
+            dirs cltMcpAgentClientJar.parentFile
+        }
     }
 }
 
@@ -145,6 +160,11 @@ legacyForge {
         client {
             client()
             gameDirectory = project.file('run')
+            if (cltMcpAgentClientJar != null) {
+                systemProperty 'mcp_tool_for_agent_client.bridge.enabled', 'true'
+                systemProperty 'mcp_tool_for_agent_client.bridge.port', (findProperty('cltMcpAgentClientPort') ?: '18770').toString()
+                systemProperty 'mcp_tool_for_agent_client.bridge.token', cltMcpAgentClientToken
+            }
         }
 
         server {
@@ -189,6 +209,9 @@ repositories {
 }
 
 dependencies {
+    if (cltMcpAgentClientJar != null) {
+        modImplementation(name: cltMcpAgentClientJar.name.substring(0, cltMcpAgentClientJar.name.length() - 4), ext: 'jar')
+    }
     implementation 'org.jetbrains:annotations:22.0.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' //Mixin注解处理器(记得开)
     //Create
@@ -207,8 +230,6 @@ dependencies {
     //minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
 
-
-    modImplementation("curse.maven:observable-509575:5643037")
 
     modImplementation("curse.maven:spark-361579:4738952")
 
