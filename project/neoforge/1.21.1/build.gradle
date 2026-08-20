@@ -154,7 +154,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' //Mixin注解处理器(记得开)
     //Create
-    implementation("curse.maven:create-328085:7408951")
+    implementation("curse.maven:create-328085:7963363")
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
 
