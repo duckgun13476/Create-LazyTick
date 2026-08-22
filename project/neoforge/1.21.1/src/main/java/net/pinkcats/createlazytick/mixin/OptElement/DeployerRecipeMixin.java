@@ -2,6 +2,7 @@ package net.pinkcats.createlazytick.mixin.OptElement;
 
 import com.simibubi.create.content.kinetics.deployer.DeployerBlockEntity;
 import com.simibubi.create.content.kinetics.deployer.DeployerFakePlayer;
+import com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
@@ -23,9 +24,8 @@ import static net.pinkcats.createlazytick.CreateLazyTick.IsServerReload;
  * * 主要功能：
  * 1. [极速缓存]：针对普通配方（如打磨、物品应用）进行缓存，大幅降低 Tick 耗时。
  * 2. [状态同步]：缓存命中时手动同步内部容器状态，修复耐久不消耗和部分配方判定失效的问题。
- * 3. [序列封锁]：通过三重防御（类型、序列化器、产物基因）彻底拦截“序列组装”配方，防止单例污染导致的跳步 BUG。
- * 4. [熔断机制]：对检测到的危险配方启用黑名单，后续直接跳过处理，零开销运行。<p>
- * 你知道吗,**的,序列组装这玩意谁存配方谁倒霉,直接给你跳步骤,得防住它的同时把普通配方存了
+ * 3. [序列重绑定]：缓存父序列组装 ID，但每次命中均按当前输入重建步骤和推进回调，避免复用旧输入的状态。
+ * 4. [熔断机制]：对其他检测到的危险配方启用黑名单，后续回退到原始查找。<p>
  */
 @Mixin(DeployerBlockEntity.class)
 public abstract class DeployerRecipeMixin {
@@ -42,6 +42,7 @@ public abstract class DeployerRecipeMixin {
     @Unique private Item lazytick$cachedHeldItem = null;   // 缓存的手持物品（机械手里的）
     @Unique private RecipeHolder<? extends Recipe<? extends RecipeInput>> lazytick$cachedRecipe = null; // 缓存的配方结果
     @Unique private boolean lazytick$isBlacklisted = false; // 黑名单标记（熔断开关）
+    @Unique private boolean lazytick$isSequencedAssembly = false;
     @Unique private boolean lazytick$cachedTargetItemHasNbt = false;
     @Unique private ItemStack lazytick$cachedTargetStack = ItemStack.EMPTY;
 
@@ -59,30 +60,46 @@ public abstract class DeployerRecipeMixin {
         // 1. 基础缓存有效性检查
         if (!lazytick$hasCached) return;
 
-        // 2. 物品变更检查 (这是缓存逻辑的前提)
+        // 2. 手持物品一致性检查
+        DeployerFakePlayer player = this.getPlayer();
+        if (player == null) return;
+        ItemStack currentHeld = player.getMainHandItem();
+        if (currentHeld.getItem() != lazytick$cachedHeldItem) return;
+
+        DeployerBlockEntity be = (DeployerBlockEntity)(Object)this;
+
+        // Sequenced recipes wrap their mutable step recipe in a holder whose id is the parent
+        // assembly. Cache that parent identity, then rebind the current stack's advancement
+        // callback on every hit; never reuse the old forcedResult closure.
+        if (lazytick$isSequencedAssembly) {
+            RecipeHolder<DeployerApplicationRecipe> rebound =
+                RecipeCacheTool.rebindSequencedAssemblyDeployerRecipe(lazytick$cachedRecipe, stack, be.getLevel());
+            if (rebound == null) {
+                this.lazytick$clearCache();
+                return;
+            }
+
+            if (this.recipeInv != null) {
+                this.recipeInv.setStackInSlot(0, stack);
+                this.recipeInv.setStackInSlot(1, currentHeld);
+            }
+
+            cir.setReturnValue(rebound);
+            cir.cancel();
+            return;
+        }
+
+        // 3. Ordinary recipe cache keys include the complete target stack.
         if (stack.getItem() != lazytick$cachedTargetItem) return;
 
         boolean hasTag = !stack.getComponentsPatch().isEmpty();
         if (hasTag != lazytick$cachedTargetItemHasNbt) return;
-        // Dynamic deployer recipes may build their result from item components (for example,
-        // CBC ammo containers). Item identity and component presence are not a sufficient key.
         if (!ItemStack.isSameItemSameComponents(stack, lazytick$cachedTargetStack)) return;
 
-        // 3. 黑名单检查
-        // 如果该物品之前已被判定为导致序列组装的“危险物品”，直接跳过处理，走原版逻辑。
-        if (lazytick$isBlacklisted) {
-            return;
-        }
+        // 4. Blacklisted recipes stay on Create's original lookup path.
+        if (lazytick$isBlacklisted) return;
 
-        // 4. 手持物品一致性检查
-        DeployerFakePlayer player = this.getPlayer();
-        if (player == null) return;
-        ItemStack currentHeld = player.getMainHandItem();
-
-        if (currentHeld.getItem() != lazytick$cachedHeldItem) return;
-
-        // 5. 防止之前的缓存中混入了脏数据
-        DeployerBlockEntity be = (DeployerBlockEntity)(Object)this;
+        // 5. Prevent stale ordinary cache entries from bypassing the safety checks.
         Recipe<?> recipeEntity = lazytick$cachedRecipe == null ? null : lazytick$cachedRecipe.value();
         if (RecipeCacheTool.isDangerousSARecipe(stack, recipeEntity, be.getLevel())) {
             this.lazytick$clearCache();
@@ -125,6 +142,16 @@ public abstract class DeployerRecipeMixin {
         // 检查输出是否会导致序列组装
         DeployerBlockEntity be = (DeployerBlockEntity)(Object)this;
         Recipe<?> recipeEntity = result == null ? null : result.value();
+        if (RecipeCacheTool.isSequencedAssemblyHolder(result, be.getLevel())) {
+            this.lazytick$hasCached = true;
+            this.lazytick$cachedTargetItem = stack.getItem();
+            this.lazytick$cachedHeldItem = player.getMainHandItem().getItem();
+            this.lazytick$cachedRecipe = result;
+            this.lazytick$isBlacklisted = false;
+            this.lazytick$isSequencedAssembly = true;
+            return;
+        }
+
         boolean recipeIsDangerous = RecipeCacheTool.isDangerousSARecipe(stack, recipeEntity, be.getLevel());
 
         // --- 黑名单判定 ---
@@ -136,6 +163,7 @@ public abstract class DeployerRecipeMixin {
             this.lazytick$cachedTargetItemHasNbt = !stack.getComponentsPatch().isEmpty();
             this.lazytick$cachedTargetStack = stack.copy();
             this.lazytick$isBlacklisted = true; // 标记为黑名单，下次 checkCache 直接熔断
+            this.lazytick$isSequencedAssembly = false;
             this.lazytick$cachedRecipe = null;  // 不缓存危险配方
             return;
         }
@@ -148,6 +176,7 @@ public abstract class DeployerRecipeMixin {
         this.lazytick$cachedTargetItemHasNbt = !stack.getComponentsPatch().isEmpty();
         this.lazytick$cachedTargetStack = stack.copy();
         this.lazytick$isBlacklisted = false;
+        this.lazytick$isSequencedAssembly = false;
         this.lazytick$cachedRecipe = result;
     }
 
@@ -158,6 +187,7 @@ public abstract class DeployerRecipeMixin {
         this.lazytick$cachedHeldItem = null;
         this.lazytick$cachedRecipe = null;
         this.lazytick$isBlacklisted = false;
+        this.lazytick$isSequencedAssembly = false;
         this.lazytick$cachedTargetItemHasNbt = false;
         this.lazytick$cachedTargetStack = ItemStack.EMPTY;
     }

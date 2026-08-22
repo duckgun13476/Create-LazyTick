@@ -10,6 +10,7 @@
     "Create.ScrollOptionBehaviourGuardMixin",
     "Minecraft.CacheLabel",
     "OptElement.DeployerRecipeMixin",
+    "OptElement.SequencedAssemblyRecipeAccessor",
     "OptElement.SpoutRecipeMixin",
     "OptElement.arm.ArmBlockUseMixin",
     "OptElement.arm.ArmLazyTickMixin",

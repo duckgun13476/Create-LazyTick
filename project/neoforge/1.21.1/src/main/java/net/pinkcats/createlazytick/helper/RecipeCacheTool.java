@@ -2,6 +2,9 @@ package net.pinkcats.createlazytick.helper;
 
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
+import com.simibubi.create.content.processing.sequenced.SequencedRecipe;
+import com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -16,6 +19,7 @@ import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Crafter.CrafterGridSignature;
 import net.pinkcats.createlazytick.bridge.Spout.SpoutCacheKey;
+import net.pinkcats.createlazytick.mixin.OptElement.SequencedAssemblyRecipeAccessor;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -66,6 +70,33 @@ public class RecipeCacheTool {
 
     // 预定义 Create 序列组装的注册名常量，用于快速比对
     private static final ResourceLocation CREATE_SEQUENCED_ASSEMBLY = DropResourceLocation("create", "sequenced_assembly");
+
+    public static boolean isSequencedAssemblyHolder(RecipeHolder<?> holder, Level level) {
+        if (holder == null || level == null) return false;
+
+        return level.getRecipeManager().byKey(holder.id())
+            .map(parent -> parent.value() instanceof SequencedAssemblyRecipe)
+            .orElse(false);
+    }
+
+    public static RecipeHolder<DeployerApplicationRecipe> rebindSequencedAssemblyDeployerRecipe(
+        RecipeHolder<?> cachedHolder, ItemStack input, Level level) {
+        if (cachedHolder == null || level == null) return null;
+
+        return level.getRecipeManager().byKey(cachedHolder.id())
+            .filter(parent -> parent.value() instanceof SequencedAssemblyRecipe)
+            .map(parent -> (SequencedAssemblyRecipe) parent.value())
+            .filter(parent -> ((SequencedAssemblyRecipeAccessor) parent).createLazyTick$appliesTo(cachedHolder.id(), input))
+            .map(parent -> {
+                SequencedRecipe<?> next = ((SequencedAssemblyRecipeAccessor) parent).createLazyTick$getNextRecipe(input);
+                if (!(next.getRecipe() instanceof DeployerApplicationRecipe deployerRecipe)) return null;
+
+                deployerRecipe.enforceNextResult(() ->
+                    ((SequencedAssemblyRecipeAccessor) parent).createLazyTick$advance(cachedHolder.id(), input, level.random));
+                return new RecipeHolder<>(cachedHolder.id(), deployerRecipe);
+            })
+            .orElse(null);
+    }
 
     public static boolean isSequencedAssemblyItem(ItemStack input) {
         if (input == null || input.isEmpty()) return false;
