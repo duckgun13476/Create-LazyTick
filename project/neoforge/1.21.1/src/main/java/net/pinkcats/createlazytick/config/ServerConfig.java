@@ -24,6 +24,7 @@ public class ServerConfig {
 
     // Logistics (Funnel, Chute, Belt)
     private static final ModConfigSpec.BooleanValue ENABLE_LAZY_FUNNEL;
+    private static final ModConfigSpec.BooleanValue ENABLE_FUNNEL_OVERCLOCK;
     private static final ModConfigSpec.IntValue FUNNEL_DELAY_MAX;
     private static final ModConfigSpec.BooleanValue ENABLE_LAZY_CHUTE;
     private static final ModConfigSpec.IntValue CHUTE_DELAY_MAX;
@@ -129,6 +130,9 @@ public class ServerConfig {
                 .comment("--------------------------------------------------------------------------")
                 .comment("Whether to enable funnel lazy tick")
                 .define("enable_lazy_funnel", true);
+            ENABLE_FUNNEL_OVERCLOCK = BUILDER
+                .comment("Whether to enable funnel overclocking after redstone unpause")
+                .define("enable_funnel_overclock", true);
         FUNNEL_DELAY_MAX = BUILDER
                 .comment("")
                 .comment("--------------------------------------------------------------------------")
@@ -409,6 +413,10 @@ public class ServerConfig {
 
     public static boolean getEnableLazyFunnel() {
         return ENABLE_LAZY_FUNNEL.get();
+    }
+
+    public static boolean getEnableFunnelOverclock() {
+        return ENABLE_FUNNEL_OVERCLOCK.get();
     }
 
     public static int getFunnelDelayMax() {

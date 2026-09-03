@@ -224,7 +224,8 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             ci.cancel();
             return;
         }
-        boolean justUnpaused = createLazyTick$wasPaused
+        boolean justUnpaused = ServerConfig.getEnableFunnelOverclock()
+            && createLazyTick$wasPaused
                 && (mode == Funnel.Mode.EXTRACT || mode == Funnel.Mode.PUSHING_TO_BELT);
         createLazyTick$wasPaused = false;
         if (justUnpaused) {
