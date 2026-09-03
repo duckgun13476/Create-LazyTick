@@ -171,6 +171,9 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
     @Unique
     private int CLT$FunnelDelayTick = 0;
 
+    @Unique
+    private boolean createLazyTick$wasPaused = false;
+
 
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
@@ -206,6 +209,14 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         // Redstone resets the extraction cooldown
         if (mode == Funnel.Mode.PAUSED) {
             createLazyTick$resetDelayTick(control);
+            createLazyTick$wasPaused = true;
+            ci.cancel();
+            return;
+        }
+        boolean justUnpaused = createLazyTick$wasPaused && mode == Funnel.Mode.EXTRACT;
+        createLazyTick$wasPaused = false;
+        if (justUnpaused) {
+            activateExtractor();
             ci.cancel();
             return;
         }
