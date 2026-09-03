@@ -361,9 +361,9 @@ public class ServerConfig {
         return ENABLE_LAZY_FUNNEL.get();
     }
 
-        public static boolean getEnableFunnelOverclock() {
-                return ENABLE_FUNNEL_OVERCLOCK.get();
-        }
+    public static boolean getEnableFunnelOverclock() {
+        return ENABLE_FUNNEL_OVERCLOCK.get();
+    }
 
     public static int getFunnelDelayMax() {
         return FUNNEL_DELAY_MAX.get();
