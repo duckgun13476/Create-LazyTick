@@ -18,6 +18,7 @@
     "OptElement.basin.BasinOperatingLazyTickMixin",
     "OptElement.belt.BeltFunnelInteractionLazyTickMixin",
     "OptElement.belt.BeltInventoryAccessor",
+    "OptElement.belt.BeltStalledPassengerLazyTickMixin",
     "OptElement.belt.BeltTickMixin",
     "OptElement.chute.AbstractChuteBlockUseMixin",
     "OptElement.chute.ChuteLazyTickMixin",
