@@ -19,6 +19,8 @@
     "OptElement.basin.BasinOperatingLazyTickMixin",
     "OptElement.belt.BeltFunnelInteractionLazyTickMixin",
     "OptElement.belt.BeltInventoryAccessor",
+    "OptElement.belt.BeltStalledPassengerLazyTickMixin",
+    "OptElement.belt.TransportedEntityInfoAccessor",
     "OptElement.belt.BeltTickMixin",
     "OptElement.crafter.CrafterAccessor",
     "OptElement.crafter.CrafterRecipeMixin",

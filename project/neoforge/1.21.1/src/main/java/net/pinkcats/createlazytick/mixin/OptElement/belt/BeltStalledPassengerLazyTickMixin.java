@@ -1,14 +1,18 @@
 package net.pinkcats.createlazytick.mixin.OptElement.belt;
 
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
+import com.simibubi.create.content.kinetics.belt.BeltBlock;
 import com.simibubi.create.content.kinetics.belt.transport.BeltMovementHandler;
 import com.simibubi.create.content.kinetics.belt.transport.BeltMovementHandler.TransportedEntityInfo;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.pinkcats.createlazytick.config.ServerConfig;
+import net.pinkcats.createlazytick.optimization.belt.BeltStalledPassengerState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,7 +26,7 @@ import java.util.WeakHashMap;
 
 /**
  * The vanilla/Create passenger path is intentionally separate from BeltInventory: it moves
- * entities every tick. Only a living entity which has already failed to move twice is sampled
+ * entities every tick. Only a living entity which has already collided twice is sampled
  * here; players, item transport, and a passenger that begins moving keep Create's exact rate.
  */
 @Mixin(value = BeltBlockEntity.class, remap = false)
@@ -30,13 +34,15 @@ public abstract class BeltStalledPassengerLazyTickMixin {
 
     @Shadow(remap = false) protected Map<Entity, TransportedEntityInfo> passengers;
 
-    @Shadow public abstract Level getLevel();
+    @Unique
+    private final Map<Entity, BeltStalledPassengerState> createLazyTick$stalledPassengers = new WeakHashMap<>();
 
     @Unique
-    private final Map<Entity, PassengerState> createLazyTick$stalledPassengers = new WeakHashMap<>();
+    private int createLazyTick$passengerPruneTicks;
 
     @Redirect(
-            method = "tick",
+            // Create performs the passenger iteration in this compiled lambda, not in tick itself.
+            method = "lambda$tick$1",
             at = @At(
                     value = "INVOKE",
                     target = "Lcom/simibubi/create/content/kinetics/belt/transport/BeltMovementHandler;transportEntity(Lcom/simibubi/create/content/kinetics/belt/BeltBlockEntity;Lnet/minecraft/world/entity/Entity;Lcom/simibubi/create/content/kinetics/belt/transport/BeltMovementHandler$TransportedEntityInfo;)V"
@@ -45,7 +51,7 @@ public abstract class BeltStalledPassengerLazyTickMixin {
     )
     private void createLazyTick$throttleStalledPassenger(BeltBlockEntity belt, Entity passenger,
                                                            TransportedEntityInfo info) {
-        Level level = passenger.level();
+        var level = passenger.level();
         if (level.isClientSide || !ServerConfig.getEnableLazyBeltStalledPassengers()
                 || !(passenger instanceof LivingEntity) || passenger instanceof Player) {
             createLazyTick$stalledPassengers.remove(passenger);
@@ -54,37 +60,45 @@ public abstract class BeltStalledPassengerLazyTickMixin {
         }
 
         long now = level.getGameTime();
-        PassengerState state = createLazyTick$stalledPassengers.computeIfAbsent(passenger, ignored -> new PassengerState());
-        if (state.stationaryAttempts >= 2 && now < state.nextAttemptTick) {
+        BeltStalledPassengerState state = createLazyTick$stalledPassengers.computeIfAbsent(
+                passenger, ignored -> new BeltStalledPassengerState());
+        TransportedEntityInfoAccessor accessor = (TransportedEntityInfoAccessor) info;
+        BlockState beltState = accessor.createLazyTick$getLastCollidedState();
+        float movementSpeed = belt.getBeltMovementSpeed();
+        boolean blockedByEntity = false;
+        if (Math.abs(movementSpeed) < .5f) {
+            Direction.Axis axis = beltState.getValue(BeltBlock.HORIZONTAL_FACING).getAxis();
+            Direction movementDirection = Direction.get(axis == Direction.Axis.X ? Direction.AxisDirection.NEGATIVE : Direction.AxisDirection.POSITIVE, axis);
+            Vec3 checkDistance = Vec3.atLowerCornerOf(movementDirection.getNormal()).scale(.5);
+            AABB box = passenger.getBoundingBox().move(checkDistance)
+                    .inflate(-Math.abs(checkDistance.x), -Math.abs(checkDistance.y), -Math.abs(checkDistance.z));
+            blockedByEntity = !level.getEntities(passenger, box,
+                    other -> !BeltMovementHandler.shouldIgnoreBlocking(passenger, other)).isEmpty();
+        }
+
+        if (state.stationaryAttempts() >= 2 && now < state.nextAttemptTick() && blockedByEntity) {
+            // Keep the passenger admission alive while avoiding the expensive full movement
+            // path. The bounded AABB probe is deliberately retained on every skipped tick so
+            // deleting or moving the leading entity wakes the passenger immediately.
+            accessor.createLazyTick$setTicksSinceLastCollision(
+                    accessor.createLazyTick$getTicksSinceLastCollision() - 1);
             return;
         }
 
-        Vec3 before = passenger.position();
         BeltMovementHandler.transportEntity(belt, passenger, info);
-        if (passenger.position().distanceToSqr(before) <= 1.0E-8D) {
-            state.stationaryAttempts++;
-            if (state.stationaryAttempts >= 2) {
-                state.nextAttemptTick = now + ServerConfig.getBeltStalledPassengerInterval();
-            }
+        if (blockedByEntity) {
+            state.recordCollision(now + ServerConfig.getBeltStalledPassengerInterval());
         } else {
-            state.stationaryAttempts = 0;
-            state.nextAttemptTick = now;
+            state.recordMovement(now);
         }
     }
 
     @Inject(method = "tick", at = @At("TAIL"), remap = false)
     private void createLazyTick$pruneFormerPassengers(CallbackInfo ci) {
-        Level level = getLevel();
-        if (level == null || level.isClientSide || createLazyTick$stalledPassengers.isEmpty()
-                || (level.getGameTime() & 31L) != 0L) {
+        if (createLazyTick$stalledPassengers.isEmpty()
+                || (createLazyTick$passengerPruneTicks++ & 31) != 0) {
             return;
         }
         createLazyTick$stalledPassengers.keySet().removeIf(entity -> passengers == null || !passengers.containsKey(entity));
-    }
-
-    @Unique
-    private static final class PassengerState {
-        private int stationaryAttempts;
-        private long nextAttemptTick;
     }
 }

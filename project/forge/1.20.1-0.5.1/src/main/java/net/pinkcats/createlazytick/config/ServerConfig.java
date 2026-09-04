@@ -27,6 +27,8 @@ public class ServerConfig {
     private static final ForgeConfigSpec.IntValue CHUTE_DELAY_MAX;
     private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT;
     private static final ForgeConfigSpec.IntValue BELT_DELAY_MAX;
+    private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_BELT_STALLED_PASSENGERS;
+    private static final ForgeConfigSpec.IntValue BELT_STALLED_PASSENGER_INTERVAL;
 
     // Processing (Depot, Saw, Basin, Item Drain, Deployer, Spout)
     private static final ForgeConfigSpec.BooleanValue ENABLE_LAZY_DEPOT;
@@ -140,6 +142,16 @@ public class ServerConfig {
                 .comment("--------------------------------------------------------------------------")
                 .comment("max delay tick if belt is rest")
                 .defineInRange("belt_delay_max", 60, 20, Integer.MAX_VALUE);
+        ENABLE_LAZY_BELT_STALLED_PASSENGERS = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Reduce repeated belt movement attempts for non-player living entities that remain blocked")
+                .define("enable_lazy_belt_stalled_passengers", true);
+        BELT_STALLED_PASSENGER_INTERVAL = BUILDER
+                .comment("")
+                .comment("--------------------------------------------------------------------------")
+                .comment("Ticks between retrying a belt passenger that stayed stationary for two movement attempts")
+                .defineInRange("belt_stalled_passenger_interval", 5, 2, 20);
 
         BUILDER.pop();
 
@@ -375,6 +387,14 @@ public class ServerConfig {
 
     public static int getBeltDelayMax() {
         return BELT_DELAY_MAX.get();
+    }
+
+    public static boolean getEnableLazyBeltStalledPassengers() {
+        return ENABLE_LAZY_BELT_STALLED_PASSENGERS.get();
+    }
+
+    public static int getBeltStalledPassengerInterval() {
+        return BELT_STALLED_PASSENGER_INTERVAL.get();
     }
 
     public static boolean getEnableLazyDepot() {
