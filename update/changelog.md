@@ -1,7 +1,12 @@
-#### v2.6.27
+#### v2.7.29
 
 - Fix Basin machines missing a second fluid input when evaluating recipes (#41).
 - Reduce passive Factory Gauge monitoring overhead on Create 6.x.
+- Fix saw recipe caching with Central Kitchen and sequenced Deployer cache progress.
+- Fix NeoForge Mixin loading and restore the Lazy Tick Clock recipe on 1.21.1.
+- Fix funnels resuming after redstone pauses, including belt funnels.
+- Add optional funnel redstone overclocking; disabled by default because it can increase lag.
+- Reduce stalled living-entity passenger overhead on belts across all supported versions.
 
 ---
 
