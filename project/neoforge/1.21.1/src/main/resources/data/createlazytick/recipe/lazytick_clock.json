@@ -11,7 +11,7 @@
   ],
   "result": {
     "count": 1,
-    "item": "createlazytick:clock"
+    "id": "createlazytick:clock"
   },
   "show_notification": true
 }
