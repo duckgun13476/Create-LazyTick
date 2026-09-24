@@ -119,7 +119,8 @@ public class ServerConfig {
                 .comment("Whether to enable funnel lazy tick")
                 .define("enable_lazy_funnel", true);
         ENABLE_FUNNEL_OVERCLOCK = BUILDER
-                .comment("Attempt extraction immediately after redstone unpauses a funnel. Frequent pulses can increase server load.")
+                .comment("WARNING: Funnel overclocking may cause lag under frequent redstone pulses.",
+                        "This conflicts with Create Lazy Tick's optimization goal. Enable only if needed.")
                 .define("enable_funnel_overclock", false);
         FUNNEL_DELAY_MAX = BUILDER
                 .comment("")
