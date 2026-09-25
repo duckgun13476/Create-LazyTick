@@ -64,6 +64,12 @@ ext.cltDiscordSuccessfulChunkKeys = { Map entry ->
             .collect { Map chunk -> "${chunk.index.toString().toInteger()}:${chunk.sha256.toString().toLowerCase(Locale.ROOT)}" }.unique().sort()
 }
 
+ext.cltDiscordFailureCategory = { String warning ->
+    String message = (warning ?: '').toLowerCase(Locale.ROOT)
+    if (message =~ /(?:timed out|timeout|connection reset|connection refused|network is unreachable|handshake)/) return 'network'
+    return 'other'
+}
+
 ext.cltDiscordRecordAttempt = { Map ledger, Map release, int exitCode, Collection<Map> events, String warning = '' ->
     List<Map> entries = (ledger.entries as Collection).findAll { it instanceof Map }.collect { it as Map }
     Map entry = cltDiscordFindLedgerEntry(ledger, release.target.toString(), release.releaseId.toString(), release.messageSha256.toString()) as Map
@@ -71,6 +77,9 @@ ext.cltDiscordRecordAttempt = { Map ledger, Map release, int exitCode, Collectio
         entry = [target: release.target, releaseId: release.releaseId, messageSha256: release.messageSha256, successfulChunks: [], attemptCount: 0, status: 'pending']
         entries.add(entry)
         ledger.entries = entries
+    }
+    if (entry.status?.toString() == 'failed' && entry.lastWarning && !entry.lastFailure) {
+        entry.lastFailure = [category: cltDiscordFailureCategory(entry.lastWarning.toString()), warning: entry.lastWarning, at: entry.updatedAt]
     }
     Map<String, Map> successfulByKey = [:]
     if (entry.successfulChunks instanceof Collection) {
@@ -91,6 +100,12 @@ ext.cltDiscordRecordAttempt = { Map ledger, Map release, int exitCode, Collectio
     entry.updatedAt = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
     if (warning?.trim()) entry.lastWarning = warning.trim().take(1000)
     else entry.remove('lastWarning')
+    if (entry.status == 'failed') {
+        entry.lastFailure = [category: cltDiscordFailureCategory(warning), warning: warning.trim().take(1000), at: entry.updatedAt]
+        entry.retryable = entry.lastFailure.category == 'network'
+    } else {
+        entry.remove('retryable')
+    }
     return entry
 }
 
@@ -161,6 +176,22 @@ ext.cltDiscordInvokeRelease = { Map release ->
     return [status: entry.status, entry: entry, warning: warning]
 }
 
+ext.cltDiscordShouldRetryTimeout = { Map result ->
+    return result?.status == 'failed'
+            && result.entry?.retryable == true
+            && (result.warning ?: '') =~ /(?i)(?:timed out|timeout)/
+}
+
+ext.cltDiscordPublishWithTimeoutRetry = { Map release, Closure publish, Closure wait ->
+    Map result = publish(release) as Map
+    if (cltDiscordShouldRetryTimeout(result)) {
+        logger.warn('[CLT Publish] Discord request timed out; retrying once in 10 seconds.')
+        wait(10_000L)
+        result = publish(release) as Map
+    }
+    return result
+}
+
 tasks.register('publishDiscordRelease') {
     group = 'Publishing'
     description = 'Publishes the latest CreateLazyTick changelog section to Discord after all version uploads.'
@@ -179,7 +210,8 @@ tasks.register('publishDiscordRelease') {
                 return
             }
             String target = cltDiscordReadStringProperty('clt_discord_target', 'CLT_DISCORD_TARGET', 'createlazytick')
-            Map result = cltDiscordInvokeRelease([target: target, releaseId: releaseId, messageSha256: cltDiscordSha256(latest), message: latest]) as Map
+            Map release = [target: target, releaseId: releaseId, messageSha256: cltDiscordSha256(latest), message: latest]
+            Map result = cltDiscordPublishWithTimeoutRetry(release, cltDiscordInvokeRelease, { long milliseconds -> Thread.sleep(milliseconds) }) as Map
             if (result.status == 'success') logger.lifecycle("Discord release notification completed: release=${releaseId}, chunks=${result.entry.chunkCount ?: result.entry.successfulChunks?.size() ?: 0}")
             else if (result.status == 'already_published') logger.lifecycle("Discord release notification already recorded: release=${releaseId}")
             else logger.warn("[CLT Publish] Discord notification was not completed: ${result.warning ?: "status=${result.status}"}. Platform publishing remains successful.")
@@ -205,5 +237,32 @@ tasks.register('testDiscordPublishSupport') {
         Map entry = cltDiscordRecordAttempt(ledger, release, 0, [[type: 'chunk_result', status: 'sent', index: 1, length: 10, sha256: 'a' * 64], [type: 'release_result', status: 'success', chunkCount: 1]])
         assert entry.status == 'success'
         assert cltDiscordSuccessfulChunkKeys(entry) == ["1:${'a' * 64}"]
+        Map failed = cltDiscordRecordAttempt(ledger, release, 1, [[type: 'release_result', status: 'failed', chunkCount: 1]], 'Chunk 1/1 failed: timed out')
+        assert failed.lastFailure.category == 'network' && failed.retryable
+        Map recovered = cltDiscordRecordAttempt(ledger, release, 0, [[type: 'chunk_result', status: 'sent', index: 1, length: 10, sha256: 'a' * 64], [type: 'release_result', status: 'success', chunkCount: 1]])
+        assert recovered.status == 'success' && recovered.lastFailure.category == 'network' && !recovered.containsKey('retryable')
+        List<Long> waits = []
+        int attempts = 0
+        Map retryResult = cltDiscordPublishWithTimeoutRetry(release, { Map ignored ->
+            attempts++
+            return attempts == 1
+                    ? [status: 'failed', entry: [retryable: true], warning: 'Chunk 1/1 failed: timed out']
+                    : [status: 'success', entry: [status: 'success']]
+        }, { long milliseconds -> waits.add(milliseconds) }) as Map
+        assert retryResult.status == 'success' && attempts == 2 && waits == [10_000L]
+        attempts = 0
+        waits.clear()
+        Map exhausted = cltDiscordPublishWithTimeoutRetry(release, { Map ignored ->
+            attempts++
+            return [status: 'failed', entry: [retryable: true], warning: 'timed out']
+        }, { long milliseconds -> waits.add(milliseconds) }) as Map
+        assert exhausted.status == 'failed' && attempts == 2 && waits == [10_000L]
+        attempts = 0
+        waits.clear()
+        cltDiscordPublishWithTimeoutRetry(release, { Map ignored ->
+            attempts++
+            return [status: 'failed', entry: [retryable: true], warning: 'connection reset']
+        }, { long milliseconds -> waits.add(milliseconds) })
+        assert attempts == 1 && waits.isEmpty()
     }
 }
