@@ -1,0 +1,46 @@
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
+
+boolean standaloneFabricBuild = rootProject.projectDir.canonicalFile == project.projectDir.canonicalFile
+
+if (standaloneFabricBuild) {
+    apply from: file('fabric-standalone.gradle')
+} else {
+    plugins.apply('base')
+    plugins.apply('java-base')
+
+    def wrapper = new File(rootProject.projectDir, System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : 'gradlew')
+    def standaloneCommand = { String taskName ->
+        List<String> command = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
+                ? ['cmd', '/c', wrapper.absolutePath] : [wrapper.absolutePath]
+        command.addAll(['-p', project.projectDir.absolutePath, '--console=plain', taskName])
+        gradle.startParameter.projectProperties.each { String key, String value -> command.add("-P${key}=${value}") }
+        return command
+    }
+    def javaHome = {
+        extensions.getByType(JavaToolchainService).launcherFor {
+            languageVersion = JavaLanguageVersion.of(17)
+        }.get().metadata.installationPath.asFile
+    }
+    ['compileJava', 'classes', 'remapJar', 'build', 'runClient', 'runServer'].each { String taskName ->
+        def configureProxy = { Task task ->
+            task.group = taskName.startsWith('run') ? 'development' : 'build'
+            task.doLast {
+                File jdk = javaHome.call()
+                exec {
+                    workingDir rootProject.projectDir
+                    environment 'JAVA_HOME', jdk.absolutePath
+                    environment 'Path', new File(jdk, 'bin').absolutePath + File.pathSeparator + System.getenv('Path')
+                    environment 'GRADLE_USER_HOME', System.getenv('CLT_FABRIC_GRADLE_USER_HOME') ?: new File(System.getProperty('user.home'), '.gradle').absolutePath
+                    commandLine standaloneCommand.call(taskName)
+                }
+            }
+        }
+        Task existing = tasks.findByName(taskName)
+        if (existing != null) configureProxy.call(existing)
+        else tasks.register(taskName) {
+            group = taskName.startsWith('run') ? 'development' : 'build'
+            configureProxy.call(delegate as Task)
+        }
+    }
+}

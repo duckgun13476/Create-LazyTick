@@ -37,7 +37,8 @@ def clientRunProjects = [
         'runClient-forge-1.19.2'       : ':forge-1.19.2',
         'runClient-forge-1.20.1-0.5.1' : ':forge-1.20.1-0.5.1',
         'runClient-forge-1.20.1-6.0.x' : ':forge-1.20.1-6.0.x',
-        'runClient-neoforge-1.21.1'    : ':neoforge-1.21.1'
+        'runClient-neoforge-1.21.1'    : ':neoforge-1.21.1',
+        'runClient-fabric-1.20.1'      : ':fabric-1.20.1'
 ]
 
 clientRunProjects.each { taskName, projectPath ->

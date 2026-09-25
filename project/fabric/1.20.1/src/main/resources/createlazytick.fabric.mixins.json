@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.pinkcats.createlazytick.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "belt.TransportedEntityInfoAccessor",
+    "belt.BeltStalledPassengerLazyTickMixin",
+    "redstone.RedstoneLinkBlockEntityMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}

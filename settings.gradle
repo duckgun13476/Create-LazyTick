@@ -10,6 +10,10 @@ pluginManagement {
             name = 'MinecraftForge'
             url = 'https://maven.minecraftforge.net/'
         }
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
     }
 }
 
@@ -24,9 +28,11 @@ include 'forge-1.19.2'
 include 'forge-1.20.1-0.5.1'
 include 'forge-1.20.1-6.0.x'
 include 'neoforge-1.21.1'
+include 'fabric-1.20.1'
 
 project(':common').projectDir = file('common')
 project(':forge-1.19.2').projectDir = file('project/forge/1.19.2')
 project(':forge-1.20.1-0.5.1').projectDir = file('project/forge/1.20.1-0.5.1')
 project(':forge-1.20.1-6.0.x').projectDir = file('project/forge/1.20.1-6.0.x')
 project(':neoforge-1.21.1').projectDir = file('project/neoforge/1.21.1')
+project(':fabric-1.20.1').projectDir = file('project/fabric/1.20.1')

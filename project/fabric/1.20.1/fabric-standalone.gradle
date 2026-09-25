@@ -1,0 +1,80 @@
+import net.fabricmc.loom.LoomGradlePlugin
+
+buildscript {
+    repositories {
+        maven { url = 'https://plugins.gradle.org/m2/' }
+        maven { url = 'https://maven.fabricmc.net/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.fabricmc:fabric-loom:1.10.5'
+    }
+}
+
+apply plugin: 'idea'
+apply plugin: LoomGradlePlugin
+apply from: file('../../../gradle/clt-property-loader.gradle')
+
+group = mod_group_id
+ext.fabricPortVersion = "${clt_release_version}-fabric-dev"
+version = "${fabricPortVersion}-${mod_create_compat_version}"
+base.archivesName = "${mod_id}-fabric-1.20.1"
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url = 'https://mvn.devos.one/releases' }
+    maven { url = 'https://mvn.devos.one/snapshots' }
+    maven { url = 'https://maven.createmod.net' }
+    maven { url = 'https://maven.tterrag.com/' }
+    maven { url = 'https://maven.jamieswhiteshirt.com/libs-release' }
+    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven' }
+    maven {
+        url = 'https://jitpack.io/'
+        content { includeGroupAndSubgroups('com.github') }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    // Use Create Fabric's own Maven metadata so Loom gets all runtime dependencies.
+    modImplementation "com.simibubi.create:create-fabric:${create_fabric_version}"
+}
+
+apply from: file('../../../gradle/clt-common.gradle')
+
+loom {
+    mixin.defaultRefmapName = 'createlazytick.refmap.json'
+    runs {
+        client { client(); runDir = 'run/client' }
+        server { server(); runDir = 'run/server' }
+    }
+}
+
+processResources {
+    inputs.property 'mod_version', fabricPortVersion
+    inputs.property 'create_fabric_version', mod_create_compat_version
+    filesMatching('fabric.mod.json') {
+        expand(mod_version: fabricPortVersion, create_fabric_version: mod_create_compat_version)
+    }
+}
+
+tasks.named('remapJar') {
+    archiveFileName = "CreateLazyTick-${fabricPortVersion}-${mod_create_compat_version}-fabric-1.20.1.jar"
+}
+
+tasks.named('jar', Jar) {
+    from(new File(cltRepositoryRoot, 'LICENSE')) {
+        rename { "LICENSE_${mod_id}" }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
