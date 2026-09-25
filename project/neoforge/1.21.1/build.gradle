@@ -250,6 +250,9 @@ sourceSets.main.resources.srcDir generatedModMetadataDir
 tasks.named('processResources').configure {
     dependsOn(generateModMetadata)
 }
+tasks.named('sourcesJar').configure {
+    dependsOn(generateModMetadata)
+}
 neoForge.ideSyncTask generateModMetadata
 
 compileJava {
