@@ -1,4 +1,4 @@
-package net.pinkcats.createlazytick.mixin.belt;
+package net.pinkcats.createlazytick.mixin.OptElement.belt;
 
 import com.simibubi.create.content.kinetics.belt.BeltBlock;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
@@ -24,15 +24,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-/** Port of the tested Forge 1.20.1 blocked-passenger cadence, scoped to living non-player entities. */
+/** Keeps Create's passenger path immediate unless a non-player living passenger remains entity-blocked. */
 @Mixin(value = BeltBlockEntity.class, remap = false)
 public abstract class BeltStalledPassengerLazyTickMixin {
     @Shadow(remap = false) public Map<Entity, TransportedEntityInfo> passengers;
     @Unique private final Map<Entity, BeltStalledPassengerState> createLazyTick$stalledPassengers = new WeakHashMap<>();
     @Unique private int createLazyTick$passengerPruneTicks;
 
-    // Descriptor is intentionally omitted: Fabric remaps Entity between named dev and intermediary runtime.
-    @Redirect(method = "lambda$tick$0", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/belt/transport/BeltMovementHandler;transportEntity"), remap = false)
+    @Redirect(method = "lambda$tick$0", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/kinetics/belt/transport/BeltMovementHandler;transportEntity(Lcom/simibubi/create/content/kinetics/belt/BeltBlockEntity;Lnet/minecraft/world/entity/Entity;Lcom/simibubi/create/content/kinetics/belt/transport/BeltMovementHandler$TransportedEntityInfo;)V"), remap = false)
     private void createLazyTick$throttleStalledPassenger(BeltBlockEntity belt, Entity passenger, TransportedEntityInfo info) {
         var level = passenger.level();
         if (level.isClientSide || !ServerConfig.getEnableLazyBeltStalledPassengers() || !(passenger instanceof LivingEntity) || passenger instanceof Player) {

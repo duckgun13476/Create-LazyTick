@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": { "item": "create:cuckoo_clock" },
+    "B": { "item": "create:precision_mechanism" }
+  },
+  "pattern": [
+    " A ",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "item": "createlazytick:clock"
+  },
+  "show_notification": true
+}
