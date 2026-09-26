@@ -10,6 +10,14 @@
 
 ---
 
+#### v2.7.29-beta.1
+
+- First Fabric 1.20.1 beta for Create Fabric 6.0.8.1.
+- Port the Lazy Tick Clock and Create machine optimizations from the Forge 1.20.1 codebase.
+- Verified clock controls, funnel/chute wake-up, fluid recovery, and changing Basin/Deployer recipes in the Fabric development client.
+
+---
+
 #### v2.6.25
 
 - Fix Create Big Cannons ammo containers disappearing or failing to refill when a Mechanical Arm reuses a cached Deployer recipe (#37).

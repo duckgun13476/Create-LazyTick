@@ -17,6 +17,12 @@ ext.cltDiscordLatestChangelog = { String text ->
     return matcher.find() ? matcher.group(1).trim() : ''
 }
 
+ext.cltDiscordChangelogSection = { String text, String releaseId ->
+    def sections = (text ?: '') =~ /(?ms)^####[ \t]+(v[^\r\n]+)[ \t]*\r?\n.*?(?=^####[ \t]+v|\z)/
+    def section = sections.findAll().find { it[1].trim() == releaseId }
+    return section == null ? '' : section[0].trim()
+}
+
 ext.cltDiscordReleaseId = { String changelog ->
     def matcher = (changelog ?: '') =~ /\A####[ \t]+(v[^\r\n]+)[ \t]*(?:\r?\n|\z)/
     return matcher.find() ? matcher.group(1).trim() : ''
@@ -192,36 +198,66 @@ ext.cltDiscordPublishWithTimeoutRetry = { Map release, Closure publish, Closure 
     return result
 }
 
+ext.cltDiscordPublishChangelog = { String section ->
+    if (cltDiscordPublishingDisabled()) {
+        logger.lifecycle('Discord release notification is disabled by configuration.')
+        return
+    }
+    try {
+        String releaseId = cltDiscordReleaseId(section)
+        if (!section || !releaseId) {
+            logger.warn('[CLT Publish] Discord notification skipped: changelog section could not be parsed. Platform publishing remains successful.')
+            return
+        }
+        String target = cltDiscordReadStringProperty('clt_discord_target', 'CLT_DISCORD_TARGET', 'createlazytick')
+        Map release = [target: target, releaseId: releaseId, messageSha256: cltDiscordSha256(section), message: section]
+        Map result = cltDiscordPublishWithTimeoutRetry(release, cltDiscordInvokeRelease, { long milliseconds -> Thread.sleep(milliseconds) }) as Map
+        if (result.status == 'success') logger.lifecycle("Discord release notification completed: release=${releaseId}, chunks=${result.entry.chunkCount ?: result.entry.successfulChunks?.size() ?: 0}")
+        else if (result.status == 'already_published') logger.lifecycle("Discord release notification already recorded: release=${releaseId}")
+        else logger.warn("[CLT Publish] Discord notification was not completed: ${result.warning ?: "status=${result.status}"}. Platform publishing remains successful.")
+    } catch (Exception exception) {
+        logger.warn("[CLT Publish] Discord notification failed unexpectedly: ${exception.class.simpleName}: ${exception.message}. Platform publishing remains successful.")
+    }
+}
+
 tasks.register('publishDiscordRelease') {
     group = 'Publishing'
     description = 'Publishes the latest CreateLazyTick changelog section to Discord after all version uploads.'
     dependsOn 'allworkPublishAllVersions'
     doLast {
-        if (cltDiscordPublishingDisabled()) {
-            logger.lifecycle('Discord release notification is disabled by configuration.')
-            return
-        }
-        try {
-            File changelogFile = rootProject.file('update/changelog.md')
-            String latest = changelogFile.isFile() ? cltDiscordLatestChangelog(changelogFile.getText('UTF-8')) : ''
-            String releaseId = cltDiscordReleaseId(latest)
-            if (!latest || !releaseId) {
-                logger.warn('[CLT Publish] Discord notification skipped: latest changelog section could not be parsed. Platform publishing remains successful.')
-                return
-            }
-            String target = cltDiscordReadStringProperty('clt_discord_target', 'CLT_DISCORD_TARGET', 'createlazytick')
-            Map release = [target: target, releaseId: releaseId, messageSha256: cltDiscordSha256(latest), message: latest]
-            Map result = cltDiscordPublishWithTimeoutRetry(release, cltDiscordInvokeRelease, { long milliseconds -> Thread.sleep(milliseconds) }) as Map
-            if (result.status == 'success') logger.lifecycle("Discord release notification completed: release=${releaseId}, chunks=${result.entry.chunkCount ?: result.entry.successfulChunks?.size() ?: 0}")
-            else if (result.status == 'already_published') logger.lifecycle("Discord release notification already recorded: release=${releaseId}")
-            else logger.warn("[CLT Publish] Discord notification was not completed: ${result.warning ?: "status=${result.status}"}. Platform publishing remains successful.")
-        } catch (Exception exception) {
-            logger.warn("[CLT Publish] Discord notification failed unexpectedly: ${exception.class.simpleName}: ${exception.message}. Platform publishing remains successful.")
-        }
+        File changelogFile = rootProject.file('update/changelog.md')
+        cltDiscordPublishChangelog(changelogFile.isFile() ? cltDiscordLatestChangelog(changelogFile.getText('UTF-8')) : '')
     }
 }
 
 tasks.named('publishAllVersions').configure { dependsOn 'publishDiscordRelease' }
+
+ext.cltDiscordFabricBetaReleaseId = {
+    Properties common = new Properties()
+    Properties fabric = new Properties()
+    rootProject.file('gradle/clt-common.properties').withInputStream { common.load(it) }
+    rootProject.file('project/fabric/1.20.1/gradle.properties').withInputStream { fabric.load(it) }
+    return "v${common.getProperty('mod_version')}-${fabric.getProperty('fabric_beta_stage')}"
+}
+
+tasks.register('publishDiscordFabricBeta') {
+    group = 'Publishing'
+    description = 'Announces the Fabric 1.20.1 beta after its separate platform upload.'
+    dependsOn ':fabric-1.20.1:publishAll'
+    doLast {
+        File changelogFile = rootProject.file('update/changelog.md')
+        String section = changelogFile.isFile()
+                ? cltDiscordChangelogSection(changelogFile.getText('UTF-8'), cltDiscordFabricBetaReleaseId()) : ''
+        if (!section) throw new GradleException('Fabric beta changelog section is missing; Discord announcement was not attempted.')
+        cltDiscordPublishChangelog(section)
+    }
+}
+
+tasks.register('publishFabricBeta') {
+    group = 'Publishing'
+    description = 'Publishes only Fabric 1.20.1 beta to platforms and then Discord.'
+    dependsOn 'publishDiscordFabricBeta'
+}
 
 tasks.register('testDiscordPublishSupport') {
     group = 'Verification'
@@ -231,6 +267,8 @@ tasks.register('testDiscordPublishSupport') {
         String latest = cltDiscordLatestChangelog(sample)
         assert latest == '#### v9.8.7\n\n- Latest.'
         assert cltDiscordReleaseId(latest) == 'v9.8.7'
+        assert cltDiscordChangelogSection('#### v9.8.7\n\n- Stable.\n\n#### v9.8.7-beta.1\n\n- Fabric beta.', 'v9.8.7-beta.1') == '#### v9.8.7-beta.1\n\n- Fabric beta.'
+        assert cltDiscordChangelogSection(rootProject.file('update/changelog.md').getText('UTF-8'), cltDiscordFabricBetaReleaseId()).startsWith("#### ${cltDiscordFabricBetaReleaseId()}\n")
         assert cltDiscordSha256(latest) ==~ /[0-9a-f]{64}/
         Map ledger = [schemaVersion: 1, entries: []]
         Map release = [target: 'formal', releaseId: 'v9.8.7', messageSha256: cltDiscordSha256(latest)]

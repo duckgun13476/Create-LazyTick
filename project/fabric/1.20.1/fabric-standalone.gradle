@@ -13,11 +13,13 @@ buildscript {
 
 apply plugin: 'idea'
 apply plugin: LoomGradlePlugin
+apply plugin: 'me.modmuss50.mod-publish-plugin'
 apply from: file('../../../gradle/clt-property-loader.gradle')
 
 group = mod_group_id
-ext.fabricPortVersion = "${clt_release_version}-beta.1"
-version = "${fabricPortVersion}-${mod_create_compat_version}"
+ext.fabricPortVersion = "${clt_release_version}-${fabric_beta_stage}"
+ext.mod_version = "${fabricPortVersion}-${mod_create_compat_version}"
+version = mod_version
 base.archivesName = "${mod_id}-fabric-1.20.1"
 
 repositories {
@@ -64,6 +66,60 @@ processResources {
 
 tasks.named('remapJar') {
     archiveFileName = "CreateLazyTick-${fabricPortVersion}-${mod_create_compat_version}-fabric-1.20.1.jar"
+}
+
+ext.clt_publish_artifact_task_name = 'remapJar'
+ext.clt_publish_loader_id = 'fabric'
+ext.clt_publish_curseforge_loaders = ['fabric']
+ext.clt_publish_modrinth_loaders = ['fabric']
+ext.clt_publish_required_dependencies = ['create-fabric', 'fabric-api']
+ext.clt_publish_display_suffix = "Fabric_${fabric_beta_stage}"
+ext.clt_publish_version_suffix = 'fabric'
+ext.clt_publish_changelog_release_id = "v${fabricPortVersion}"
+
+apply from: file('../../../gradle/clt-publishing-common.gradle')
+
+tasks.register('verifyFabricBetaRelease') {
+    group = 'verification'
+    description = 'Validates Fabric beta metadata and the shared changelog before either platform upload.'
+    dependsOn 'verifyPublishArtifact'
+    doLast {
+        if (publish_version.toString() != 'beta'
+                || cltReadPublishCurseForgeLoaders() != ['fabric']
+                || cltReadPublishModrinthLoaders() != ['fabric']
+                || cltReadPublishRequiredDependencies() != ['create-fabric', 'fabric-api']) {
+            throw new GradleException('Fabric beta publishing metadata is inconsistent')
+        }
+        String changelog = cltReadPrimaryChangelog()
+        if (!changelog.startsWith("#### v${fabricPortVersion}\n")) {
+            throw new GradleException("Missing shared changelog section for v${fabricPortVersion}")
+        }
+        def curseForgeMetadata = cltReadCurseForgeUploadMetadata()
+        if (curseForgeMetadata.releaseType != 'beta'
+                || curseForgeMetadata.changelog != changelog
+                || !curseForgeMetadata.gameVersions.containsAll([9990L, 7499L])) {
+            throw new GradleException('CurseForge Fabric beta upload metadata is inconsistent')
+        }
+        new java.util.zip.ZipFile(cltVerifyPublishArtifactFile()).withCloseable { zip ->
+            def metadataEntry = zip.getEntry('fabric.mod.json')
+            if (metadataEntry == null) throw new GradleException('Fabric beta jar has no fabric.mod.json')
+            def metadata = new groovy.json.JsonSlurper().parse(zip.getInputStream(metadataEntry))
+            if (metadata.id != mod_id || metadata.version != fabricPortVersion
+                    || metadata.license != 'GPL-3.0-only'
+                    || metadata.depends?.create != ">=${mod_create_compat_version}") {
+                throw new GradleException('Fabric beta jar metadata does not match the publish target')
+            }
+            if (zip.getEntry("LICENSE_${mod_id}") == null) {
+                throw new GradleException('Fabric beta jar is missing its license')
+            }
+        }
+        println "Verified Fabric beta publication: ${cltReadPublishVersionId()} / ${fabricPortVersion}"
+    }
+}
+
+tasks.named('publishCurseForge') { dependsOn 'verifyFabricBetaRelease' }
+tasks.matching { it.name in ['publishMods', 'publishModrinth'] }.configureEach {
+    dependsOn 'verifyFabricBetaRelease'
 }
 
 tasks.named('jar', Jar) {

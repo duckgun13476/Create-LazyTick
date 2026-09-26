@@ -1,6 +1,10 @@
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 
+plugins {
+    id 'me.modmuss50.mod-publish-plugin' version '0.8.3' apply false
+}
+
 boolean standaloneFabricBuild = rootProject.projectDir.canonicalFile == project.projectDir.canonicalFile
 
 if (standaloneFabricBuild) {
@@ -22,9 +26,12 @@ if (standaloneFabricBuild) {
             languageVersion = JavaLanguageVersion.of(17)
         }.get().metadata.installationPath.asFile
     }
-    ['compileJava', 'classes', 'remapJar', 'build', 'runClient', 'runServer'].each { String taskName ->
+    ['compileJava', 'classes', 'remapJar', 'build', 'runClient', 'runServer',
+     'PublishInfo', 'verifyPublishArtifact', 'verifyFabricBetaRelease', 'publishAll'].each { String taskName ->
         def configureProxy = { Task task ->
-            task.group = taskName.startsWith('run') ? 'development' : 'build'
+            task.group = taskName.startsWith('run') ? 'development'
+                    : taskName in ['PublishInfo', 'verifyPublishArtifact', 'publishAll'] ? 'Publishing'
+                    : taskName == 'verifyFabricBetaRelease' ? 'verification' : 'build'
             task.doLast {
                 File jdk = javaHome.call()
                 exec {

@@ -38,6 +38,15 @@ ext.cltReadPrimaryChangelog = {
         return ''
     }
     String text = changelogFile.getText('UTF-8')
+    String releaseId = project.findProperty('clt_publish_changelog_release_id')?.toString()?.trim()
+    if (releaseId) {
+        def sections = text =~ /(?ms)^####[ \t]+(v[^\r\n]+)[ \t]*\r?\n.*?(?=^####[ \t]+v|\z)/
+        def section = sections.findAll().find { it[1].trim() == releaseId }
+        if (section == null) {
+            throw new GradleException("Missing changelog section ${releaseId} for ${project.path}")
+        }
+        return section[0].trim()
+    }
     def matcher = text =~ /(?ms)\A(####\s+v[^\n]+.*?)(?=\n####\s+v|\z)/
     return matcher.find() ? matcher.group(1).trim() : text.trim()
 }
@@ -712,8 +721,8 @@ publishMods {
     def modrinthTokenGet = properties?.getProperty('MODRINTH_TOKEN')
 
     file = cltReadPublishArtifactFile()
-    changelog = cltReadFullChangelog()
-    type = STABLE
+    changelog = project.findProperty('clt_publish_changelog_release_id') ? cltReadPrimaryChangelog() : cltReadFullChangelog()
+    type = publish_version.toString().equalsIgnoreCase('beta') ? BETA : STABLE
     version = cltReadPublishVersionId()
     displayName = cltReadPublishDisplayName()
 
