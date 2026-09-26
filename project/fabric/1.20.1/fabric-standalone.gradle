@@ -16,7 +16,7 @@ apply plugin: LoomGradlePlugin
 apply from: file('../../../gradle/clt-property-loader.gradle')
 
 group = mod_group_id
-ext.fabricPortVersion = "${clt_release_version}-fabric-dev"
+ext.fabricPortVersion = "${clt_release_version}-beta.1"
 version = "${fabricPortVersion}-${mod_create_compat_version}"
 base.archivesName = "${mod_id}-fabric-1.20.1"
 
