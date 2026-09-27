@@ -1,4 +1,11 @@
-#### v2.7.29
+#### v2.7.30-release 
+- Fabric 1.20.1 beta for Create Fabric 6.0.8.1.
+- Restore bounded Redstone Link refreshes for unchanged signals without intercepting explicit transmissions.
+- Keep unchanged Redstone Link signals cheap while allowing a normal block-update refresh every 200 game ticks.
+
+---
+
+#### v2.7.29-release
 
 - Fix Basin machines missing a second fluid input when evaluating recipes (#41).
 - Reduce passive Factory Gauge monitoring overhead on Create 6.x.
@@ -7,14 +14,6 @@
 - Fix funnels resuming after redstone pauses, including belt funnels.
 - Add optional funnel redstone overclocking; disabled by default because it can increase lag.
 - Reduce stalled living-entity passenger overhead on belts across all supported versions.
-
----
-
-#### v2.7.29-beta.1
-
-- First Fabric 1.20.1 beta for Create Fabric 6.0.8.1.
-- Port the Lazy Tick Clock and Create machine optimizations from the Forge 1.20.1 codebase.
-- Verified clock controls, funnel/chute wake-up, fluid recovery, and changing Basin/Deployer recipes in the Fabric development client.
 
 ---
 
