@@ -10,6 +10,7 @@
     "fluid.FluidLazyTickMixin",
     "fluid.FluidNetworkTransferSpeedMixin",
     "redstone.RedstoneLinkBlockEntityMixin",
+    "redstone.RedstoneLinkBlockMixin",
     "Create.ScrollOptionBehaviourGuardMixin",
     "Create.SmartBlockEntityControlMixin",
     "OptElement.arm.ArmLazyTickMixin",

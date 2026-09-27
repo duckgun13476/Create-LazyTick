@@ -39,6 +39,7 @@
     "OptElement.itemdrain.ItemDrainBlockUseMixin",
     "OptElement.itemdrain.ItemDrainLazyTickMixin",
     "OptElement.redstone.RedstoneLinkBlockEntityMixin",
+    "OptElement.redstone.RedstoneLinkBlockMixin",
     "OptElement.saw.SawBlockUseMixin",
     "OptElement.saw.SawLazyTickMixin",
     "OptElement.saw.SawRecipeMixin"

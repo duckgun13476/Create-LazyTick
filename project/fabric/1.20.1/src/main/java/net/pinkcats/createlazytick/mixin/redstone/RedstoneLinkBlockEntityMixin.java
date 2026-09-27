@@ -1,19 +1,34 @@
 package net.pinkcats.createlazytick.mixin.redstone;
 
 import com.simibubi.create.content.redstone.link.RedstoneLinkBlockEntity;
+import net.minecraft.world.level.Level;
+import net.pinkcats.createlazytick.redstone.RedstoneLinkRefreshAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Skip an unchanged transmitter value instead of notifying its whole wireless network. */
+/** Bound same-signal network refreshes without delaying real signal changes. */
 @Mixin(value = RedstoneLinkBlockEntity.class, remap = false)
-public abstract class RedstoneLinkBlockEntityMixin {
+public abstract class RedstoneLinkBlockEntityMixin implements RedstoneLinkRefreshAccess {
+    private static final long CREATE_LAZY_TICK$REFRESH_INTERVAL = 200;
+
+    private long createLazyTick$lastRefreshTick = Long.MIN_VALUE;
+
     @Shadow(remap = false) private int transmittedSignal;
 
-    @Inject(method = "transmit", at = @At("HEAD"), cancellable = true, remap = false)
-    private void createLazyTick$skipUnchangedTransmission(int signal, CallbackInfo ci) {
-        if (transmittedSignal == signal) ci.cancel();
+    @Override
+    public boolean createLazyTick$allowRegularTransmission(int signal) {
+        Level level = ((RedstoneLinkBlockEntity) (Object) this).getLevel();
+        if (level == null || level.isClientSide()) {
+            return true;
+        }
+
+        long now = level.getGameTime();
+        if (transmittedSignal == signal && createLazyTick$lastRefreshTick != Long.MIN_VALUE
+                && now >= createLazyTick$lastRefreshTick
+                && now - createLazyTick$lastRefreshTick < CREATE_LAZY_TICK$REFRESH_INTERVAL) {
+            return false;
+        }
+        createLazyTick$lastRefreshTick = now;
+        return true;
     }
 }
