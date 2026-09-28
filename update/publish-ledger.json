@@ -224,6 +224,76 @@
             "source": "direct-curseforge-upload",
             "confirmedAt": "2026-09-25T18:14:43+10:00",
             "fileId": 8970326
+        },
+        {
+            "platform": "curseforge",
+            "projectId": "1409401",
+            "minecraftVersion": "1.19.2",
+            "loader": "forge",
+            "versionId": "1.19.2-2.7.30-0.5.1.i",
+            "displayName": "CLT_v2.7.30_for_Create_v0.5.1.i",
+            "artifactFileName": "CreateLazyTick-2.7.30-0.5.1.i-forge-1.19.2.jar",
+            "artifactSha256": "bc3a20997bfbcb81925c49e6e8c6737d7ecf0b859b6ea89acb554d3f7b37c3f5",
+            "status": "success",
+            "source": "direct-curseforge-upload",
+            "confirmedAt": "2026-09-28T10:49:26+10:00",
+            "fileId": 8995836
+        },
+        {
+            "platform": "curseforge",
+            "projectId": "1409401",
+            "minecraftVersion": "1.20.1",
+            "loader": "forge",
+            "versionId": "1.20.1-2.7.30-0.5.1.j",
+            "displayName": "CLT_v2.7.30_for_Create_v0.5.1.j",
+            "artifactFileName": "CreateLazyTick-2.7.30-0.5.1.j-forge-1.20.1.jar",
+            "artifactSha256": "c3f6c3f1eeec3be73770e70080436970696b83d34d27f5ccc61677d1d078a359",
+            "status": "success",
+            "source": "direct-curseforge-upload",
+            "confirmedAt": "2026-09-28T10:55:44+10:00",
+            "fileId": 8995864
+        },
+        {
+            "platform": "curseforge",
+            "projectId": "1409401",
+            "minecraftVersion": "1.20.1",
+            "loader": "forge",
+            "versionId": "1.20.1-2.7.30-6.0.x",
+            "displayName": "CLT_v2.7.30_for_Create_v6.0.x",
+            "artifactFileName": "CreateLazyTick-2.7.30-6.0.x-forge-1.20.1.jar",
+            "artifactSha256": "879dec49afe90fd1f7d3a1fc3895fc2af03ee6c40648724a26750cc29f779594",
+            "status": "success",
+            "source": "direct-curseforge-upload",
+            "confirmedAt": "2026-09-28T10:55:53+10:00",
+            "fileId": 8995866
+        },
+        {
+            "platform": "curseforge",
+            "projectId": "1409401",
+            "minecraftVersion": "1.21.1",
+            "loader": "neoforge",
+            "versionId": "1.21.1-2.7.30-6.0.10",
+            "displayName": "CLT_v2.7.30_for_Create_v6.0.10",
+            "artifactFileName": "CreateLazyTick-2.7.30-6.0.10-neoforge-1.21.1.jar",
+            "artifactSha256": "e3e735ae64d83926d1a435733386707c495f0daffcaa0ac0731e60fa2fbb3066",
+            "status": "success",
+            "source": "direct-curseforge-upload",
+            "confirmedAt": "2026-09-28T10:56:02+10:00",
+            "fileId": 8995867
+        },
+        {
+            "platform": "curseforge",
+            "projectId": "1409401",
+            "minecraftVersion": "1.20.1",
+            "loader": "fabric",
+            "versionId": "1.20.1-2.7.30-6.0.8.1-fabric",
+            "displayName": "CLT_v2.7.30_for_Create_v6.0.8.1_Fabric",
+            "artifactFileName": "CreateLazyTick-2.7.30-6.0.8.1-fabric-1.20.1.jar",
+            "artifactSha256": "dfdfc687c2c2688a745bc98ec5213c87b04b50165d1bd5cf7161c5b2db2bf52c",
+            "status": "success",
+            "source": "direct-curseforge-upload",
+            "confirmedAt": "2026-09-28T10:56:24+10:00",
+            "fileId": 8995869
         }
     ]
 }
