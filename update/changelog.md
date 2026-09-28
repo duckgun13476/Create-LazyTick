@@ -1,7 +1,7 @@
-#### v2.7.30-release 
-- Fabric 1.20.1 beta for Create Fabric 6.0.8.1.
+#### v2.7.30-release
+
+- Add Fabric 1.20.1 support for Create Fabric 6.0.8.1.
 - Restore bounded Redstone Link refreshes for unchanged signals without intercepting explicit transmissions.
-- Keep unchanged Redstone Link signals cheap while allowing a normal block-update refresh every 200 game ticks.
 
 ---
 

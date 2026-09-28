@@ -232,31 +232,10 @@ tasks.register('publishDiscordRelease') {
 
 tasks.named('publishAllVersions').configure { dependsOn 'publishDiscordRelease' }
 
-ext.cltDiscordFabricBetaReleaseId = {
+ext.cltDiscordCurrentReleaseId = {
     Properties common = new Properties()
-    Properties fabric = new Properties()
     rootProject.file('gradle/clt-common.properties').withInputStream { common.load(it) }
-    rootProject.file('project/fabric/1.20.1/gradle.properties').withInputStream { fabric.load(it) }
-    return "v${common.getProperty('mod_version')}-${fabric.getProperty('fabric_beta_stage')}"
-}
-
-tasks.register('publishDiscordFabricBeta') {
-    group = 'Publishing'
-    description = 'Announces the Fabric 1.20.1 beta after its separate platform upload.'
-    dependsOn ':fabric-1.20.1:publishAll'
-    doLast {
-        File changelogFile = rootProject.file('update/changelog.md')
-        String section = changelogFile.isFile()
-                ? cltDiscordChangelogSection(changelogFile.getText('UTF-8'), cltDiscordFabricBetaReleaseId()) : ''
-        if (!section) throw new GradleException('Fabric beta changelog section is missing; Discord announcement was not attempted.')
-        cltDiscordPublishChangelog(section)
-    }
-}
-
-tasks.register('publishFabricBeta') {
-    group = 'Publishing'
-    description = 'Publishes only Fabric 1.20.1 beta to platforms and then Discord.'
-    dependsOn 'publishDiscordFabricBeta'
+    return "v${common.getProperty('mod_version')}-release"
 }
 
 tasks.register('testDiscordPublishSupport') {
@@ -267,8 +246,8 @@ tasks.register('testDiscordPublishSupport') {
         String latest = cltDiscordLatestChangelog(sample)
         assert latest == '#### v9.8.7\n\n- Latest.'
         assert cltDiscordReleaseId(latest) == 'v9.8.7'
-        assert cltDiscordChangelogSection('#### v9.8.7\n\n- Stable.\n\n#### v9.8.7-beta.1\n\n- Fabric beta.', 'v9.8.7-beta.1') == '#### v9.8.7-beta.1\n\n- Fabric beta.'
-        assert cltDiscordChangelogSection(rootProject.file('update/changelog.md').getText('UTF-8'), cltDiscordFabricBetaReleaseId()).startsWith("#### ${cltDiscordFabricBetaReleaseId()}\n")
+        assert cltDiscordChangelogSection('#### v9.8.7-release\n\n- Stable.\n\n#### v9.8.6-release\n\n- Old.', 'v9.8.6-release') == '#### v9.8.6-release\n\n- Old.'
+        assert cltDiscordReleaseId(cltDiscordLatestChangelog(rootProject.file('update/changelog.md').getText('UTF-8'))) == cltDiscordCurrentReleaseId()
         assert cltDiscordSha256(latest) ==~ /[0-9a-f]{64}/
         Map ledger = [schemaVersion: 1, entries: []]
         Map release = [target: 'formal', releaseId: 'v9.8.7', messageSha256: cltDiscordSha256(latest)]

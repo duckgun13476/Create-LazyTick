@@ -27,11 +27,13 @@ if (standaloneFabricBuild) {
         }.get().metadata.installationPath.asFile
     }
     ['compileJava', 'classes', 'remapJar', 'build', 'runClient', 'runServer',
-     'PublishInfo', 'verifyPublishArtifact', 'verifyFabricBetaRelease', 'publishAll'].each { String taskName ->
+     'PublishInfo', 'verifyPublishArtifact', 'verifyFabricRelease', 'publishAll',
+     'allworkPublishInfo', 'allworkJarJar', 'allworkPublishAll'].each { String taskName ->
         def configureProxy = { Task task ->
             task.group = taskName.startsWith('run') ? 'development'
-                    : taskName in ['PublishInfo', 'verifyPublishArtifact', 'publishAll'] ? 'Publishing'
-                    : taskName == 'verifyFabricBetaRelease' ? 'verification' : 'build'
+                    : taskName in ['PublishInfo', 'verifyPublishArtifact', 'publishAll',
+                                   'allworkPublishInfo', 'allworkPublishAll'] ? 'Publishing'
+                    : taskName == 'verifyFabricRelease' ? 'verification' : 'build'
             task.doLast {
                 File jdk = javaHome.call()
                 exec {

@@ -4,10 +4,24 @@ def cltPublishableProjects = [
         ':forge-1.19.2',
         ':forge-1.20.1-0.5.1',
         ':forge-1.20.1-6.0.x',
-        ':neoforge-1.21.1'
+        ':neoforge-1.21.1',
+        ':fabric-1.20.1'
 ]
 
 gradle.projectsEvaluated {
+    // Verify all five distributable jars before the first platform upload.
+    cltPublishableProjects.each { targetPath ->
+        project(targetPath).tasks.named('allworkPublishAll').configure {
+            dependsOn rootProject.tasks.named('packageAllVersions')
+        }
+    }
+    // The Fabric child runs in its own Loom build; finish the four in-process
+    // publishers before its proxy launches that separate Gradle invocation.
+    project(':fabric-1.20.1').tasks.named('allworkPublishAll').configure {
+        cltPublishableProjects.findAll { it != ':fabric-1.20.1' }.each { targetPath ->
+            mustRunAfter project(targetPath).tasks.named('allworkPublishAll')
+        }
+    }
     Task previousCurseForgeTask = null
     Task previousModrinthTask = null
     cltPublishableProjects.collect { rootProject.project(it) }.each { targetProject ->
