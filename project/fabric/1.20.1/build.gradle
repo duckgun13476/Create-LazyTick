@@ -18,6 +18,15 @@ if (standaloneFabricBuild) {
         List<String> command = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
                 ? ['cmd', '/c', wrapper.absolutePath] : [wrapper.absolutePath]
         command.addAll(['-p', project.projectDir.absolutePath, '--console=plain', taskName])
+        if (gradle.startParameter.offline) command.add('--offline')
+        def localInitScript = System.getenv('CLT_GRADLE_INIT_SCRIPT')
+        if (localInitScript) {
+            File initScript = new File(localInitScript)
+            if (!initScript.isFile()) {
+                throw new GradleException("CLT_GRADLE_INIT_SCRIPT does not exist: ${initScript}")
+            }
+            command.addAll(['--init-script', initScript.absolutePath])
+        }
         gradle.startParameter.projectProperties.each { String key, String value -> command.add("-P${key}=${value}") }
         return command
     }

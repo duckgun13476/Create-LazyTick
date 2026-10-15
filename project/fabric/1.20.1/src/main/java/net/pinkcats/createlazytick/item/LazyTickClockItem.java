@@ -24,7 +24,7 @@ import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.helper.util.LazyTickLogic;
 import net.pinkcats.createlazytick.helper.LazyTickScrollBehaviour;
 import net.pinkcats.createlazytick.helper.LazyTickScrollerOpenHelper;
-import net.pinkcats.createlazytick.helper.tooltip.LazyTickMode;
+import net.pinkcats.createlazytick.helper.ClockModeFeedback;
 import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.manager.ForcedActiveManager;
 import org.jetbrains.annotations.NotNull;
@@ -156,7 +156,7 @@ public class LazyTickClockItem extends Item {
             int maxDelayTick = whiteItem.getMaxTick();
             MutableComponent message = Component.translatable("createlazytick.clock.mode_changed");
 
-            List<Component> infoList = LazyTickMode.getDisplayComponents(
+            List<Component> infoList = ClockModeFeedback.getDisplayComponents(
                     control.createLazyTick$getDynamicValue(),
                     control.createLazyTick$getForcedValue(),
                     maxDelayTick
