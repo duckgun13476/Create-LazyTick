@@ -1,3 +1,9 @@
+#### v2.7.31-release
+
+- Fix Lazy Tick Clock mode changes on dedicated servers by keeping feedback independent of client-only tooltip settings.
+
+---
+
 #### v2.7.30-release
 
 - Add Fabric 1.20.1 support for Create Fabric 6.0.8.1.
