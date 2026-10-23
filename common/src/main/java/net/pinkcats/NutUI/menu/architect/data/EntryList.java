@@ -5,12 +5,10 @@ import java.util.List;
 
 public class EntryList {
     private static EntryList instance; // 单例实例
-    private static List<Entry> entries;
+    private static List<Entry> entries = new ArrayList<>();
 
     // 私有构造函数
-    public EntryList() {
-        entries = new ArrayList<>();
-    }
+    private EntryList() {}
 
     // 获取单例实例
     public static EntryList getInstance() {

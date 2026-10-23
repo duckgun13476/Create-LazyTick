@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.helper.util;
 
+import net.pinkcats.createlazytick.helper.ClockDisplayState;
+
 import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.simibubi.create.content.logistics.depot.DepotBlockEntity;
@@ -165,6 +167,18 @@ public final class SmartLazyTickStateHelper {
         @Override
         public String createLazyTick$getOwnerName() {
             return state.ownerName;
+        }
+
+        @Override
+        public void createLazyTick$applyDisplayState(ClockDisplayState display) {
+            if (blockEntity.getLevel() == null || !blockEntity.getLevel().isClientSide) return;
+            state.currentInterval = display.interval();
+            state.dynamicValue = display.dynamic();
+            state.forcedValue = display.forced();
+            state.extraData = display.extraData();
+            state.ownerName = display.owner();
+            LazyTickTooltipWhiteList white = LazyTickTooltipWhiteList.getByEntity(blockEntity);
+            if (white != null) state.syncedTier = LazyTickTier.fromTicks(display.interval(), white.getMaxTick());
         }
 
         @Override

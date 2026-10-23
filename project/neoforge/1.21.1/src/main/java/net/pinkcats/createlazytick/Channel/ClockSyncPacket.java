@@ -1,7 +1,6 @@
 package net.pinkcats.createlazytick.Channel;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -84,36 +83,17 @@ public class ClockSyncPacket implements CustomPacketPayload {
             // 查询模式
             if (isQuery) {
                 Level level = serverPlayer.level();
-                if (level.isLoaded(pos)) {
+                if (serverPlayer.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 4096
+                        && level.isLoaded(pos)) {
                     BlockEntity blockEntity = level.getBlockEntity(pos);
-                    if (blockEntity != null) {
-                        LazyTickTooltipWhiteList whiteItem = LazyTickTooltipWhiteList.getByEntity(blockEntity);
-                        CompoundTag state = blockEntity.saveWithoutMetadata(level.registryAccess());
+                    if (LazyTickTooltipWhiteList.getByEntity(blockEntity) != null) {
                         ISmartBlockEntityControl control = blockEntity instanceof ISmartBlockEntityControl smart
                                 ? smart
                                 : SmartLazyTickStateHelper.control(blockEntity);
                         if (control != null) {
-                            state.putInt("cltCurrentInterval", Math.max(1, control.createLazyTick$getCurrentSuperTick()));
-                            state.putInt("cltDynamic", control.createLazyTick$getDynamicValue());
-                            state.putInt("cltForced", control.createLazyTick$getForcedValue());
-                            state.putInt("cltExtraData", control.lazytick$getExtraData());
-                            state.putInt("cltTier", control.lazytick$getSyncedTier().ordinal());
-                            String owner = control.createLazyTick$getOwnerName();
-                            if (owner != null && !owner.isEmpty()) {
-                                state.putString("cltOwner", owner);
-                            }
-                            control.createLazyTick$sendBlockUpdated();
-                        } else if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
-                            mes.warn("[Network][clock_sync][server] depot query target is not ISmartBlockEntityControl: "
-                                    + blockEntity.getClass().getName());
+                            CLTChannel.sendToPlayer(new LazyTickStatePacket(level.dimension().location().toString(),
+                                    pos, control.createLazyTick$getDisplayState()), serverPlayer);
                         }
-                        if (whiteItem == LazyTickTooltipWhiteList.DEPOT) {
-                            mes.debug("[Network][clock_sync][server] sending state for depot keys=" + state.getAllKeys());
-                        }
-                        CLTChannel.sendToPlayer(
-                                new LazyTickStatePacket(level.dimension().location().toString(), pos, state),
-                                serverPlayer
-                        );
                     }
                 }
                 return;

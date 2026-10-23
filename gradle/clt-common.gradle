@@ -31,3 +31,22 @@ sourceSets {
         resources.srcDir(cltCommonResourcesDir)
     }
 }
+
+// Verify the small display response against this target's actual Minecraft and loader classes.
+def cltClockStateTestClasses = layout.buildDirectory.dir('classes/clockStateRegression')
+tasks.register('compileClockDisplayStateRegression', JavaCompile) {
+    dependsOn('classes')
+    source = files(new File(cltRepositoryRoot, 'common/src/clockStateTest/java/net/pinkcats/createlazytick/ClockDisplayStateRegression.java'))
+    classpath = sourceSets.main.compileClasspath + sourceSets.main.output
+    destinationDirectory = cltClockStateTestClasses
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+tasks.register('verifyClockDisplayState', JavaExec) {
+    group = 'verification'
+    description = 'Checks minimal clock state fields and response packet round trips.'
+    dependsOn('compileClockDisplayStateRegression')
+    classpath = files(cltClockStateTestClasses) + sourceSets.main.runtimeClasspath
+    mainClass = 'net.pinkcats.createlazytick.ClockDisplayStateRegression'
+}
+tasks.named('check').configure { dependsOn('verifyClockDisplayState') }

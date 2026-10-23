@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.mixin.Create;
 
+import net.pinkcats.createlazytick.helper.ClockDisplayState;
+
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -168,6 +170,18 @@ public abstract class SmartBlockEntityControlMixin extends BlockEntity implement
     @Override
     public boolean lazytick$isDefaultState() {
         return this.lazyTick$dynamicValue == 100 && this.lazyTick$forcedValue == -1;
+    }
+
+    @Override
+    public void createLazyTick$applyDisplayState(ClockDisplayState state) {
+        if (this.level == null || !this.level.isClientSide) return;
+        this.createLazyTick$CurrentDelayTick = state.interval();
+        this.lazyTick$dynamicValue = state.dynamic();
+        this.lazyTick$forcedValue = state.forced();
+        this.lazytick$extraData = state.extraData();
+        this.lazytick$ownerName = state.owner();
+        LazyTickTooltipWhiteList white = LazyTickTooltipWhiteList.getByEntity(this);
+        if (white != null) this.lazytick$syncedTier = LazyTickTier.fromTicks(state.interval(), white.getMaxTick());
     }
 
     @Override

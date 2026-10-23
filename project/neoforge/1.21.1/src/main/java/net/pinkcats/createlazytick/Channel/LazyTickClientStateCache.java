@@ -3,12 +3,13 @@ package net.pinkcats.createlazytick.Channel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public final class LazyTickClientStateCache {
-    private static final Map<CacheKey, CompoundTag> CACHE = new HashMap<>();
+    private static final int MAX_ENTRIES = 64;
+    private static final Map<CacheKey, CompoundTag> CACHE = new LinkedHashMap<>();
 
     private LazyTickClientStateCache() {
     }
@@ -18,6 +19,7 @@ public final class LazyTickClientStateCache {
             return;
         }
         CACHE.put(new CacheKey(dimension, pos), tag.copy());
+        if (CACHE.size() > MAX_ENTRIES) CACHE.remove(CACHE.keySet().iterator().next());
     }
 
     public static CompoundTag get(String dimension, BlockPos pos) {

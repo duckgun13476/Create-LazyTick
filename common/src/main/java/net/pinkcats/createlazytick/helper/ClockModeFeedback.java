@@ -55,7 +55,7 @@ public final class ClockModeFeedback {
             mode.withStyle(style -> style.withBold(true));
         }
 
-        int interval = Math.max(1, maxTick * percentage / 100);
+        int interval = TickIntervalMath.percentage(maxTick, percentage);
         MutableComponent extra = Component.translatable(
                 forced ? "createlazytick.tooltip.extra.fixed" : "createlazytick.tooltip.extra.dynamic",
                 percentage,

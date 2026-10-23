@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.adaptive.saw;
 
+import net.pinkcats.createlazytick.helper.TickIntervalMath;
+
 /**
  * Pure, loader-neutral frequency function for a Create saw's periodic input/output paths.
  *
@@ -27,7 +29,7 @@ public final class SawFrequencyFunction {
 
     public static State onRetryFailure(State state, int maxInterval) {
         int current = clamp(state.fallbackInterval(), 1, maxInterval);
-        int next = Math.min(maxInterval, current + Math.max(1, current / 10));
+        int next = TickIntervalMath.growByTenPercent(current, maxInterval);
         return new State(next, state.lastSuccessTick(), state.learnedPeriod());
     }
 
@@ -35,7 +37,7 @@ public final class SawFrequencyFunction {
         int period = state.learnedPeriod();
         if (state.lastSuccessTick() != NO_SUCCESS && gameTick > state.lastSuccessTick()) {
             int observed = clampLong(gameTick - state.lastSuccessTick(), 1, maxInterval);
-            period = period <= 0 ? observed : clamp((period * 3 + observed) / 4, 1, maxInterval);
+            period = period <= 0 ? observed : clampLong(((long) period * 3 + observed) / 4, 1, maxInterval);
         }
         return new State(1, gameTick, period);
     }

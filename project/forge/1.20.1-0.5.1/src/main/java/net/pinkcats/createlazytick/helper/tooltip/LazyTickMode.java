@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.helper.tooltip;
 
+import net.pinkcats.createlazytick.helper.TickIntervalMath;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -72,7 +74,7 @@ public enum LazyTickMode {
         int percentage = isForced ? forcedValue : dynamicValue;
 
         // 1. 计算实际间隔时间
-        int actualInterval = Math.max(1, maxTick * percentage / 100);
+        int actualInterval = TickIntervalMath.percentage(maxTick, percentage);
 
         // 2. 获取时间格式化字符串 (例如 "2.0s" 或 "1t")
         String timeStr = LazyTickTooltipTool.formatTime(actualInterval);

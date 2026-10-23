@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 
@@ -57,9 +59,13 @@ public class ClockSyncPacket {
         if (player == null) return;
         if (isQuery) {
             Level level = player.level();
-            if (level.isLoaded(pos)) {
-                if (level.getBlockEntity(pos) instanceof ISmartBlockEntityControl control) {
-                    control.createLazyTick$sendBlockUpdated();
+            if (player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 4096
+                    && level.isLoaded(pos)) {
+                BlockEntity blockEntity = level.getBlockEntity(pos);
+                if (LazyTickTooltipWhiteList.getByEntity(blockEntity) != null
+                        && blockEntity instanceof ISmartBlockEntityControl control) {
+                    CLTChannel.sendToPlayer(new LazyTickStatePacket(level.dimension().location().toString(), pos,
+                            control.createLazyTick$getDisplayState()), player);
                 }
             }
             return;

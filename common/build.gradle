@@ -15,6 +15,9 @@ sourceSets {
         java.setSrcDirs([])
         resources.setSrcDirs([])
     }
+    test {
+        java.setSrcDirs([])
+    }
 }
 
 tasks.named('sourcesJar').configure {
@@ -31,4 +34,47 @@ tasks.register('verifyCommonLayout') {
 
 tasks.named('check').configure {
     dependsOn('verifyCommonLayout')
+    dependsOn('verifyTickIntervalMath')
+    dependsOn('verifyEntryList')
+}
+
+// Compile only the dependency-closed arithmetic cluster, not the MC-dependent common fragment.
+def tickMathClasses = layout.buildDirectory.dir('classes/tickMathRegression')
+tasks.register('compileTickIntervalMath', JavaCompile) {
+    source = files(
+            'src/main/java/net/pinkcats/createlazytick/helper/TickIntervalMath.java',
+            'src/main/java/net/pinkcats/createlazytick/adaptive/saw/SawFrequencyFunction.java',
+            'src/test/java/net/pinkcats/createlazytick/TickIntervalMathRegression.java')
+    classpath = files()
+    destinationDirectory = tickMathClasses
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('verifyTickIntervalMath', JavaExec) {
+    group = 'verification'
+    description = 'Checks overflow boundaries and ordinary-range equivalence for tick arithmetic.'
+    dependsOn('compileTickIntervalMath')
+    classpath = files(tickMathClasses)
+    mainClass = 'net.pinkcats.createlazytick.TickIntervalMathRegression'
+}
+
+def entryListClasses = layout.buildDirectory.dir('classes/entryListRegression')
+tasks.register('compileEntryListRegression', JavaCompile) {
+    source = files(
+            'src/main/java/net/pinkcats/NutUI/menu/architect/data/Entry.java',
+            'src/main/java/net/pinkcats/NutUI/menu/architect/data/EntryList.java',
+            'src/test/java/net/pinkcats/NutUI/menu/architect/data/EntryListRegression.java')
+    classpath = files()
+    destinationDirectory = entryListClasses
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('verifyEntryList', JavaExec) {
+    group = 'verification'
+    description = 'Checks EntryList access before initialization and packet-before-singleton ordering.'
+    dependsOn('compileEntryListRegression')
+    classpath = files(entryListClasses)
+    mainClass = 'net.pinkcats.NutUI.menu.architect.data.EntryListRegression'
 }

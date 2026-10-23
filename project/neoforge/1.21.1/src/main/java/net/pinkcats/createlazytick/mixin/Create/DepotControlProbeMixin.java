@@ -1,5 +1,8 @@
 package net.pinkcats.createlazytick.mixin.Create;
 
+import net.pinkcats.createlazytick.helper.ClockDisplayState;
+import net.pinkcats.createlazytick.helper.tooltip.LazyTickTooltipWhiteList;
+
 import com.simibubi.create.content.logistics.depot.DepotBlockEntity;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -105,6 +108,17 @@ public abstract class DepotControlProbeMixin extends BlockEntity implements ISma
     @Override
     public String createLazyTick$getOwnerName() {
         return this.lazytick$ownerName;
+    }
+
+    @Override
+    public void createLazyTick$applyDisplayState(ClockDisplayState state) {
+        if (this.level == null || !this.level.isClientSide) return;
+        this.createLazyTick$CurrentDelayTick = state.interval();
+        this.lazyTick$dynamicValue = state.dynamic();
+        this.lazyTick$forcedValue = state.forced();
+        this.lazytick$extraData = state.extraData();
+        this.lazytick$ownerName = state.owner();
+        this.lazytick$syncedTier = LazyTickTier.fromTicks(state.interval(), LazyTickTooltipWhiteList.DEPOT.getMaxTick());
     }
 
     @Override

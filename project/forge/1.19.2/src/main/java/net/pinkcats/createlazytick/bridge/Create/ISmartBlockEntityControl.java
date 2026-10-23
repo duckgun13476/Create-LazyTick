@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.bridge.Create;
 
+import net.pinkcats.createlazytick.helper.ClockDisplayState;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -11,6 +13,15 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ISmartBlockEntityControl {
+
+    default ClockDisplayState createLazyTick$getDisplayState() {
+        return new ClockDisplayState(createLazyTick$getCurrentSuperTick(), createLazyTick$getDynamicValue(),
+                createLazyTick$getForcedValue(), lazytick$getExtraData(), lazytick$getSyncedTier().ordinal(),
+                createLazyTick$getOwnerName());
+    }
+
+    /** Client-only field assignment; must not save, broadcast or run machine state transitions. */
+    void createLazyTick$applyDisplayState(ClockDisplayState state);
 
     // 渲染/命令补全系统调用
     String createLazyTick$getOwnerName();

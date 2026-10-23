@@ -15,7 +15,7 @@ import static net.pinkcats.createlazytick.CreateLazyTick.MODID;
 @EventBusSubscriber(modid = MODID)
 public class CLTChannel {
 
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
 
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {

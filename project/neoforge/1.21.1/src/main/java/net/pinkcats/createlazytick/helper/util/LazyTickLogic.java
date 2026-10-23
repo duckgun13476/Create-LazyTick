@@ -1,5 +1,7 @@
 package net.pinkcats.createlazytick.helper.util;
 
+import net.pinkcats.createlazytick.helper.TickIntervalMath;
+
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.minecraft.core.BlockPos;
@@ -136,7 +138,7 @@ public class LazyTickLogic {
 
         //System.out.println("change");
         // 2. compute next interval (指数退避: 10%)
-        int nextInterval = currentInterval + Math.max(1, currentInterval / 10);
+        int nextInterval = TickIntervalMath.growByTenPercent(currentInterval, Integer.MAX_VALUE);
 
         // 3. compute dynamic max value limit
         int dynamicPercent = control.createLazyTick$getDynamicValue();

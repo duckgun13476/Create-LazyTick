@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import net.pinkcats.createlazytick.Gui.mes;
+import net.pinkcats.createlazytick.helper.ClockDisplayState;
 import org.jetbrains.annotations.NotNull;
 
 public class LazyTickStatePacket implements CustomPacketPayload {
@@ -19,25 +19,25 @@ public class LazyTickStatePacket implements CustomPacketPayload {
 
     private final String dimension;
     private final BlockPos pos;
-    private final CompoundTag state;
+    private final ClockDisplayState state;
 
-    public LazyTickStatePacket(String dimension, BlockPos pos, CompoundTag state) {
+    public LazyTickStatePacket(String dimension, BlockPos pos, ClockDisplayState state) {
         this.dimension = dimension;
         this.pos = pos;
-        this.state = state == null ? new CompoundTag() : state.copy();
+        this.state = state;
     }
 
     public LazyTickStatePacket(FriendlyByteBuf buf) {
         this.dimension = buf.readUtf();
         this.pos = buf.readBlockPos();
         CompoundTag readState = buf.readNbt();
-        this.state = readState == null ? new CompoundTag() : readState;
+        this.state = ClockDisplayState.fromTag(readState);
     }
 
     private void encode(FriendlyByteBuf buf) {
         buf.writeUtf(dimension);
         buf.writeBlockPos(pos);
-        buf.writeNbt(state);
+        buf.writeNbt(state.toTag());
     }
 
     @Override
@@ -46,14 +46,6 @@ public class LazyTickStatePacket implements CustomPacketPayload {
     }
 
     public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            LazyTickClientStateCache.put(dimension, pos, state);
-            if (state.contains("cltCurrentInterval")
-                    || state.contains("cltDynamic")
-                    || state.contains("cltForced")
-                    || state.contains("cltExtraData")) {
-                mes.debug("[Network][lazytick_state][client] received state pos=" + pos + " keys=" + state.getAllKeys());
-            }
-        });
+        ctx.enqueueWork(() -> ClientClockStateHandler.accept(dimension, pos, state));
     }
 }
