@@ -165,6 +165,11 @@ Please report bugs and compatibility problems through
 the affected versions, logs from both sides when applicable, the relevant CLT
 configuration, and steps that reproduce the behavior.
 
+## Building
+
+Run `./gradlew packageAllVersions` to package all supported versions. Final release
+jars are collected in `output/<CLT version>/`; publishing uses these same files.
+
 ## License
 
 Create: LazyTick is licensed under [GNU GPLv3](LICENSE) (`GPL-3.0-only`).

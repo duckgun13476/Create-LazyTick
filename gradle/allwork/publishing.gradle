@@ -147,6 +147,14 @@ ext.cltReadPublishOptionalDependencies = {
     return cltReadStringListProperty('clt_publish_optional_dependencies')
 }
 
+// Only distributable tasks write here: Forge reobfJar, NeoForge jar and Fabric
+// remapJar. Development/intermediate jars keep their loader-managed locations.
+// Resolve from the repository so standalone (-p) builds share the same output.
+def cltReleaseOutputDirectory = new File(cltPublishingRepositoryRootDir, "output/${clt_release_version}")
+tasks.named(cltReadPublishArtifactTaskName()).configure {
+    destinationDirectory.set(cltReleaseOutputDirectory)
+}
+
 ext.cltReadPublishArtifactFile = {
     def relativePath = project.findProperty('clt_publish_artifact_relative_path')?.toString()?.trim()
     if (relativePath != null && !relativePath.isEmpty()) {

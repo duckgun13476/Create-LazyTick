@@ -131,6 +131,11 @@ CLT 会为短暂交互窗口和持续输出保留必要的正常/有界重试节
 请通过 [GitHub Issues](https://github.com/duckgun13476/Create-LazyTick/issues) 提交 bug 与兼容性问题。
 客户端和服务端都参与时，请提供两侧日志。
 
+## 打包
+
+运行 `./gradlew packageAllVersions` 打包所有支持的版本。最终发布 jar 统一放在
+`output/<CLT 版本号>/`，发布任务直接使用这些文件。
+
 ## 许可证
 
 机械动力：懒惰刻使用 [GNU GPLv3](LICENSE) 许可证（`GPL-3.0-only`）。
