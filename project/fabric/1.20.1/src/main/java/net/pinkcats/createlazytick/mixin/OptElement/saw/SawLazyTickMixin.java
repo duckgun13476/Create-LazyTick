@@ -120,9 +120,11 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         createLazyTick$wakeForInput();
     }
 
+    // These Create methods are not overloaded. Keep their names, but omit Minecraft
+    // type descriptors which differ between named development and intermediary runtime.
     @Inject(method = "tick", remap = false, at = @At(
             value = "INVOKE",
-            target = "Lcom/simibubi/create/content/kinetics/saw/SawBlockEntity;getItemMovementVec()Lnet/minecraft/world/phys/Vec3;"), cancellable = true)
+            target = "Lcom/simibubi/create/content/kinetics/saw/SawBlockEntity;getItemMovementVec"), cancellable = true)
     public void optimizedTick(CallbackInfo ci) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
         if (level == null || level.isClientSide) return;
@@ -160,7 +162,7 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
 
     @Inject(method = "tick", remap = false, at = @At(
             value = "INVOKE",
-            target = "Lcom/simibubi/create/content/processing/recipe/ProcessingInventory;setStackInSlot(ILnet/minecraft/world/item/ItemStack;)V"))
+            target = "Lcom/simibubi/create/content/processing/recipe/ProcessingInventory;setStackInSlot"))
     public void onInventoryChange(CallbackInfo ci) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableLazySaw()) return;
 

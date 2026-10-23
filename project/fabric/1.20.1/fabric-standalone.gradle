@@ -78,6 +78,7 @@ ext.clt_publish_version_suffix = 'fabric'
 ext.clt_publish_changelog_release_id = "v${fabricReleaseVersion}-release"
 
 apply from: file('../../../gradle/clt-publishing-common.gradle')
+apply from: file('../../../gradle/clt-fabric-mixin-verification.gradle')
 
 tasks.register('verifyFabricRelease') {
     group = 'verification'

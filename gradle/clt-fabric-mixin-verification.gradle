@@ -1,0 +1,72 @@
+import groovy.json.JsonSlurper
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.tree.AnnotationNode
+import org.objectweb.asm.tree.ClassNode
+
+buildscript {
+    dependencies {
+        // Reuse the pinned Gradle distribution's ASM, without another download.
+        classpath fileTree(new File(gradle.gradleHomeDir, 'lib')) { include 'asm-*.jar' }
+    }
+}
+
+// Inspect the distributable, not Loom's named development classes.
+tasks.register('verifyFabricMixinTargets') {
+    group = 'verification'
+    description = 'Rejects unmapped named Minecraft descriptors in final Fabric Mixin annotations.'
+    dependsOn 'remapJar'
+    doLast {
+        File artifact = providers.gradleProperty('clt_mixin_verification_jar')
+                .map { file(it) }.getOrElse(tasks.named('remapJar').get().archiveFile.get().asFile)
+        List<String> invalid = []
+        Map mappings = [:]
+        String currentClass
+        def namedDescriptor = ~/Lnet\/minecraft\/(?!class_\d+(?:\$|;))[^;]+;/
+        Closure inspect
+        inspect = { Object value, String location ->
+            if (value instanceof AnnotationNode) {
+                inspect(value.values, location)
+            } else if (value instanceof List) {
+                value.each { inspect(it, location) }
+            } else if (value instanceof String && value =~ namedDescriptor) {
+                // Remap-enabled annotations may retain named strings backed by a refmap.
+                def mapped = mappings[currentClass]?.get(value)
+                if (!(mapped instanceof String) || mapped == value || mapped =~ namedDescriptor) {
+                    invalid.add("${location}: ${value}")
+                }
+            }
+        }
+        new java.util.zip.ZipFile(artifact).withCloseable { zip ->
+            def metadata = new JsonSlurper().parse(zip.getInputStream(zip.getEntry('fabric.mod.json')))
+            metadata.mixins.each { configSpec ->
+                String configName = configSpec instanceof String ? configSpec : configSpec.config
+                def config = new JsonSlurper().parse(zip.getInputStream(zip.getEntry(configName)))
+                mappings = config.refmap
+                        ? new JsonSlurper().parse(zip.getInputStream(zip.getEntry(config.refmap))).mappings
+                        : [:]
+                (config.mixins + (config.client ?: []) + (config.server ?: [])).each { name ->
+                    String className = "${config.package}.${name}".replace('.', '/')
+                    currentClass = className
+                    def entry = zip.getEntry("${className}.class")
+                    if (entry == null) throw new GradleException("Missing configured Mixin: ${className}")
+                    ClassNode node = new ClassNode()
+                    new ClassReader(zip.getInputStream(entry)).accept(node,
+                            ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+                    inspect(node.visibleAnnotations, className)
+                    inspect(node.invisibleAnnotations, className)
+                    (node.methods + node.fields).each { member ->
+                        inspect(member.visibleAnnotations, "${className}.${member.name}")
+                        inspect(member.invisibleAnnotations, "${className}.${member.name}")
+                    }
+                }
+            }
+        }
+        if (!invalid.empty) {
+            throw new GradleException("Unmapped named Minecraft Mixin descriptors in Fabric artifact:\n" + invalid.join('\n'))
+        }
+        println "Verified intermediary Mixin targets: ${artifact.name}"
+    }
+}
+
+tasks.named('check') { dependsOn 'verifyFabricMixinTargets' }
+tasks.named('verifyPublishArtifact') { dependsOn 'verifyFabricMixinTargets' }
