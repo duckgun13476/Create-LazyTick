@@ -1,3 +1,10 @@
+#### v2.7.32-release
+
+- Fix Fabric release startup failures caused by development-environment mappings (#46).
+- Improve code stability.
+
+---
+
 #### v2.7.31-release
 
 - Fix Lazy Tick Clock mode changes on dedicated servers by keeping feedback independent of client-only tooltip settings.
