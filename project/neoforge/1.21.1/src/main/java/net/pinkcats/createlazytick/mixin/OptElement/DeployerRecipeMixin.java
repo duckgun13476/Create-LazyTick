@@ -9,6 +9,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import net.pinkcats.createlazytick.config.ServerConfig;
 import net.pinkcats.createlazytick.helper.RecipeCacheTool;
 import org.spongepowered.asm.mixin.Mixin;
@@ -74,14 +75,18 @@ public abstract class DeployerRecipeMixin {
         if (lazytick$isSequencedAssembly) {
             RecipeHolder<DeployerApplicationRecipe> rebound =
                 RecipeCacheTool.rebindSequencedAssemblyDeployerRecipe(lazytick$cachedRecipe, stack, be.getLevel());
-            if (rebound == null) {
+            if (rebound == null || this.recipeInv == null) {
                 this.lazytick$clearCache();
                 return;
             }
 
-            if (this.recipeInv != null) {
-                this.recipeInv.setStackInSlot(0, stack);
-                this.recipeInv.setStackInSlot(1, currentHeld);
+            this.recipeInv.setStackInSlot(0, stack);
+            this.recipeInv.setStackInSlot(1, currentHeld);
+
+            // the next step can require a different held ingredient than the cached step.
+            if (!rebound.value().matches(new RecipeWrapper(this.recipeInv), be.getLevel())) {
+                this.lazytick$clearCache();
+                return;
             }
 
             cir.setReturnValue(rebound);
