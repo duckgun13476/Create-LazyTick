@@ -35,8 +35,9 @@ public abstract class SpoutRecipeMixin {
         Item item = stack.getItem();
 
         // Acquire cache.
-        if (CAN_FILL_CACHE.containsKey(item)) {
-            cir.setReturnValue(CAN_FILL_CACHE.get(item));
+        Boolean cached = CAN_FILL_CACHE.get(item);
+        if (cached != null) {
+            cir.setReturnValue(cached);
             cir.cancel();
         }
     }
@@ -62,8 +63,9 @@ public abstract class SpoutRecipeMixin {
 
         // Acquire cache.
         SpoutCacheKey key = new SpoutCacheKey(stack.getItem(), availableFluid.getFluid());
-        if (AMOUNT_CACHE.containsKey(key)) {
-            cir.setReturnValue(AMOUNT_CACHE.get(key));
+        Integer cached = AMOUNT_CACHE.get(key);
+        if (cached != null) {
+            cir.setReturnValue(cached);
             cir.cancel();
         }
     }

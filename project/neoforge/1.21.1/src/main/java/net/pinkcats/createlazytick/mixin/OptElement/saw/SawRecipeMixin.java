@@ -61,7 +61,9 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
             Object cacheKey, net.minecraft.world.level.Level recipeLevel,
             Predicate<RecipeHolder<? extends Recipe<?>>> recipeTypes) {
         if (!ServerConfig.getEnableLazyTick() || !ServerConfig.getEnableCacheSaw()) {
-            DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_BYPASS, "pos=" + worldPosition.toShortString() + " reason=disabled");
+            if (ServerConfig.getEnableDebugLog()) {
+                DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_BYPASS, "pos=" + worldPosition.toShortString() + " reason=disabled");
+            }
             return RecipeFinder.get(cacheKey, recipeLevel, recipeTypes);
         }
         if (IsServerReload) {
@@ -70,8 +72,10 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
 
         ItemStack input = inventory.getStackInSlot(0);
         if (input.isEmpty() || RecipeCacheTool.isSequencedAssemblyItem(input)) {
-            DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_BYPASS,
-                    "pos=" + worldPosition.toShortString() + " reason=" + (input.isEmpty() ? "empty" : "sequenced"));
+            if (ServerConfig.getEnableDebugLog()) {
+                DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_BYPASS,
+                        "pos=" + worldPosition.toShortString() + " reason=" + (input.isEmpty() ? "empty" : "sequenced"));
+            }
             return RecipeFinder.get(cacheKey, recipeLevel, recipeTypes);
         }
         return createLazyTick$getRecipeCache(input, cacheKey, recipeLevel, recipeTypes);
@@ -98,12 +102,16 @@ public class SawRecipeMixin extends BlockBreakingKineticBlockEntity {
         // check cache if it has then return
         if (createLazyTick$recipeCache.containsKey(itemStack.getItem())) {
             List<RecipeHolder<? extends Recipe<?>>> cached = createLazyTick$recipeCache.get(itemStack.getItem());
-            DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_HIT, "pos=" + worldPosition.toShortString() + " candidates=" + cached.size());
+            if (ServerConfig.getEnableDebugLog()) {
+                DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_HIT, "pos=" + worldPosition.toShortString() + " candidates=" + cached.size());
+            }
             return cached;
         }
 
         boolean hasTag = !itemStack.getComponentsPatch().isEmpty();
-        DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_MISS, "pos=" + worldPosition.toShortString() + " components=" + hasTag);
+        if (ServerConfig.getEnableDebugLog()) {
+            DiagnosticLog.saw(DiagnosticLog.Event.SAW_CACHE_MISS, "pos=" + worldPosition.toShortString() + " components=" + hasTag);
+        }
         //System.out.println("not use cache "+itemStack+createLazyTick$recipeCache.size());
         List<RecipeHolder<? extends Recipe<?>>> startedSearch = RecipeFinder.get(cacheKey, recipeLevel, recipeTypes);
 

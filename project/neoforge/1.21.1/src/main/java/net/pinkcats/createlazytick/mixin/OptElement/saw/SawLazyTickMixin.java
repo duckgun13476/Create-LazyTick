@@ -64,7 +64,9 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         int nextInterval = SawFrequencyFunction.nextProbeInterval(
                 createLazyTick$adaptiveSchedule, level.getGameTime(), maxInterval, 2);
         LazyTickLogic.setIntervalSafe(this, nextInterval);
-        DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_BACKOFF, "pos=" + worldPosition.toShortString() + " interval=" + nextInterval);
+        if (ServerConfig.getEnableDebugLog()) {
+            DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_BACKOFF, "pos=" + worldPosition.toShortString() + " interval=" + nextInterval);
+        }
     }
 
     @Unique
@@ -75,8 +77,10 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
                 createLazyTick$inputSchedule, level.getGameTime(), ServerConfig.getSawDelayMax(), currentInterval);
         createLazyTick$sawTick = 0;
         LazyTickLogic.setIntervalSafe(this, SawFrequencyFunction.reduceAfterInput(currentInterval));
-        DiagnosticLog.saw(DiagnosticLog.Event.SAW_INPUT_WAKE,
-                "pos=" + worldPosition.toShortString() + " from=" + currentInterval + " to=" + this.createLazyTick$getCurrentSuperTick());
+        if (ServerConfig.getEnableDebugLog()) {
+            DiagnosticLog.saw(DiagnosticLog.Event.SAW_INPUT_WAKE,
+                    "pos=" + worldPosition.toShortString() + " from=" + currentInterval + " to=" + this.createLazyTick$getCurrentSuperTick());
+        }
     }
 
     public SawLazyTickMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -129,7 +133,9 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         int nextInterval = SawFrequencyFunction.nextInputProbeInterval(
                 createLazyTick$inputSchedule, level.getGameTime(), maxInterval, 2);
         LazyTickLogic.setIntervalSafe(this, nextInterval);
-        DiagnosticLog.saw(DiagnosticLog.Event.SAW_IDLE_PROBE, "pos=" + worldPosition.toShortString() + " interval=" + nextInterval);
+        if (ServerConfig.getEnableDebugLog()) {
+            DiagnosticLog.saw(DiagnosticLog.Event.SAW_IDLE_PROBE, "pos=" + worldPosition.toShortString() + " interval=" + nextInterval);
+        }
     }
 
     @Inject(method = "start", remap = false, at = @At("HEAD"))
@@ -164,7 +170,9 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
             createLazyTick$allowNextOutputAttempt = false;
             createLazyTick$sawTick = 0;
             createLazyTick$outputAttempted = true;
-            DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_ATTEMPT, "pos=" + worldPosition.toShortString() + " kind=initial");
+            if (ServerConfig.getEnableDebugLog()) {
+                DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_ATTEMPT, "pos=" + worldPosition.toShortString() + " kind=initial");
+            }
             return;
         }
 
@@ -177,7 +185,9 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
             // 放行一次实际重试；只有 RETURN 仍未产生库存变化时才增长退避。
             createLazyTick$sawTick = 0;
             createLazyTick$outputAttempted = true;
-            DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_ATTEMPT, "pos=" + worldPosition.toShortString() + " kind=retry");
+            if (ServerConfig.getEnableDebugLog()) {
+                DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_ATTEMPT, "pos=" + worldPosition.toShortString() + " kind=retry");
+            }
         }
     }
 
@@ -192,8 +202,10 @@ public abstract class SawLazyTickMixin extends KineticBlockEntity implements ISm
         if (createLazyTick$outputAttempted) {
             createLazyTick$adaptiveSchedule = SawFrequencyFunction.onOutputSuccess(
                     createLazyTick$adaptiveSchedule, level.getGameTime(), ServerConfig.getSawDelayMax());
-            DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_SUCCESS,
-                    "pos=" + worldPosition.toShortString() + " interval=" + this.createLazyTick$getCurrentSuperTick());
+            if (ServerConfig.getEnableDebugLog()) {
+                DiagnosticLog.saw(DiagnosticLog.Event.SAW_OUTPUT_SUCCESS,
+                        "pos=" + worldPosition.toShortString() + " interval=" + this.createLazyTick$getCurrentSuperTick());
+            }
         }
         createLazyTick$sawTick = 0;
     }
