@@ -33,6 +33,8 @@
     "OptElement.depot.DepotLazyTickMixin",
     "OptElement.funnel.FunnelLazyTickMixin",
     "OptElement.funnel.FunnelBlockUseMixin",
+    "OptElement.funnel.PortableInterfaceLeaseMixin",
+    "OptElement.funnel.PortableItemHandlerLeaseMixin",
     "OptElement.factorygauge.FactoryGaugeLazyTickMixin",
     "OptElement.itemdrain.ItemDrainAccessor",
     "OptElement.itemdrain.ItemDrainLazyTickMixin",

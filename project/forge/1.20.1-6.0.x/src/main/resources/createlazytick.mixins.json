@@ -32,6 +32,8 @@
     "OptElement.fluid.FluidLazyTickMixin",
     "OptElement.fluid.FluidNetworkTransferSpeedMixin",
     "OptElement.funnel.FunnelLazyTickMixin",
+    "OptElement.funnel.PortableInterfaceLeaseMixin",
+    "OptElement.funnel.PortableItemHandlerLeaseMixin",
     "OptElement.funnel.FunnelBlockUseMixin",
     "OptElement.factorygauge.FactoryGaugeLazyTickMixin",
     "OptElement.itemdrain.ItemDrainAccessor",

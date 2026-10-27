@@ -3,7 +3,6 @@ package net.pinkcats.createlazytick.mixin.OptElement.funnel;
 import net.pinkcats.createlazytick.Gui.mes;
 import net.pinkcats.createlazytick.bridge.Create.ISmartBlockEntityControl;
 import net.pinkcats.createlazytick.config.ServerConfig;
-import net.pinkcats.createlazytick.CreateLazyTick;
 import net.pinkcats.createlazytick.bridge.Funnel;
 import net.pinkcats.createlazytick.helper.NetworkSyncHelper;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
@@ -11,6 +10,7 @@ import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.belt.BeltHelper;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
+import com.simibubi.create.content.kinetics.deployer.DeployerItemHandler;
 import com.simibubi.create.content.logistics.funnel.*;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -27,7 +27,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -43,10 +42,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.simibubi.create.AllBlocks.DEPLOYER;
-import static com.simibubi.create.AllBlocks.PORTABLE_STORAGE_INTERFACE;
 
 @Mixin(value = FunnelBlockEntity.class, remap = false)
 public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IHaveHoveringInformation {
@@ -241,14 +237,18 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
             return;
         }
 
-        BlockState blockState = getBlockState();
-        BlockPos blockPos = getBlockPos();
-        CLT$HasInterface = createLazyTick$IsMovingInterface(blockPos,blockState);
-
-
-        // for interface
+        // Read the actual cached extraction target, not unrelated neighboring blocks.
+        // Deployer overflow blocks its next operation until drained: retain vanilla
+        // extraction cadence even when the selected lazy interval is longer.
+        Object inventory = invManipulation.getInventory();
         CLT$FunnelDelayTick++;
-        if (!CLT$HasInterface){
+        if ((mode == Funnel.Mode.EXTRACT || mode == Funnel.Mode.PUSHING_TO_BELT)
+                && inventory instanceof net.pinkcats.createlazytick.bridge.Create.IPortableInterfaceLease.Source source) {
+            int remaining = control.createLazyTick$getCurrentSuperTick() - CLT$FunnelDelayTick;
+            source.createLazyTick$getLeaseOwner().createLazyTick$awaitFunnel(
+                    (FunnelBlockEntity) (Object) this, inventory, remaining);
+        }
+        if (!(inventory instanceof DeployerItemHandler)){
             if (CLT$FunnelDelayTick < control.createLazyTick$getCurrentSuperTick()) {
                 ci.cancel();
                 return;}
@@ -274,13 +274,6 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
 
         ci.cancel();
     }
-
-    @Unique
-    private Direction createlazytick$targetDirection = null;
-
-
-    @Unique
-    private boolean CLT$HasInterface = false;
 
     @Inject(method = "activateExtractingBeltFunnel" ,at=@At("HEAD" ),cancellable = true,remap = false)
     private void clt$activateExtractingBeltFunnel(CallbackInfo ci) {
@@ -325,11 +318,8 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
         ItemHelper.ExtractionCountMode mode = getModeToExtract();
         MutableBoolean deniedByInsertion = new MutableBoolean(false);
 
-        AtomicInteger extract_time = new AtomicInteger();
         // delay from this
         ItemStack stack = invManipulation.extract(mode, amountToExtract, s -> {
-            extract_time.getAndIncrement();
-            //System.out.println("Extracting belt funnel"+extract_time);
 
             ItemStack handleInsertion = inputBehaviour.handleInsertion(s, facing, true);
             if (handleInsertion.isEmpty()) {
@@ -364,56 +354,6 @@ public abstract class FunnelLazyTickMixin extends SmartBlockEntity implements IH
 
 
 
-
-
-    //Tool func
-
-    //paradox Code (interesting func)
-    @Unique
-    private boolean createLazyTick$IsMovingInterface(BlockPos blockPos, BlockState blockState) {
-
-        if (createlazytick$targetDirection == null) {
-            if (level != null) {
-                try {
-
-                    Direction[] allDirections = {Direction.UP, Direction.DOWN,
-                            Direction.NORTH, Direction.SOUTH,
-                            Direction.EAST, Direction.WEST};
-
-                    for (Direction dir : allDirections) {
-                        BlockPos probePos = blockPos.relative(dir);
-                        if (!level.hasChunkAt(probePos))
-                            continue;
-
-                        Block block = level.getBlockState(probePos).getBlock();
-
-                        // 找到目标方块：记录方向并返回true
-                        if (block == PORTABLE_STORAGE_INTERFACE.get() || block == DEPLOYER.get()) {
-                            createlazytick$targetDirection = dir;
-                            return true;
-                        }
-                    }
-                }
-                catch(Exception e){
-                    CreateLazyTick.LOGGER.error(e.getMessage());
-                    return false;
-                }
-
-            }
-        }
-        else {
-            if (level != null) {
-                BlockPos probePos = blockPos.relative(createlazytick$targetDirection);
-                if (!level.hasChunkAt(probePos))
-                    return false;
-
-                Block target = level.getBlockState(probePos).getBlock();
-                return target == PORTABLE_STORAGE_INTERFACE.get() || target == DEPLOYER.get();
-            }
-        }
-
-        return false;
-    }
 
 
     /**
