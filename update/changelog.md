@@ -1,3 +1,11 @@
+#### v2.7.33-release
+
+- Fix Deployer caching accepting incorrect sequenced assembly ingredients (#47). Thanks to @osyrisrblx for the fix (#48).
+- Remove funnel neighbor scans while preserving Portable Storage Interface transfers and Deployer output speed.
+- Reduce unnecessary saw diagnostic work and duplicate spout cache lookups.
+
+---
+
 #### v2.7.32-release
 
 - Fix Fabric release startup failures caused by development-environment mappings (#46).
