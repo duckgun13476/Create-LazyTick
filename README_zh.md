@@ -133,8 +133,15 @@ CLT 会为短暂交互窗口和持续输出保留必要的正常/有界重试节
 
 ## 打包
 
-运行 `./gradlew packageAllVersions` 打包所有支持的版本。最终发布 jar 统一放在
-`output/<CLT 版本号>/`，发布任务直接使用这些文件。
+运行 `build.cmd`（Windows）或 `./build.sh` 打包所有支持的版本。最终发布 jar 统一放在
+`output/<CLT 版本号>/`，发布任务直接使用这些文件。原有 `./gradlew packageAllVersions` 仍可使用。
+
+默认直接使用官方仓库；可选的本机文件 `~/.gradle/nexus-build.properties` 中配置
+`baseUrl=https://nexus.example.org/repository` 后优先走 Nexus，仅依赖传输失败时允许
+适用的构建向官方仓库重试一次，编译错误和普通缺失依赖不会重试。`--offline` 不联网回退。
+其他开发者不需要私有地址或凭据即可构建。嵌套 Gradle 进程的镜像继承需要本机 init 桥接；
+没有桥接时子进程仍用官方仓库。Unix 未安装 PowerShell 时，`build.sh` 直接使用原生 wrapper。
+发布、游戏启动及测试任务请使用原生 wrapper，重试入口会拒绝这些任务名。
 
 ## 许可证
 

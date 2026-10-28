@@ -167,8 +167,20 @@ configuration, and steps that reproduce the behavior.
 
 ## Building
 
-Run `./gradlew packageAllVersions` to package all supported versions. Final release
-jars are collected in `output/<CLT version>/`; publishing uses these same files.
+Run `build.cmd` (Windows) or `./build.sh` to package all supported versions. Final
+release jars are collected in `output/<CLT version>/`; publishing uses these same files.
+The stock `./gradlew packageAllVersions` entry remains supported.
+
+The build entry uses official repositories unless the optional, machine-local
+`~/.gradle/nexus-build.properties` contains `baseUrl=https://nexus.example.org/repository`.
+With that configuration it prefers Nexus and retries an eligible build once against
+official repositories only after a dependency transport failure. Compilation errors
+and ordinary missing artifacts are not retried. `--offline` never falls back online.
+No private URL or credentials are needed to build a fresh checkout. Nested Gradle
+processes require an owner-local init bridge to inherit Nexus routing; without it
+they retain their official repositories. On Unix without PowerShell, `build.sh`
+uses the stock wrapper directly. Run publishing, game and test tasks through the
+stock wrapper; the retry launcher deliberately rejects those task names.
 
 ## License
 
